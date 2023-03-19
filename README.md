@@ -6,14 +6,20 @@ At least that's the plan.
 
 ## Building
 
-Because Zig is still working on a package manager, this project makes heavy use
-of git submodules (I am sorry).
+Because [Zig](https://ziglang.org) is still working on a package manager, this
+project makes heavy use of git submodules (I am sorry).
 
 When you clone this repo, be sure to pass the `--recursive` flag (it can take
 quite a while to clone the raylib dependency, so be patient):
 
 ```sh
-git clone --recursive <url>
+git clone --recursive git@github.com:namuol/boyziigame.git
+```
+
+Then to try to build and run it, run this command:
+
+```sh
+zig build run
 ```
 
 The basic project was bootstrapped with
