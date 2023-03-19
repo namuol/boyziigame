@@ -1,15 +1,16 @@
 # Boyz II Game
 
-Another Game Boy emulator written in Zig.
+Another Game Boy emulator written in Zig, for fun.
 
-Well, that's the plan, anyway.
+At least that's the plan.
 
 ## Building
 
 Because Zig is still working on a package manager, this project makes heavy use
 of git submodules (I am sorry).
 
-When you clone this repo, be sure to pass the `--recursive` flag:
+When you clone this repo, be sure to pass the `--recursive` flag (it can take
+quite a while to clone the raylib dependency, so be patient):
 
 ```sh
 git clone --recursive <url>
