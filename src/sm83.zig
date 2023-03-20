@@ -2,6 +2,16 @@
 //!
 //! Reference: https://gekkio.fi/files/gb-docs/gbctr.pdf
 
+const FLAG_ZERO_POS: usize = 7;
+const FLAG_SUBTRACT_POS: usize = 6;
+const FLAG_HALF_CARRY_POS: usize = 5;
+const FLAG_CARRY_POS: usize = 4;
+
+const FLAG_ZERO_MASK: u8 = 0b1 << FLAG_ZERO_POS;
+const FLAG_SUBTRACT_MASK: u8 = 0b1 << FLAG_SUBTRACT_POS;
+const FLAG_HALF_CARRY_MASK: u8 = 0b1 << FLAG_HALF_CARRY_POS;
+const FLAG_CARRY_MASK: u8 = 0b1 << FLAG_CARRY_POS;
+
 const SM83 = struct {
     a: u8 = 0,
     b: u8 = 0,
@@ -17,6 +27,9 @@ const SM83 = struct {
     sp: u16 = 0,
     pc: u16 = 0,
 
+    //
+    // 16-bit register methods
+    //
     // Would be nice to generate these, or use unions to achieve it somehow...
     //
     // i.e. I would much rather be able to do this:
@@ -36,6 +49,7 @@ const SM83 = struct {
     //     try expect(cpu.f == 0xFF);
     // }
     // ```
+    //
 
     pub fn af(self: SM83) u16 {
         return @as(u16, self.a) << 8 | @as(u16, self.f);
@@ -68,9 +82,39 @@ const SM83 = struct {
         self.h = @truncate(u8, (val & 0xFF00) >> 8);
         self.l = @truncate(u8, val & 0xFF);
     }
+
+    //
+    // Flag methods
+    //
+
+    pub fn flag_zero(self: SM83) bool {
+        return (self.flags >> FLAG_ZERO_POS) & 0b1 == 0b1;
+    }
+    pub fn set_flag_zero(self: *SM83, val: bool) void {
+        self.flags = if (val) self.flags | FLAG_ZERO_MASK else self.flags & ~FLAG_ZERO_MASK;
+    }
+    pub fn flag_subtract(self: SM83) bool {
+        return (self.flags >> FLAG_SUBTRACT_POS) & 0b1 == 0b1;
+    }
+    pub fn set_flag_subtract(self: *SM83, val: bool) void {
+        self.flags = if (val) self.flags | FLAG_SUBTRACT_MASK else self.flags & ~FLAG_SUBTRACT_MASK;
+    }
+    pub fn flag_half_carry(self: SM83) bool {
+        return (self.flags >> FLAG_HALF_CARRY_POS) & 0b1 == 0b1;
+    }
+    pub fn set_flag_half_carry(self: *SM83, val: bool) void {
+        self.flags = if (val) self.flags | FLAG_HALF_CARRY_MASK else self.flags & ~FLAG_HALF_CARRY_MASK;
+    }
+    pub fn flag_carry(self: SM83) bool {
+        return (self.flags & FLAG_CARRY_MASK) != 0;
+    }
+    pub fn set_flag_carry(self: *SM83, val: bool) void {
+        self.flags = if (val) self.flags | FLAG_CARRY_MASK else self.flags & ~FLAG_CARRY_MASK;
+    }
 };
 
-const expect = @import("std").testing.expect;
+const std = @import("std");
+const expect = std.testing.expect;
 test "16 bit registers" {
     try expect((SM83{ .a = 0xAA, .f = 0xBB }).af() == 0xAABB);
     try expect((SM83{ .b = 0xAA, .c = 0xBB }).bc() == 0xAABB);
@@ -90,4 +134,57 @@ test "16 bit registers" {
     cpu.set_hl(0xAABB);
     try expect(cpu.h == 0xAA);
     try expect(cpu.l == 0xBB);
+}
+
+test "flags" {
+    var cpu = SM83{};
+
+    try expect(cpu.flag_zero() == false);
+    try expect(cpu.flag_subtract() == false);
+    try expect(cpu.flag_half_carry() == false);
+    try expect(cpu.flag_carry() == false);
+
+    cpu.set_flag_zero(true);
+    try expect(cpu.flag_zero() == true);
+    try expect(cpu.flag_subtract() == false);
+    try expect(cpu.flag_half_carry() == false);
+    try expect(cpu.flag_carry() == false);
+    cpu.set_flag_zero(false);
+    try expect(cpu.flag_zero() == false);
+    try expect(cpu.flag_subtract() == false);
+    try expect(cpu.flag_half_carry() == false);
+    try expect(cpu.flag_carry() == false);
+
+    cpu.set_flag_subtract(true);
+    try expect(cpu.flag_zero() == false);
+    try expect(cpu.flag_subtract() == true);
+    try expect(cpu.flag_half_carry() == false);
+    try expect(cpu.flag_carry() == false);
+    cpu.set_flag_subtract(false);
+    try expect(cpu.flag_zero() == false);
+    try expect(cpu.flag_subtract() == false);
+    try expect(cpu.flag_half_carry() == false);
+    try expect(cpu.flag_carry() == false);
+
+    cpu.set_flag_half_carry(true);
+    try expect(cpu.flag_zero() == false);
+    try expect(cpu.flag_subtract() == false);
+    try expect(cpu.flag_half_carry() == true);
+    try expect(cpu.flag_carry() == false);
+    cpu.set_flag_half_carry(false);
+    try expect(cpu.flag_zero() == false);
+    try expect(cpu.flag_subtract() == false);
+    try expect(cpu.flag_half_carry() == false);
+    try expect(cpu.flag_carry() == false);
+
+    cpu.set_flag_carry(true);
+    try expect(cpu.flag_zero() == false);
+    try expect(cpu.flag_subtract() == false);
+    try expect(cpu.flag_half_carry() == false);
+    try expect(cpu.flag_carry() == true);
+    cpu.set_flag_carry(false);
+    try expect(cpu.flag_zero() == false);
+    try expect(cpu.flag_subtract() == false);
+    try expect(cpu.flag_half_carry() == false);
+    try expect(cpu.flag_carry() == false);
 }
