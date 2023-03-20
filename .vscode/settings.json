@@ -8,5 +8,6 @@
     "**/Thumbs.db": true,
     "raylib-zig": true,
     "zig-cache": true
-  }
+  },
+  "editor.tabSize": 4
 }

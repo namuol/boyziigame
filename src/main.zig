@@ -1,10 +1,3 @@
-//
-// basic_window
-// Zig version: 0.6.0
-// Author: Nikolas Wipper
-// Date: 2020-02-15
-//
-
 const rl = @import("raylib");
 
 pub fn main() anyerror!void {
@@ -31,7 +24,7 @@ pub fn main() anyerror!void {
 
         rl.ClearBackground(rl.WHITE);
 
-        rl.DrawText("Congrats! You created your first window!", 190, 200, 20, rl.LIGHTGRAY);
+        rl.DrawText("Congrats! You created your first window!", 190, 200, 20, rl.BLACK);
 
         rl.EndDrawing();
         //----------------------------------------------------------------------------------
@@ -41,4 +34,16 @@ pub fn main() anyerror!void {
     //--------------------------------------------------------------------------------------
     rl.CloseWindow(); // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
+}
+
+const expect = @import("std").testing.expect;
+
+fn fibonacci(n: u16) u16 {
+    if (n == 0 or n == 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+test "fib" {
+    const x = fibonacci(10);
+    try expect(x == 55);
 }
