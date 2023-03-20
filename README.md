@@ -26,3 +26,7 @@ The basic project was bootstrapped with
 [raylib-zig](https://github.com/Not-Nik/raylib-zig)'s
 [`project_setup.sh`](https://github.com/Not-Nik/raylib-zig/blob/1e06706bff87c39738b339eec90e8d20db2ba122/project_setup.sh)
 and only tested on Zig 0.10.1 on an M1 Mac.
+
+## Acknowledgements
+
+- `src/sm83-opcodes.json` originally sourced from https://gbdev.io/gb-opcodes

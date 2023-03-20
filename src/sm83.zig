@@ -1,6 +1,11 @@
 //! Sharp SM83 CPU emulator implementation
 //!
-//! Reference: https://gekkio.fi/files/gb-docs/gbctr.pdf
+//! References I've found helpful:
+//!
+//! - gekkio's guide: https://gekkio.fi/files/gb-docs/gbctr.pdf
+//! - Description of opcodes: https://gb-archive.github.io/salvage/decoding_gbz80_opcodes/Decoding%20Gamboy%20Z80%20Opcodes.html
+//! - Opcode matrix: https://gbdev.io/gb-opcodes/optables/
+//! - Opcode JSON (useful for codegen): https://gbdev.io/gb-opcodes/Opcodes.json
 
 const Flag = enum(u8) {
     zero = 0b1 << 7,
