@@ -13,6 +13,10 @@ const FLAG_HALF_CARRY_MASK: u8 = 0b1 << FLAG_HALF_CARRY_POS;
 const FLAG_CARRY_MASK: u8 = 0b1 << FLAG_CARRY_POS;
 
 const SM83 = struct {
+    //
+    // Registers
+    //
+
     a: u8 = 0,
     b: u8 = 0,
     c: u8 = 0,
@@ -22,9 +26,24 @@ const SM83 = struct {
     h: u8 = 0,
     l: u8 = 0,
 
+    /// Flags register
+    ///
+    /// See also:
+    ///
+    /// - `flag_zero`
+    /// - `set_flag_zero`
+    /// - `flag_subtract`
+    /// - `set_flag_subtract`
+    /// - `flag_half_carry`
+    /// - `set_flag_half_carry`
+    /// - `flag_carry`
+    /// - `set_flag_carry`
     flags: u8 = 0,
 
+    /// Stack pointer
     sp: u16 = 0,
+
+    /// Program counter
     pc: u16 = 0,
 
     //
