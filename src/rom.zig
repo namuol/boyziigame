@@ -269,6 +269,7 @@ const Rom = struct {
             }
         }
 
+        // Bottom row of tiles:
         i = 0;
         while ((0x011C + i) < 0x0134) : (i += 1) {
             const byte = self.raw_data[0x011C + i];

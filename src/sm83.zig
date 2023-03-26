@@ -7,6 +7,10 @@
 //! - Opcode matrix: https://gbdev.io/gb-opcodes/optables/
 //! - Opcode JSON (useful for codegen): https://gbdev.io/gb-opcodes/Opcodes.json
 
+// No gods, no kings, only bus
+const bus = @import("./bus.zig");
+const Bus = bus.Bus;
+
 const Flag = enum(u8) {
     zero = 0b1 << 7,
     subtract = 0b1 << 6,
@@ -15,6 +19,8 @@ const Flag = enum(u8) {
 };
 
 const SM83 = struct {
+    bus: Bus = Bus{},
+
     //
     // General purpose registers
     //
@@ -109,6 +115,39 @@ const SM83 = struct {
     pub fn set_flag(self: *SM83, comptime mask: Flag, val: bool) void {
         self.flags = if (val) self.flags | @enumToInt(mask) else self.flags & ~@enumToInt(mask);
     }
+
+    //
+    // Reset
+    //
+
+    /// Basic bootup simulation.
+    ///
+    /// This skips the boot ROM sequence and jumps straight to $0100, the ROM's
+    /// entrypoint.
+    ///
+    /// Guide here: https://gbdev.io/pandocs/Power_Up_Sequence.html#cpu-registers
+    ///
+    /// This behavior follows the entry for `DMG` model.
+    pub fn boot(self: *SM83) void {
+        self.a = 0x01;
+        self.set_flag(Flag.zero, true);
+        self.set_flag(Flag.subtract, false);
+        self.set_flag(Flag.halfCarry, true);
+        self.set_flag(Flag.carry, true);
+        self.b = 0x00;
+        self.c = 0x13;
+        self.d = 0x00;
+        self.e = 0xD8;
+        self.h = 0x01;
+        self.l = 0x4D;
+
+        self.pc = 0x0100;
+        self.sp = 0xFFFE;
+
+        // TODO: Initialize hardware registers (on the bus) based on this table:
+        //
+        // https://gbdev.io/pandocs/Power_Up_Sequence.html#hardware-registers
+    }
 };
 
 const std = @import("std");
@@ -185,4 +224,22 @@ test "flags" {
     try expect(cpu.flag(Flag.subtract) == false);
     try expect(cpu.flag(Flag.halfCarry) == false);
     try expect(cpu.flag(Flag.carry) == false);
+}
+
+test "boot" {
+    var cpu = SM83{};
+    cpu.boot();
+    try expect(cpu.a == 0x01);
+    try expect(cpu.flag(Flag.zero) == true);
+    try expect(cpu.flag(Flag.subtract) == false);
+    try expect(cpu.flag(Flag.halfCarry) == true);
+    try expect(cpu.flag(Flag.carry) == true);
+    try expect(cpu.b == 0x00);
+    try expect(cpu.c == 0x13);
+    try expect(cpu.d == 0x00);
+    try expect(cpu.e == 0xD8);
+    try expect(cpu.h == 0x01);
+    try expect(cpu.l == 0x4D);
+    try expect(cpu.pc == 0x0100);
+    try expect(cpu.sp == 0xFFFE);
 }
