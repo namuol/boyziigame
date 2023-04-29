@@ -49,6 +49,11 @@ const SM83 = struct {
     pc: u16 = 0,
 
     //
+    // Internals
+    //
+    cyclesLeft: u8 = 0,
+
+    //
     // 16-bit register methods
     //
     // Would be nice to generate these, or use unions to achieve it somehow...
@@ -116,10 +121,6 @@ const SM83 = struct {
         self.flags = if (val) self.flags | @enumToInt(mask) else self.flags & ~@enumToInt(mask);
     }
 
-    //
-    // Reset
-    //
-
     /// Basic bootup simulation.
     ///
     /// This skips the boot ROM sequence and jumps straight to $0100, the ROM's
@@ -147,6 +148,19 @@ const SM83 = struct {
         // TODO: Initialize hardware registers (on the bus) based on this table:
         //
         // https://gbdev.io/pandocs/Power_Up_Sequence.html#hardware-registers
+    }
+
+    pub fn cycle(self: *SM83) void {
+        if (self.cyclesLeft != 0) {
+            self.cyclesLeft -= 1;
+        }
+
+        const op = self.bus.read(self.pc);
+        if (op == 0xCB) {
+            // Handle prefixes
+        } else {
+            // Handle normal instructions
+        }
     }
 };
 

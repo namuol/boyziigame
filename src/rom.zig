@@ -26,8 +26,8 @@ fn checksum_rom(data: []const u8) u16 {
     return result;
 }
 
-const Rom = struct {
-    raw_data: []u8 = undefined,
+pub const Rom = struct {
+    _raw_data: []u8 = undefined,
 
     logo: [48]u8 = undefined,
     title: [11]u8 = undefined,
@@ -122,6 +122,10 @@ const Rom = struct {
         _,
     };
 
+    const ReadError = error{
+        OutOfRange,
+    };
+
     pub fn format(self: Rom, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) std.os.WriteError!void {
         const str = (
             \\ ----------- Header -----------
@@ -161,9 +165,9 @@ const Rom = struct {
             self.old_licensee_code,
             self.mask_rom_version,
             self.header_checksum,
-            if (checksum_header(u8, u8, self.raw_data[0x0134..0x014D]) == self.header_checksum) "✅" else "❌",
+            if (checksum_header(u8, u8, self._raw_data[0x0134..0x014D]) == self.header_checksum) "✅" else "❌",
             self.global_checksum,
-            if (checksum_rom(self.raw_data) == self.global_checksum) "✅" else "❌",
+            if (checksum_rom(self._raw_data) == self.global_checksum) "✅" else "❌",
         });
     }
 
@@ -172,38 +176,38 @@ const Rom = struct {
         const file = try std.fs.cwd().openFile(file_path, .{});
         defer file.close();
 
-        rom.raw_data = try file.readToEndAlloc(allocator, 32 * 1024 * 1024);
+        rom._raw_data = try file.readToEndAlloc(allocator, 32 * 1024 * 1024);
 
         {
             var pos: usize = HEADER_START;
             pos += 4; // We discard the entry point and continue...
-            std.mem.copy(u8, &rom.logo, rom.raw_data[pos..(pos + rom.logo.len)]);
+            std.mem.copy(u8, &rom.logo, rom._raw_data[pos..(pos + rom.logo.len)]);
             pos += rom.logo.len;
-            std.mem.copy(u8, &rom.title, rom.raw_data[pos..(pos + rom.title.len)]);
+            std.mem.copy(u8, &rom.title, rom._raw_data[pos..(pos + rom.title.len)]);
             pos += rom.title.len;
-            std.mem.copy(u8, &rom.manufacturer_code, rom.raw_data[pos..(pos + rom.manufacturer_code.len)]);
+            std.mem.copy(u8, &rom.manufacturer_code, rom._raw_data[pos..(pos + rom.manufacturer_code.len)]);
             pos += rom.manufacturer_code.len;
-            rom.cgb_flag = @intToEnum(CgbFlag, rom.raw_data[pos]);
+            rom.cgb_flag = @intToEnum(CgbFlag, rom._raw_data[pos]);
             pos += 1;
-            std.mem.copy(u8, &rom.new_licensee_code, rom.raw_data[pos..(pos + rom.new_licensee_code.len)]);
+            std.mem.copy(u8, &rom.new_licensee_code, rom._raw_data[pos..(pos + rom.new_licensee_code.len)]);
             pos += rom.new_licensee_code.len;
-            rom.sgb_flag = @intToEnum(SgbFlag, rom.raw_data[pos]);
+            rom.sgb_flag = @intToEnum(SgbFlag, rom._raw_data[pos]);
             pos += 1;
-            rom.cartridge_type = @intToEnum(CartridgeType, rom.raw_data[pos]);
+            rom.cartridge_type = @intToEnum(CartridgeType, rom._raw_data[pos]);
             pos += 1;
-            rom.rom_size = @intToEnum(RomSize, rom.raw_data[pos]);
+            rom.rom_size = @intToEnum(RomSize, rom._raw_data[pos]);
             pos += 1;
-            rom.ram_size = @intToEnum(RamSize, rom.raw_data[pos]);
+            rom.ram_size = @intToEnum(RamSize, rom._raw_data[pos]);
             pos += 1;
-            rom.destination_code = @intToEnum(DestinationCode, rom.raw_data[pos]);
+            rom.destination_code = @intToEnum(DestinationCode, rom._raw_data[pos]);
             pos += 1;
-            rom.old_licensee_code = rom.raw_data[pos];
+            rom.old_licensee_code = rom._raw_data[pos];
             pos += 1;
-            rom.mask_rom_version = rom.raw_data[pos];
+            rom.mask_rom_version = rom._raw_data[pos];
             pos += 1;
-            rom.header_checksum = rom.raw_data[pos];
+            rom.header_checksum = rom._raw_data[pos];
             pos += 1;
-            rom.global_checksum = (@as(u16, rom.raw_data[pos]) << 8) | @as(u16, rom.raw_data[pos + 1]);
+            rom.global_checksum = (@as(u16, rom._raw_data[pos]) << 8) | @as(u16, rom._raw_data[pos + 1]);
         }
 
         return rom;
@@ -247,7 +251,7 @@ const Rom = struct {
     // 0 2 4 6 8
     // 1 3 5 7 ...
     // ```
-    pub fn draw_logo(self: @This()) [8 * 48 + 7]u8 {
+    pub fn draw_logo(self: *const Rom) [8 * 48 + 7]u8 {
         var logo: [8 * 48 + 7]u8 = undefined;
         var i: usize = 0;
         while (i < 7) : (i += 1) {
@@ -256,7 +260,7 @@ const Rom = struct {
         // Top row of tiles:
         i = 0;
         while ((0x0104 + i) < 0x011C) : (i += 1) {
-            const byte = self.raw_data[0x0104 + i];
+            const byte = self._raw_data[0x0104 + i];
             const tile_x = i / 2;
             const tile_y = (i % 2) * 2;
             const start1 = tile_y * 49 + tile_x * 4;
@@ -272,7 +276,7 @@ const Rom = struct {
         // Bottom row of tiles:
         i = 0;
         while ((0x011C + i) < 0x0134) : (i += 1) {
-            const byte = self.raw_data[0x011C + i];
+            const byte = self._raw_data[0x011C + i];
             const tile_x = i / 2;
             const tile_y = 4 + (i % 2) * 2;
             const start1 = tile_y * 49 + tile_x * 4;
@@ -288,8 +292,29 @@ const Rom = struct {
         return logo;
     }
 
-    pub fn deinit(self: @This()) void {
-        self.allocator.free(self.raw_data);
+    pub fn deinit(self: *const Rom) void {
+        self.allocator.free(self._raw_data);
+    }
+
+    //
+    // Emulator methods
+    //
+
+    /// A read from the bus at a given address.
+    ///
+    /// Can return an error if the read is out of range of the cartridge ROM, in
+    /// which case the caller (i.e. the Bus) should handle the read instead.
+    pub fn bus_read(self: *const Rom, addr: u16) !u8 {
+        // TODO: Handle mappers and such
+        //
+        // We might want to return something other than `!u8` (maybe a union of
+        // some kind) for scenarios where we want to allow the Rom to defer to
+        // the bus to handle things like I/O or other devices.
+        if (addr > self._raw_data.len) {
+            return ReadError.OutOfRange;
+        }
+
+        return self._raw_data[addr];
     }
 };
 
