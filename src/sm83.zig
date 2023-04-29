@@ -11,6 +11,11 @@
 const bus = @import("./bus.zig");
 const Bus = bus.Bus;
 
+const rom = @import("./rom.zig");
+const Rom = rom.Rom;
+
+const opcodes = @import("./sm83-opcodes.zig");
+
 const Flag = enum(u8) {
     zero = 0b1 << 7,
     subtract = 0b1 << 6,
@@ -19,7 +24,7 @@ const Flag = enum(u8) {
 };
 
 const SM83 = struct {
-    bus: Bus = Bus{},
+    bus: Bus,
 
     //
     // General purpose registers
@@ -167,12 +172,19 @@ const SM83 = struct {
 const std = @import("std");
 const expect = std.testing.expect;
 test "16 bit registers" {
-    try expect((SM83{ .a = 0xAA, .f = 0xBB }).af() == 0xAABB);
-    try expect((SM83{ .b = 0xAA, .c = 0xBB }).bc() == 0xAABB);
-    try expect((SM83{ .d = 0xAA, .e = 0xBB }).de() == 0xAABB);
-    try expect((SM83{ .h = 0xAA, .l = 0xBB }).hl() == 0xAABB);
+    const bus_ = Bus{
+        .rom = Rom{
+            ._raw_data = try std.testing.allocator.alloc(u8, 1),
+            .allocator = std.testing.allocator,
+        },
+    };
 
-    var cpu = SM83{};
+    try expect((SM83{ .bus = bus_, .a = 0xAA, .f = 0xBB }).af() == 0xAABB);
+    try expect((SM83{ .bus = bus_, .b = 0xAA, .c = 0xBB }).bc() == 0xAABB);
+    try expect((SM83{ .bus = bus_, .d = 0xAA, .e = 0xBB }).de() == 0xAABB);
+    try expect((SM83{ .bus = bus_, .h = 0xAA, .l = 0xBB }).hl() == 0xAABB);
+
+    var cpu = SM83{ .bus = bus_ };
     cpu.set_af(0xAABB);
     try expect(cpu.a == 0xAA);
     try expect(cpu.f == 0xBB);
@@ -188,7 +200,13 @@ test "16 bit registers" {
 }
 
 test "flags" {
-    var cpu = SM83{};
+    const bus_ = Bus{
+        .rom = Rom{
+            ._raw_data = try std.testing.allocator.alloc(u8, 1),
+            .allocator = std.testing.allocator,
+        },
+    };
+    var cpu = SM83{ .bus = bus_ };
 
     try expect(cpu.flag(Flag.zero) == false);
     try expect(cpu.flag(Flag.subtract) == false);
@@ -241,7 +259,14 @@ test "flags" {
 }
 
 test "boot" {
-    var cpu = SM83{};
+    const bus_ = Bus{
+        .rom = Rom{
+            ._raw_data = try std.testing.allocator.alloc(u8, 1),
+            .allocator = std.testing.allocator,
+        },
+    };
+
+    var cpu = SM83{ .bus = bus_ };
     cpu.boot();
     try expect(cpu.a == 0x01);
     try expect(cpu.flag(Flag.zero) == true);
