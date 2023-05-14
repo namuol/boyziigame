@@ -55,7 +55,92 @@ const Mnemonic = enum {
     SUB,
     SWAP,
     XOR,
+
+    const strings = [_][]const u8{
+        "ADC",        "ADD",        "AND",
+        "BIT",        "CALL",       "CCF",
+        "CP",         "CPL",        "DAA",
+        "DEC",        "DI",         "EI",
+        "HALT",       "ILLEGAL_D3", "ILLEGAL_DB",
+        "ILLEGAL_DD", "ILLEGAL_E3", "ILLEGAL_E4",
+        "ILLEGAL_EB", "ILLEGAL_EC", "ILLEGAL_ED",
+        "ILLEGAL_F4", "ILLEGAL_FC", "ILLEGAL_FD",
+        "INC",        "JP",         "JR",
+        "LD",         "LDH",        "NOP",
+        "OR",         "POP",        "PREFIX",
+        "PUSH",       "RES",        "RET",
+        "RETI",       "RL",         "RLA",
+        "RLC",        "RLCA",       "RR",
+        "RRA",        "RRC",        "RRCA",
+        "RST",        "SBC",        "SCF",
+        "SET",        "SLA",        "SRA",
+        "SRL",        "STOP",       "SUB",
+        "SWAP",       "XOR",
+    };
+
+    pub fn string(val: Mnemonic) []const u8 {
+        return strings[@enumToInt(val)];
+    }
 };
+
+test "Mnemonic::string" {
+    try testing.expectEqualStrings("ADC", Mnemonic.string(Mnemonic.ADC));
+    try testing.expectEqualStrings("ADD", Mnemonic.string(Mnemonic.ADD));
+    try testing.expectEqualStrings("AND", Mnemonic.string(Mnemonic.AND));
+    try testing.expectEqualStrings("BIT", Mnemonic.string(Mnemonic.BIT));
+    try testing.expectEqualStrings("CALL", Mnemonic.string(Mnemonic.CALL));
+    try testing.expectEqualStrings("CCF", Mnemonic.string(Mnemonic.CCF));
+    try testing.expectEqualStrings("CP", Mnemonic.string(Mnemonic.CP));
+    try testing.expectEqualStrings("CPL", Mnemonic.string(Mnemonic.CPL));
+    try testing.expectEqualStrings("DAA", Mnemonic.string(Mnemonic.DAA));
+    try testing.expectEqualStrings("DEC", Mnemonic.string(Mnemonic.DEC));
+    try testing.expectEqualStrings("DI", Mnemonic.string(Mnemonic.DI));
+    try testing.expectEqualStrings("EI", Mnemonic.string(Mnemonic.EI));
+    try testing.expectEqualStrings("HALT", Mnemonic.string(Mnemonic.HALT));
+    try testing.expectEqualStrings("ILLEGAL_D3", Mnemonic.string(Mnemonic.ILLEGAL_D3));
+    try testing.expectEqualStrings("ILLEGAL_DB", Mnemonic.string(Mnemonic.ILLEGAL_DB));
+    try testing.expectEqualStrings("ILLEGAL_DD", Mnemonic.string(Mnemonic.ILLEGAL_DD));
+    try testing.expectEqualStrings("ILLEGAL_E3", Mnemonic.string(Mnemonic.ILLEGAL_E3));
+    try testing.expectEqualStrings("ILLEGAL_E4", Mnemonic.string(Mnemonic.ILLEGAL_E4));
+    try testing.expectEqualStrings("ILLEGAL_EB", Mnemonic.string(Mnemonic.ILLEGAL_EB));
+    try testing.expectEqualStrings("ILLEGAL_EC", Mnemonic.string(Mnemonic.ILLEGAL_EC));
+    try testing.expectEqualStrings("ILLEGAL_ED", Mnemonic.string(Mnemonic.ILLEGAL_ED));
+    try testing.expectEqualStrings("ILLEGAL_F4", Mnemonic.string(Mnemonic.ILLEGAL_F4));
+    try testing.expectEqualStrings("ILLEGAL_FC", Mnemonic.string(Mnemonic.ILLEGAL_FC));
+    try testing.expectEqualStrings("ILLEGAL_FD", Mnemonic.string(Mnemonic.ILLEGAL_FD));
+    try testing.expectEqualStrings("INC", Mnemonic.string(Mnemonic.INC));
+    try testing.expectEqualStrings("JP", Mnemonic.string(Mnemonic.JP));
+    try testing.expectEqualStrings("JR", Mnemonic.string(Mnemonic.JR));
+    try testing.expectEqualStrings("LD", Mnemonic.string(Mnemonic.LD));
+    try testing.expectEqualStrings("LDH", Mnemonic.string(Mnemonic.LDH));
+    try testing.expectEqualStrings("NOP", Mnemonic.string(Mnemonic.NOP));
+    try testing.expectEqualStrings("OR", Mnemonic.string(Mnemonic.OR));
+    try testing.expectEqualStrings("POP", Mnemonic.string(Mnemonic.POP));
+    try testing.expectEqualStrings("PREFIX", Mnemonic.string(Mnemonic.PREFIX));
+    try testing.expectEqualStrings("PUSH", Mnemonic.string(Mnemonic.PUSH));
+    try testing.expectEqualStrings("RES", Mnemonic.string(Mnemonic.RES));
+    try testing.expectEqualStrings("RET", Mnemonic.string(Mnemonic.RET));
+    try testing.expectEqualStrings("RETI", Mnemonic.string(Mnemonic.RETI));
+    try testing.expectEqualStrings("RL", Mnemonic.string(Mnemonic.RL));
+    try testing.expectEqualStrings("RLA", Mnemonic.string(Mnemonic.RLA));
+    try testing.expectEqualStrings("RLC", Mnemonic.string(Mnemonic.RLC));
+    try testing.expectEqualStrings("RLCA", Mnemonic.string(Mnemonic.RLCA));
+    try testing.expectEqualStrings("RR", Mnemonic.string(Mnemonic.RR));
+    try testing.expectEqualStrings("RRA", Mnemonic.string(Mnemonic.RRA));
+    try testing.expectEqualStrings("RRC", Mnemonic.string(Mnemonic.RRC));
+    try testing.expectEqualStrings("RRCA", Mnemonic.string(Mnemonic.RRCA));
+    try testing.expectEqualStrings("RST", Mnemonic.string(Mnemonic.RST));
+    try testing.expectEqualStrings("SBC", Mnemonic.string(Mnemonic.SBC));
+    try testing.expectEqualStrings("SCF", Mnemonic.string(Mnemonic.SCF));
+    try testing.expectEqualStrings("SET", Mnemonic.string(Mnemonic.SET));
+    try testing.expectEqualStrings("SLA", Mnemonic.string(Mnemonic.SLA));
+    try testing.expectEqualStrings("SRA", Mnemonic.string(Mnemonic.SRA));
+    try testing.expectEqualStrings("SRL", Mnemonic.string(Mnemonic.SRL));
+    try testing.expectEqualStrings("STOP", Mnemonic.string(Mnemonic.STOP));
+    try testing.expectEqualStrings("SUB", Mnemonic.string(Mnemonic.SUB));
+    try testing.expectEqualStrings("SWAP", Mnemonic.string(Mnemonic.SWAP));
+    try testing.expectEqualStrings("XOR", Mnemonic.string(Mnemonic.XOR));
+}
 
 const OperandName = enum {
     _0,
@@ -94,9 +179,64 @@ const OperandName = enum {
     r8,
     SP,
     Z,
+
+    const strings = [_][]const u8{
+        "0",   "00H", "1",   "2",
+        "3",   "4",   "5",   "6",
+        "7",   "08H", "10H", "18H",
+        "20H", "28H", "30H", "38H",
+        "A",   "a8",  "a16", "AF",
+        "B",   "BC",  "C",   "D",
+        "d8",  "d16", "DE",  "E",
+        "H",   "HL",  "L",   "NC",
+        "NZ",  "r8",  "SP",  "Z",
+    };
+
+    pub fn string(val: OperandName) []const u8 {
+        return strings[@enumToInt(val)];
+    }
 };
 
-const Operand = struct {
+test "OperandName::string" {
+    try testing.expectEqualStrings("0", OperandName.string(OperandName._0));
+    try testing.expectEqualStrings("00H", OperandName.string(OperandName._00H));
+    try testing.expectEqualStrings("1", OperandName.string(OperandName._1));
+    try testing.expectEqualStrings("2", OperandName.string(OperandName._2));
+    try testing.expectEqualStrings("3", OperandName.string(OperandName._3));
+    try testing.expectEqualStrings("4", OperandName.string(OperandName._4));
+    try testing.expectEqualStrings("5", OperandName.string(OperandName._5));
+    try testing.expectEqualStrings("6", OperandName.string(OperandName._6));
+    try testing.expectEqualStrings("7", OperandName.string(OperandName._7));
+    try testing.expectEqualStrings("08H", OperandName.string(OperandName._08H));
+    try testing.expectEqualStrings("10H", OperandName.string(OperandName._10H));
+    try testing.expectEqualStrings("18H", OperandName.string(OperandName._18H));
+    try testing.expectEqualStrings("20H", OperandName.string(OperandName._20H));
+    try testing.expectEqualStrings("28H", OperandName.string(OperandName._28H));
+    try testing.expectEqualStrings("30H", OperandName.string(OperandName._30H));
+    try testing.expectEqualStrings("38H", OperandName.string(OperandName._38H));
+    try testing.expectEqualStrings("A", OperandName.string(OperandName.A));
+    try testing.expectEqualStrings("a8", OperandName.string(OperandName.a8));
+    try testing.expectEqualStrings("a16", OperandName.string(OperandName.a16));
+    try testing.expectEqualStrings("AF", OperandName.string(OperandName.AF));
+    try testing.expectEqualStrings("B", OperandName.string(OperandName.B));
+    try testing.expectEqualStrings("BC", OperandName.string(OperandName.BC));
+    try testing.expectEqualStrings("C", OperandName.string(OperandName.C));
+    try testing.expectEqualStrings("D", OperandName.string(OperandName.D));
+    try testing.expectEqualStrings("d8", OperandName.string(OperandName.d8));
+    try testing.expectEqualStrings("d16", OperandName.string(OperandName.d16));
+    try testing.expectEqualStrings("DE", OperandName.string(OperandName.DE));
+    try testing.expectEqualStrings("E", OperandName.string(OperandName.E));
+    try testing.expectEqualStrings("H", OperandName.string(OperandName.H));
+    try testing.expectEqualStrings("HL", OperandName.string(OperandName.HL));
+    try testing.expectEqualStrings("L", OperandName.string(OperandName.L));
+    try testing.expectEqualStrings("NC", OperandName.string(OperandName.NC));
+    try testing.expectEqualStrings("NZ", OperandName.string(OperandName.NZ));
+    try testing.expectEqualStrings("r8", OperandName.string(OperandName.r8));
+    try testing.expectEqualStrings("SP", OperandName.string(OperandName.SP));
+    try testing.expectEqualStrings("Z", OperandName.string(OperandName.Z));
+}
+
+pub const Operand = struct {
     name: OperandName,
     immediate: bool,
     bytes: u2 = 0,
@@ -123,7 +263,7 @@ const FlagBehaviors = struct {
     c: FlagBehavior,
 };
 
-const Opcode = struct {
+pub const Opcode = struct {
     mnemonic: Mnemonic,
     bytes: u2,
     cycles: []const u5,
@@ -11240,10 +11380,419 @@ pub const PREFIXED = [256]Opcode{
             .c = FlagBehavior.__,
         },
     },
+
+    // 0xEF
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._5,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.A,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xF0
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._6,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.B,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xF1
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._6,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.C,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xF2
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._6,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.D,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xF3
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._6,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.E,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xF4
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._6,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.H,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xF5
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._6,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.L,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xF6
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{16},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._6,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.HL,
+                .immediate = false,
+            },
+        },
+        .immediate = false,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xF7
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._6,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.A,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xF8
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._7,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.B,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xF9
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._7,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.C,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xFA
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._7,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.D,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xFB
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._7,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.E,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xFC
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._7,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.H,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xFD
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._7,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.L,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xFE
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{16},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._7,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.HL,
+                .immediate = false,
+            },
+        },
+        .immediate = false,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
+
+    // 0xFF
+    Opcode{
+        .mnemonic = Mnemonic.SET,
+        .bytes = 2,
+        .cycles = &[_]u5{8},
+        .operands = &[_]Operand{
+            Operand{
+                .name = OperandName._7,
+                .immediate = true,
+            },
+            Operand{
+                .name = OperandName.A,
+                .immediate = true,
+            },
+        },
+        .immediate = true,
+        .flags = FlagBehaviors{
+            .z = FlagBehavior.__,
+            .n = FlagBehavior.__,
+            .h = FlagBehavior.__,
+            .c = FlagBehavior.__,
+        },
+    },
 };
 
 const std = @import("std");
-const expect = std.testing.expect;
+const testing = std.testing;
+const expect = testing.expect;
 test "size" {
     try expect(UNPREFIXED.len == 256);
 }
