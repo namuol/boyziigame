@@ -126,7 +126,7 @@ pub const Rom = struct {
         OutOfRange,
     };
 
-    pub fn format(self: *const Rom, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) std.os.WriteError!void {
+    pub fn format(self: *const Rom, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         const str = (
             \\ ----------- Header -----------
             \\              logo: {s}

@@ -89,6 +89,98 @@ test "basic cycle (INC)" {
     try expect(sm83.l == 0x01);
 }
 
+test "disassemble" {
+    var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
+    defer rom.deinit();
+
+    const bus = try Bus.init(std.testing.allocator, rom);
+    defer bus.deinit();
+
+    var cpu = SM83{ .bus = bus };
+    cpu.boot();
+
+    // Output format borrowed from the excellent SameBoy debugger:
+    const expected = (
+        \\
+        \\->0100: NOP
+        \\  0101: JP $0150
+        \\  0104: ADC $ed
+        \\  0106: LD h, [hl]
+        \\  0107: LD h, [hl]
+        \\  0108: CALL z, $000d
+        \\  010b: DEC bc
+        \\  010c: INC bc
+        \\  010d: LD [hl], e
+        \\  010e: NOP
+        \\  010f: ADD e
+        \\  0110: NOP
+        \\  0111: INC c
+        \\  0112: NOP
+        \\  0113: DEC c
+        \\  0114: NOP
+        \\  0115: LD [$1f11], sp
+        \\  0118: ADC b
+        \\  0119: ADC c
+        \\  011a: NOP
+        \\  011b: LD c, $dc
+        \\  011d: CALL z, $e66e
+        \\  0120: .BYTE $dd
+        \\  0121: .BYTE $dd
+        \\  0122: RETI
+        \\  0123: SBC c
+        \\  0124: CP e
+        \\  0125: CP e
+        \\  0126: LD h, a
+        \\  0127: LD h, e
+        \\  0128: LD l, [hl]
+        \\  0129: LD c, $ec
+        \\  012b: CALL z, $dcdd
+        \\  012e: SBC c
+        \\  012f: SBC a
+        \\  0130: CP e
+        \\  0131: CP c
+        \\  0132: INC sp
+        \\  0133: LD a, $50
+        \\  0135: LD c, a
+        \\  0136: LD c, e
+        \\  0137: LD b, l
+        \\  0138: LD c, l
+        \\  0139: LD c, a
+        \\  013a: LD c, [hl]
+        \\  013b: JR nz, $017f
+        \\  013d: LD c, h
+        \\  013e: LD d, l
+        \\  013f: LD b, l
+        \\  0140: NOP
+        \\  0141: NOP
+        \\  0142: NOP
+        \\  0143: NOP
+        \\  0144: JR nc, $0177
+        \\  0146: INC bc
+        \\  0147: INC de
+        \\  0148: DEC b
+        \\  0149: INC bc
+        \\  014a: LD bc, $0033
+        \\  014d: .BYTE $d3
+        \\  014e: SBC l
+        \\  014f: LD a, [bc]
+        \\  0150: CP $11
+        \\  0152: JR z, $0157
+        \\  0154: XOR a
+        \\  0155: JR $0159
+        \\  0157: LD a, $00
+        \\  0159: LD [$cf1a], a
+        \\  015c: JP $1f54
+        \\  015f: LD a, $20
+        \\  0161: LD c, $00
+        \\
+    );
+
+    var actual = try std.fmt.allocPrint(std.testing.allocator, "{}", .{cpu.disassemble(71)});
+    defer std.testing.allocator.free(actual);
+    try std.testing.expectEqualStrings(expected, actual);
+}
+
 test "real world ROM" {
     var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
     defer rom.deinit();
@@ -98,18 +190,18 @@ test "real world ROM" {
 
     var cpu = SM83{ .bus = bus };
     cpu.boot();
-    cpu.trace();
+    std.debug.print("{}", .{cpu.disassemble(5)});
 
     cpu.step();
-    cpu.trace();
+    std.debug.print("{}", .{cpu.disassemble(5)});
 
     cpu.step();
-    cpu.trace();
+    std.debug.print("{}", .{cpu.disassemble(5)});
 
     cpu.step();
-    cpu.trace();
+    std.debug.print("{}", .{cpu.disassemble(5)});
 
     cpu.step();
-    cpu.trace();
+    std.debug.print("{}", .{cpu.disassemble(5)});
     std.debug.print("\n", .{});
 }

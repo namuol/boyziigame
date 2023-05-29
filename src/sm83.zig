@@ -359,41 +359,61 @@ pub const SM83 = struct {
         }
     }
 
-    pub fn trace(self: *const SM83) void {
-        var addr = self.pc;
-        var i: u3 = 0;
-        while (i < 5) : (i += 1) {
-            if (addr == self.pc) {
-                std.debug.print("\n->", .{});
-            } else {
-                std.debug.print("\n  ", .{});
-            }
-            const opcode = self.opcode_at(addr);
+    pub fn disassemble(self: *const SM83, count: u16) Disassembly {
+        return Disassembly{ .cpu = self, .count = count };
+    }
+};
 
-            std.debug.print("{x:0>4}: ({X:0>2}) {s}", .{ addr, self.bus.read(addr), opcode.mnemonic.string() });
+const Disassembly = struct {
+    cpu: *const SM83,
+    count: u16,
+    pub fn format(self: *const Disassembly, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        var addr = self.cpu.pc;
+        var i: u16 = 0;
+        while (i < self.count) : (i += 1) {
+            if (addr == self.cpu.pc) {
+                try writer.print("\n->", .{});
+            } else {
+                try writer.print("\n  ", .{});
+            }
+            const opcode = self.cpu.opcode_at(addr);
+
+            // For opcode debugging, uncomment this line and comment out the one after it:
+            // try writer.print("{x:0>4}: ({X:0>2}) {s}", .{ addr, self.cpu.bus.read(addr), opcode.mnemonic.string() });
+            try writer.print("{x:0>4}: {s}", .{ addr, opcode.mnemonic.string() });
             addr += 1;
             var j: u3 = 0;
             while (j < opcode.operands.len) : (j += 1) {
                 const operand = opcode.operands[j];
                 const next_addr = addr + operand.bytes;
+
+                // HACKS: Omit certain implied operands (chiefly A register in 0th operand position)
+                if (j == 0 and operand.bytes == 0 and switch (opcode.mnemonic) {
+                    .ADD, .ADC, .SBC => true,
+                    else => false,
+                }) {
+                    addr = next_addr;
+                    continue;
+                }
+
                 if (operand.bytes == 2) {
-                    std.debug.print(" {}", .{OperandValue(u16){ .operand = &operand, .val = self.bus.read_16(addr), .addr = next_addr }});
+                    try writer.print(" {}", .{OperandValue(u16){ .operand = &operand, .val = self.cpu.bus.read_16(addr), .addr = next_addr }});
                 } else if (operand.bytes == 1) {
-                    std.debug.print(" {}", .{OperandValue(u8){ .operand = &operand, .val = self.bus.read(addr), .addr = next_addr }});
+                    try writer.print(" {}", .{OperandValue(u8){ .operand = &operand, .val = self.cpu.bus.read(addr), .addr = next_addr }});
                 } else if (operand.immediate) {
-                    std.debug.print(" {s}", .{operand.name.string()});
+                    try writer.print(" {s}", .{operand.name.string()});
                 } else {
-                    std.debug.print(" [{s}]", .{operand.name.string()});
+                    try writer.print(" [{s}]", .{operand.name.string()});
                 }
 
                 if (j < opcode.operands.len - 1) {
-                    std.debug.print(",", .{});
+                    try writer.print(",", .{});
                 }
                 addr = next_addr;
             }
         }
 
-        std.debug.print("\n", .{});
+        try writer.print("\n", .{});
     }
 };
 
@@ -407,7 +427,7 @@ fn OperandValue(comptime T: type) type {
         const I8_IMM_FMT = "{}";
         const U16_IMM_FMT = "${x:0>4}";
         const U16_FMT = "[${x:0>4}]";
-        pub fn format(self: *const OperandValue(T), comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) std.os.WriteError!void {
+        pub fn format(self: *const OperandValue(T), comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
             return switch (self.operand.name) {
                 .a8, .d8 => {
                     if (self.operand.immediate) {

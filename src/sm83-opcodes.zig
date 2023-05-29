@@ -57,25 +57,25 @@ const Mnemonic = enum {
     XOR,
 
     const strings = [_][]const u8{
-        "ADC",        "ADD",        "AND",
-        "BIT",        "CALL",       "CCF",
-        "CP",         "CPL",        "DAA",
-        "DEC",        "DI",         "EI",
-        "HALT",       "ILLEGAL_D3", "ILLEGAL_DB",
-        "ILLEGAL_DD", "ILLEGAL_E3", "ILLEGAL_E4",
-        "ILLEGAL_EB", "ILLEGAL_EC", "ILLEGAL_ED",
-        "ILLEGAL_F4", "ILLEGAL_FC", "ILLEGAL_FD",
-        "INC",        "JP",         "JR",
-        "LD",         "LDH",        "NOP",
-        "OR",         "POP",        "PREFIX",
-        "PUSH",       "RES",        "RET",
-        "RETI",       "RL",         "RLA",
-        "RLC",        "RLCA",       "RR",
-        "RRA",        "RRC",        "RRCA",
-        "RST",        "SBC",        "SCF",
-        "SET",        "SLA",        "SRA",
-        "SRL",        "STOP",       "SUB",
-        "SWAP",       "XOR",
+        "ADC",       "ADD",       "AND",
+        "BIT",       "CALL",      "CCF",
+        "CP",        "CPL",       "DAA",
+        "DEC",       "DI",        "EI",
+        "HALT",      ".BYTE $d3", ".BYTE $db",
+        ".BYTE $dd", ".BYTE $e3", ".BYTE $e4",
+        ".BYTE $eb", ".BYTE $ec", ".BYTE $ed",
+        ".BYTE $f4", ".BYTE $fc", ".BYTE $fd",
+        "INC",       "JP",        "JR",
+        "LD",        "LDH",       "NOP",
+        "OR",        "POP",       "PREFIX",
+        "PUSH",      "RES",       "RET",
+        "RETI",      "RL",        "RLA",
+        "RLC",       "RLCA",      "RR",
+        "RRA",       "RRC",       "RRCA",
+        "RST",       "SBC",       "SCF",
+        "SET",       "SLA",       "SRA",
+        "SRL",       "STOP",      "SUB",
+        "SWAP",      "XOR",
     };
 
     pub fn string(val: Mnemonic) []const u8 {
@@ -97,17 +97,17 @@ test "Mnemonic::string" {
     try testing.expectEqualStrings("DI", Mnemonic.string(Mnemonic.DI));
     try testing.expectEqualStrings("EI", Mnemonic.string(Mnemonic.EI));
     try testing.expectEqualStrings("HALT", Mnemonic.string(Mnemonic.HALT));
-    try testing.expectEqualStrings("ILLEGAL_D3", Mnemonic.string(Mnemonic.ILLEGAL_D3));
-    try testing.expectEqualStrings("ILLEGAL_DB", Mnemonic.string(Mnemonic.ILLEGAL_DB));
-    try testing.expectEqualStrings("ILLEGAL_DD", Mnemonic.string(Mnemonic.ILLEGAL_DD));
-    try testing.expectEqualStrings("ILLEGAL_E3", Mnemonic.string(Mnemonic.ILLEGAL_E3));
-    try testing.expectEqualStrings("ILLEGAL_E4", Mnemonic.string(Mnemonic.ILLEGAL_E4));
-    try testing.expectEqualStrings("ILLEGAL_EB", Mnemonic.string(Mnemonic.ILLEGAL_EB));
-    try testing.expectEqualStrings("ILLEGAL_EC", Mnemonic.string(Mnemonic.ILLEGAL_EC));
-    try testing.expectEqualStrings("ILLEGAL_ED", Mnemonic.string(Mnemonic.ILLEGAL_ED));
-    try testing.expectEqualStrings("ILLEGAL_F4", Mnemonic.string(Mnemonic.ILLEGAL_F4));
-    try testing.expectEqualStrings("ILLEGAL_FC", Mnemonic.string(Mnemonic.ILLEGAL_FC));
-    try testing.expectEqualStrings("ILLEGAL_FD", Mnemonic.string(Mnemonic.ILLEGAL_FD));
+    try testing.expectEqualStrings(".BYTE $d3", Mnemonic.string(Mnemonic.ILLEGAL_D3));
+    try testing.expectEqualStrings(".BYTE $db", Mnemonic.string(Mnemonic.ILLEGAL_DB));
+    try testing.expectEqualStrings(".BYTE $dd", Mnemonic.string(Mnemonic.ILLEGAL_DD));
+    try testing.expectEqualStrings(".BYTE $e3", Mnemonic.string(Mnemonic.ILLEGAL_E3));
+    try testing.expectEqualStrings(".BYTE $e4", Mnemonic.string(Mnemonic.ILLEGAL_E4));
+    try testing.expectEqualStrings(".BYTE $eb", Mnemonic.string(Mnemonic.ILLEGAL_EB));
+    try testing.expectEqualStrings(".BYTE $ec", Mnemonic.string(Mnemonic.ILLEGAL_EC));
+    try testing.expectEqualStrings(".BYTE $ed", Mnemonic.string(Mnemonic.ILLEGAL_ED));
+    try testing.expectEqualStrings(".BYTE $f4", Mnemonic.string(Mnemonic.ILLEGAL_F4));
+    try testing.expectEqualStrings(".BYTE $fc", Mnemonic.string(Mnemonic.ILLEGAL_FC));
+    try testing.expectEqualStrings(".BYTE $fd", Mnemonic.string(Mnemonic.ILLEGAL_FD));
     try testing.expectEqualStrings("INC", Mnemonic.string(Mnemonic.INC));
     try testing.expectEqualStrings("JP", Mnemonic.string(Mnemonic.JP));
     try testing.expectEqualStrings("JR", Mnemonic.string(Mnemonic.JR));
@@ -243,7 +243,7 @@ pub const Operand = struct {
     increment: ?bool = null,
     decrement: ?bool = null,
 
-    pub fn format(self: *const Operand, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) std.os.WriteError!void {
+    pub fn format(self: *const Operand, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         if (self.immediate) {
             return writer.print("{s}", .{self.name.string()});
         } else {
