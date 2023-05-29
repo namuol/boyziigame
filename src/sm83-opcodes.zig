@@ -181,15 +181,15 @@ const OperandName = enum {
     Z,
 
     const strings = [_][]const u8{
-        "0",   "00H", "1",   "2",
+        "0",   "00h", "1",   "2",
         "3",   "4",   "5",   "6",
-        "7",   "08H", "10H", "18H",
-        "20H", "28H", "30H", "38H",
-        "A",   "a8",  "a16", "AF",
-        "B",   "BC",  "C",   "D",
-        "d8",  "d16", "DE",  "E",
-        "H",   "HL",  "L",   "NC",
-        "NZ",  "r8",  "SP",  "Z",
+        "7",   "08h", "10h", "18h",
+        "20h", "28h", "30h", "38h",
+        "a",   "a8",  "a16", "af",
+        "b",   "bc",  "c",   "d",
+        "d8",  "d16", "de",  "e",
+        "h",   "hl",  "l",   "nc",
+        "nz",  "r8",  "sp",  "z",
     };
 
     pub fn string(val: OperandName) []const u8 {
@@ -199,7 +199,7 @@ const OperandName = enum {
 
 test "OperandName::string" {
     try testing.expectEqualStrings("0", OperandName.string(OperandName._0));
-    try testing.expectEqualStrings("00H", OperandName.string(OperandName._00H));
+    try testing.expectEqualStrings("00h", OperandName.string(OperandName._00H));
     try testing.expectEqualStrings("1", OperandName.string(OperandName._1));
     try testing.expectEqualStrings("2", OperandName.string(OperandName._2));
     try testing.expectEqualStrings("3", OperandName.string(OperandName._3));
@@ -207,33 +207,33 @@ test "OperandName::string" {
     try testing.expectEqualStrings("5", OperandName.string(OperandName._5));
     try testing.expectEqualStrings("6", OperandName.string(OperandName._6));
     try testing.expectEqualStrings("7", OperandName.string(OperandName._7));
-    try testing.expectEqualStrings("08H", OperandName.string(OperandName._08H));
-    try testing.expectEqualStrings("10H", OperandName.string(OperandName._10H));
-    try testing.expectEqualStrings("18H", OperandName.string(OperandName._18H));
-    try testing.expectEqualStrings("20H", OperandName.string(OperandName._20H));
-    try testing.expectEqualStrings("28H", OperandName.string(OperandName._28H));
-    try testing.expectEqualStrings("30H", OperandName.string(OperandName._30H));
-    try testing.expectEqualStrings("38H", OperandName.string(OperandName._38H));
-    try testing.expectEqualStrings("A", OperandName.string(OperandName.A));
+    try testing.expectEqualStrings("08h", OperandName.string(OperandName._08H));
+    try testing.expectEqualStrings("10h", OperandName.string(OperandName._10H));
+    try testing.expectEqualStrings("18h", OperandName.string(OperandName._18H));
+    try testing.expectEqualStrings("20h", OperandName.string(OperandName._20H));
+    try testing.expectEqualStrings("28h", OperandName.string(OperandName._28H));
+    try testing.expectEqualStrings("30h", OperandName.string(OperandName._30H));
+    try testing.expectEqualStrings("38h", OperandName.string(OperandName._38H));
+    try testing.expectEqualStrings("a", OperandName.string(OperandName.A));
     try testing.expectEqualStrings("a8", OperandName.string(OperandName.a8));
     try testing.expectEqualStrings("a16", OperandName.string(OperandName.a16));
-    try testing.expectEqualStrings("AF", OperandName.string(OperandName.AF));
-    try testing.expectEqualStrings("B", OperandName.string(OperandName.B));
-    try testing.expectEqualStrings("BC", OperandName.string(OperandName.BC));
-    try testing.expectEqualStrings("C", OperandName.string(OperandName.C));
-    try testing.expectEqualStrings("D", OperandName.string(OperandName.D));
+    try testing.expectEqualStrings("af", OperandName.string(OperandName.AF));
+    try testing.expectEqualStrings("b", OperandName.string(OperandName.B));
+    try testing.expectEqualStrings("bc", OperandName.string(OperandName.BC));
+    try testing.expectEqualStrings("c", OperandName.string(OperandName.C));
+    try testing.expectEqualStrings("d", OperandName.string(OperandName.D));
     try testing.expectEqualStrings("d8", OperandName.string(OperandName.d8));
     try testing.expectEqualStrings("d16", OperandName.string(OperandName.d16));
-    try testing.expectEqualStrings("DE", OperandName.string(OperandName.DE));
-    try testing.expectEqualStrings("E", OperandName.string(OperandName.E));
-    try testing.expectEqualStrings("H", OperandName.string(OperandName.H));
-    try testing.expectEqualStrings("HL", OperandName.string(OperandName.HL));
-    try testing.expectEqualStrings("L", OperandName.string(OperandName.L));
-    try testing.expectEqualStrings("NC", OperandName.string(OperandName.NC));
-    try testing.expectEqualStrings("NZ", OperandName.string(OperandName.NZ));
+    try testing.expectEqualStrings("de", OperandName.string(OperandName.DE));
+    try testing.expectEqualStrings("e", OperandName.string(OperandName.E));
+    try testing.expectEqualStrings("h", OperandName.string(OperandName.H));
+    try testing.expectEqualStrings("hl", OperandName.string(OperandName.HL));
+    try testing.expectEqualStrings("l", OperandName.string(OperandName.L));
+    try testing.expectEqualStrings("nc", OperandName.string(OperandName.NC));
+    try testing.expectEqualStrings("nz", OperandName.string(OperandName.NZ));
     try testing.expectEqualStrings("r8", OperandName.string(OperandName.r8));
-    try testing.expectEqualStrings("SP", OperandName.string(OperandName.SP));
-    try testing.expectEqualStrings("Z", OperandName.string(OperandName.Z));
+    try testing.expectEqualStrings("sp", OperandName.string(OperandName.SP));
+    try testing.expectEqualStrings("z", OperandName.string(OperandName.Z));
 }
 
 pub const Operand = struct {
@@ -242,6 +242,14 @@ pub const Operand = struct {
     bytes: u2 = 0,
     increment: ?bool = null,
     decrement: ?bool = null,
+
+    pub fn format(self: *const Operand, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) std.os.WriteError!void {
+        if (self.immediate) {
+            return writer.print("{s}", .{self.name.string()});
+        } else {
+            return writer.print("[{s}]", .{self.name.string()});
+        }
+    }
 };
 
 const FlagBehavior = enum {

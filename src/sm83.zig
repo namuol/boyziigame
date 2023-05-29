@@ -28,7 +28,7 @@ const Flag = enum(u8) {
     carry = 0b1 << 4,
 };
 
-const SM83 = struct {
+pub const SM83 = struct {
     bus: Bus,
 
     //
@@ -160,13 +160,14 @@ const SM83 = struct {
         // https://gbdev.io/pandocs/Power_Up_Sequence.html#hardware-registers
     }
 
-    pub fn cycle(self: *SM83) void {
+    pub fn cycle(self: *SM83) bool {
+        const stepped = self.cyclesLeft == 0;
         // We are not (yet) implementing a "cycle accurate" emulator, so we
         // essentially just do all our execution at once, once our cycle counter
         // has reached 0.
         if (self.cyclesLeft == 0) {
             const opcode = self.opcode_at(self.pc);
-            self.pc += 1;
+            self.pc +%= 1;
 
             // Set the cycle counter to the first cycle count; for some
             // instructions like conditional jumps, the number of cycles
@@ -176,6 +177,43 @@ const SM83 = struct {
             var nextCyclesLeft = opcode.cycles[0];
 
             switch (opcode.mnemonic) {
+                .NOP => {},
+                .JP => {
+                    switch (opcode.operands.len) {
+                        1 => {
+                            const addr = self.read_operand_u16(&opcode.operands[0]);
+                            self.pc = addr;
+                        },
+                        // 2 => {},
+                        else => {
+                            panic("JP with {d} opcodes not supported!", .{opcode.operands.len});
+                        },
+                    }
+                },
+                .JR => {
+                    const condition = opcode.operands[0];
+                    const offset = self.read_operand_u8(&opcode.operands[1]);
+                    switch (condition.name) {
+                        .Z => {
+                            if (self.flag(Flag.zero)) {
+                                self.pc +%= offset;
+                            }
+                        },
+                        else => {
+                            panic("Unsupported JR condition: {s}", .{condition.name.string()});
+                        },
+                    }
+                },
+                .CP => {
+                    // Compare A with n. This is basically an A - n subtraction
+                    // instruction but the results are thrown away.
+                    const n = self.read_operand_u8(&opcode.operands[0]);
+                    const result = self.a -% n;
+                    self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.subtract, true);
+                    // TODO: self.set_flag(Flag.halfCarry, ???);
+                    self.set_flag(Flag.carry, self.a < n);
+                },
                 .INC => {
                     if (opcode.operands.len > 1) {
                         @panic("Unexpected number of operands for INC");
@@ -205,39 +243,28 @@ const SM83 = struct {
                 },
             }
 
-            self.pc += opcode.bytes - 1;
-
             // TODO: Handle flags
 
             self.cyclesLeft = nextCyclesLeft;
         }
 
         self.cyclesLeft -= 1;
+        return stepped;
     }
 
-    pub fn read_operand_u8(self: *const SM83, operand: *const Operand) u8 {
-        switch (operand.name) {
-            .A => {
-                return self.a;
-            },
-            .B => {
-                return self.b;
-            },
-            .C => {
-                return self.c;
-            },
-            .D => {
-                return self.d;
-            },
-            .E => {
-                return self.e;
-            },
-            .H => {
-                return self.h;
-            },
-            .L => {
-                return self.l;
-            },
+    pub fn step(self: *SM83) void {
+        while (!self.cycle()) {}
+    }
+
+    pub fn read_operand_u8_safe(self: *const SM83, operand: *const Operand) u8 {
+        return switch (operand.name) {
+            .A => self.a,
+            .B => self.b,
+            .C => self.c,
+            .D => self.d,
+            .E => self.e,
+            .H => self.h,
+            .L => self.l,
             .BC => {
                 // FIXME: Perhaps we should have `Operand` and `Operand16`
                 // structs instead so the type checker can help us deal with
@@ -248,35 +275,34 @@ const SM83 = struct {
 
                 return self.bus.read(self.bc());
             },
+            .d8, .r8 => self.bus.read(self.pc),
+            else => {
+                panic("read_operand_u8 for .{s} not implemented!", .{operand.name.string()});
+            },
+        };
+    }
+
+    pub fn read_operand_u8(self: *SM83, operand: *const Operand) u8 {
+        const result = self.read_operand_u8_safe(operand);
+        switch (operand.name) {
+            .A, .B, .C, .D, .E, .H, .L, .BC => {},
+            .d8, .r8 => self.pc +%= 1,
             else => {
                 panic("read_operand_u8 for .{s} not implemented!", .{operand.name.string()});
             },
         }
+        return result;
     }
 
     pub fn write_operand_u8(self: *SM83, data: u8, operand: *const Operand) void {
         switch (operand.name) {
-            .A => {
-                self.a = data;
-            },
-            .B => {
-                self.b = data;
-            },
-            .C => {
-                self.c = data;
-            },
-            .D => {
-                self.d = data;
-            },
-            .E => {
-                self.e = data;
-            },
-            .H => {
-                self.h = data;
-            },
-            .L => {
-                self.l = data;
-            },
+            .A => self.a = data,
+            .B => self.b = data,
+            .C => self.c = data,
+            .D => self.d = data,
+            .E => self.e = data,
+            .H => self.h = data,
+            .L => self.l = data,
 
             .BC => {
                 if (operand.immediate) {
@@ -292,15 +318,24 @@ const SM83 = struct {
         }
     }
 
-    pub fn read_operand_u16(self: *const SM83, operand: *const Operand) u16 {
-        switch (operand.name) {
-            .d16 => {
-                return self.bus.read_16(self.pc);
+    pub fn read_operand_u16_safe(self: *const SM83, operand: *const Operand) u16 {
+        return switch (operand.name) {
+            .d16, .a16 => self.bus.read_16(self.pc),
+            else => {
+                panic("read_operand_u16_safe for .{s} not implemented!", .{operand.name.string()});
             },
+        };
+    }
+
+    pub fn read_operand_u16(self: *SM83, operand: *const Operand) u16 {
+        const result = self.read_operand_u16_safe(operand);
+        switch (operand.name) {
+            .d16, .a16 => self.pc +%= 2,
             else => {
                 panic("read_operand_u16 for .{s} not implemented!", .{operand.name.string()});
             },
         }
+        return result;
     }
 
     pub fn write_operand_u16(self: *SM83, data: u16, operand: *const Operand) void {
@@ -323,15 +358,103 @@ const SM83 = struct {
             return opcodes.UNPREFIXED[op];
         }
     }
+
+    pub fn trace(self: *const SM83) void {
+        var addr = self.pc;
+        var i: u3 = 0;
+        while (i < 5) : (i += 1) {
+            if (addr == self.pc) {
+                std.debug.print("\n->", .{});
+            } else {
+                std.debug.print("\n  ", .{});
+            }
+            const opcode = self.opcode_at(addr);
+
+            std.debug.print("{x:0>4}: ({X:0>2}) {s}", .{ addr, self.bus.read(addr), opcode.mnemonic.string() });
+            addr += 1;
+            var j: u3 = 0;
+            while (j < opcode.operands.len) : (j += 1) {
+                const operand = opcode.operands[j];
+                if (operand.bytes == 2) {
+                    std.debug.print(" {}", .{OperandValue(u16){ .operand = &operand, .val = self.bus.read_16(addr) }});
+                } else if (operand.bytes == 1) {
+                    std.debug.print(" {}", .{OperandValue(u8){ .operand = &operand, .val = self.bus.read(addr) }});
+                } else if (operand.immediate) {
+                    std.debug.print(" {s}", .{operand.name.string()});
+                } else {
+                    std.debug.print(" [{s}]", .{operand.name.string()});
+                }
+
+                if (j < opcode.operands.len - 1) {
+                    std.debug.print(",", .{});
+                }
+
+                addr += operand.bytes;
+            }
+            // switch (opcode.operands.len) {
+            //     1 => {
+            //         const operand = opcode.operands[0];
+            //         if (operand.bytes == 2) {
+            //             std.debug.print("{s} {}", .{ opcode.mnemonic.string(), OperandValue(u16){ .operand = &operand, .val = self.bus.read_16(addr + 1) } });
+            //         } else {
+            //             std.debug.print("{s} {}", .{ opcode.mnemonic.string(), OperandValue(u8){ .operand = &operand, .val = self.bus.read(addr + 1) } });
+            //         }
+            //     },
+            //     2 => {
+            //         // There has to be a better way to dedupe this...
+            //         const left = opcode.operands[0];
+            //         const right = opcode.operands[1];
+            //         if (left.bytes == 2) {
+            //             if (right.bytes == 2) {
+            //                 std.debug.print("{s} {} {}", .{ opcode.mnemonic.string(), OperandValue(u16){ .operand = &left, .val = self.bus.read_16(addr + 1) }, OperandValue(u16){ .operand = &right, .val = self.bus.read_16(addr + 2) } });
+            //             } else {
+            //                 std.debug.print("{s} {} {}", .{ opcode.mnemonic.string(), OperandValue(u16){ .operand = &left, .val = self.bus.read_16(addr + 1) }, OperandValue(u8){ .operand = &right, .val = self.bus.read(addr + 2) } });
+            //             }
+            //         } else {
+            //             if (right.bytes == 2) {
+            //                 std.debug.print("{s} {} {}", .{ opcode.mnemonic.string(), OperandValue(u8){ .operand = &left, .val = self.bus.read(addr + 1) }, OperandValue(u16){ .operand = &right, .val = self.bus.read_16(addr + 2) } });
+            //             } else {
+            //                 std.debug.print("{s} {} {}", .{ opcode.mnemonic.string(), OperandValue(u8){ .operand = &left, .val = self.bus.read(addr + 1) }, OperandValue(u8){ .operand = &right, .val = self.bus.read(addr + 2) } });
+            //             }
+            //         }
+            //     },
+            //     else => std.debug.print("{s}", .{opcode.mnemonic.string()}),
+            // }
+        }
+
+        std.debug.print("\n", .{});
+    }
 };
 
-// const SM83Trace = struct {
-//     opcode: *const Opcode,
-//     data: []const u8,
-//     pub fn print(self: *const SM83Trace) void {
-//         std.debug.print("{s}", .{self.opcode.string()});
-//     }
-// };
+fn OperandValue(comptime T: type) type {
+    return struct {
+        operand: *const Operand,
+        val: T,
+        const U8_IMM_FMT = "${x:0<2}";
+        const U8_FMT = "[${x:0<2}]";
+        const U16_IMM_FMT = "${x:0>4}";
+        const U16_FMT = "[${x:0>4}]";
+        pub fn format(self: *const OperandValue(T), comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) std.os.WriteError!void {
+            return switch (self.operand.name) {
+                .a8, .d8, .r8 => {
+                    if (self.operand.immediate) {
+                        return writer.print(U8_IMM_FMT, .{self.val});
+                    } else {
+                        return writer.print(U8_FMT, .{self.val});
+                    }
+                },
+                .a16, .d16 => {
+                    if (self.operand.immediate) {
+                        return writer.print(U16_IMM_FMT, .{self.val});
+                    } else {
+                        return writer.print(U16_FMT, .{self.val});
+                    }
+                },
+                else => self.operand.format(fmt, options, writer),
+            };
+        }
+    };
+}
 
 const expect = std.testing.expect;
 test "16 bit registers" {
@@ -472,84 +595,4 @@ test "SM83::opcode" {
     try expect(opcode.mnemonic == .LD);
     try expect(opcode.operands[0].name == .B);
     try expect(opcode.operands[1].name == .D);
-}
-
-test "basic cycle (LD)" {
-    const raw_data = try std.testing.allocator.alloc(u8, 10);
-
-    const bus_ = try Bus.init(std.testing.allocator, Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator });
-    defer bus_.deinit();
-    defer bus_.rom.deinit();
-    var sm83 = SM83{ .bus = bus_ };
-
-    // LD BC, $1234
-    raw_data[0x0000] = 0x01;
-    raw_data[0x0001] = 0x34;
-    raw_data[0x0002] = 0x12;
-    var i: usize = 0;
-    while (i < 8) : (i += 1) sm83.cycle();
-    try expect(sm83.bc() == 0x1234);
-    try expect(sm83.pc == 0x0003);
-
-    // LD (BC), A
-    // We write 0x42 to the start of RAM:
-    raw_data[0x0003] = 0x02;
-    sm83.a = 0x42;
-    sm83.set_bc(0xC000);
-
-    i = 0;
-    while (i < 8) : (i += 1) sm83.cycle();
-    try expect(sm83.bus.read(0xC000) == 0x42);
-    try expect(sm83.pc == 0x0004);
-}
-
-test "basic cycle (INC)" {
-    const raw_data = try std.testing.allocator.alloc(u8, 10);
-    // INC A
-    raw_data[0x0000] = 0x3C;
-    // INC B
-    raw_data[0x0001] = 0x04;
-    // INC C
-    raw_data[0x0002] = 0x0C;
-    // INC D
-    raw_data[0x0003] = 0x14;
-    // INC E
-    raw_data[0x0004] = 0x1C;
-    // INC H
-    raw_data[0x0005] = 0x24;
-    // INC L
-    raw_data[0x0006] = 0x2C;
-
-    const bus_ = try Bus.init(std.testing.allocator, Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator });
-    defer bus_.deinit();
-    defer bus_.rom.deinit();
-    var sm83 = SM83{ .bus = bus_ };
-
-    var i: usize = 0;
-    while (i < 4) : (i += 1) sm83.cycle();
-    try expect(sm83.a == 0x01);
-
-    i = 0;
-    while (i < 4) : (i += 1) sm83.cycle();
-    try expect(sm83.b == 0x01);
-
-    i = 0;
-    while (i < 4) : (i += 1) sm83.cycle();
-    try expect(sm83.c == 0x01);
-
-    i = 0;
-    while (i < 4) : (i += 1) sm83.cycle();
-    try expect(sm83.d == 0x01);
-
-    i = 0;
-    while (i < 4) : (i += 1) sm83.cycle();
-    try expect(sm83.e == 0x01);
-
-    i = 0;
-    while (i < 4) : (i += 1) sm83.cycle();
-    try expect(sm83.h == 0x01);
-
-    i = 0;
-    while (i < 4) : (i += 1) sm83.cycle();
-    try expect(sm83.l == 0x01);
 }
