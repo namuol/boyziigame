@@ -375,10 +375,11 @@ pub const SM83 = struct {
             var j: u3 = 0;
             while (j < opcode.operands.len) : (j += 1) {
                 const operand = opcode.operands[j];
+                const next_addr = addr + operand.bytes;
                 if (operand.bytes == 2) {
-                    std.debug.print(" {}", .{OperandValue(u16){ .operand = &operand, .val = self.bus.read_16(addr) }});
+                    std.debug.print(" {}", .{OperandValue(u16){ .operand = &operand, .val = self.bus.read_16(addr), .addr = next_addr }});
                 } else if (operand.bytes == 1) {
-                    std.debug.print(" {}", .{OperandValue(u8){ .operand = &operand, .val = self.bus.read(addr) }});
+                    std.debug.print(" {}", .{OperandValue(u8){ .operand = &operand, .val = self.bus.read(addr), .addr = next_addr }});
                 } else if (operand.immediate) {
                     std.debug.print(" {s}", .{operand.name.string()});
                 } else {
@@ -388,38 +389,8 @@ pub const SM83 = struct {
                 if (j < opcode.operands.len - 1) {
                     std.debug.print(",", .{});
                 }
-
-                addr += operand.bytes;
+                addr = next_addr;
             }
-            // switch (opcode.operands.len) {
-            //     1 => {
-            //         const operand = opcode.operands[0];
-            //         if (operand.bytes == 2) {
-            //             std.debug.print("{s} {}", .{ opcode.mnemonic.string(), OperandValue(u16){ .operand = &operand, .val = self.bus.read_16(addr + 1) } });
-            //         } else {
-            //             std.debug.print("{s} {}", .{ opcode.mnemonic.string(), OperandValue(u8){ .operand = &operand, .val = self.bus.read(addr + 1) } });
-            //         }
-            //     },
-            //     2 => {
-            //         // There has to be a better way to dedupe this...
-            //         const left = opcode.operands[0];
-            //         const right = opcode.operands[1];
-            //         if (left.bytes == 2) {
-            //             if (right.bytes == 2) {
-            //                 std.debug.print("{s} {} {}", .{ opcode.mnemonic.string(), OperandValue(u16){ .operand = &left, .val = self.bus.read_16(addr + 1) }, OperandValue(u16){ .operand = &right, .val = self.bus.read_16(addr + 2) } });
-            //             } else {
-            //                 std.debug.print("{s} {} {}", .{ opcode.mnemonic.string(), OperandValue(u16){ .operand = &left, .val = self.bus.read_16(addr + 1) }, OperandValue(u8){ .operand = &right, .val = self.bus.read(addr + 2) } });
-            //             }
-            //         } else {
-            //             if (right.bytes == 2) {
-            //                 std.debug.print("{s} {} {}", .{ opcode.mnemonic.string(), OperandValue(u8){ .operand = &left, .val = self.bus.read(addr + 1) }, OperandValue(u16){ .operand = &right, .val = self.bus.read_16(addr + 2) } });
-            //             } else {
-            //                 std.debug.print("{s} {} {}", .{ opcode.mnemonic.string(), OperandValue(u8){ .operand = &left, .val = self.bus.read(addr + 1) }, OperandValue(u8){ .operand = &right, .val = self.bus.read(addr + 2) } });
-            //             }
-            //         }
-            //     },
-            //     else => std.debug.print("{s}", .{opcode.mnemonic.string()}),
-            // }
         }
 
         std.debug.print("\n", .{});
@@ -430,19 +401,25 @@ fn OperandValue(comptime T: type) type {
     return struct {
         operand: *const Operand,
         val: T,
+        addr: u16,
         const U8_IMM_FMT = "${x:0<2}";
         const U8_FMT = "[${x:0<2}]";
+        const I8_IMM_FMT = "{}";
         const U16_IMM_FMT = "${x:0>4}";
         const U16_FMT = "[${x:0>4}]";
         pub fn format(self: *const OperandValue(T), comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) std.os.WriteError!void {
             return switch (self.operand.name) {
-                .a8, .d8, .r8 => {
+                .a8, .d8 => {
                     if (self.operand.immediate) {
                         return writer.print(U8_IMM_FMT, .{self.val});
                     } else {
                         return writer.print(U8_FMT, .{self.val});
                     }
                 },
+                .r8 => {
+                    return writer.print(U16_IMM_FMT, .{@intCast(u16, @intCast(i16, self.addr) +% @intCast(i8, self.val))});
+                },
+
                 .a16, .d16 => {
                     if (self.operand.immediate) {
                         return writer.print(U16_IMM_FMT, .{self.val});
