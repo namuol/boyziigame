@@ -278,53 +278,54 @@ test "real world ROM" {
         \\    015c: JP $1f54
         \\    015f: LD a, $20
         \\
-        \\registers:
-        \\AF  = $0080 (---Z)
-        \\BC  = $0013
-        \\DE  = $00d8
-        \\HL  = $014d
-        \\SP  = $fffe
-        \\PC  = $0159
-        \\IME = Disabled
+        // \\registers:
+        // \\AF  = $0080 (---Z)
+        // \\BC  = $0013
+        // \\DE  = $00d8
+        // \\HL  = $014d
+        // \\SP  = $fffe
+        // \\PC  = $0159
+        // \\IME = Disabled
+        // \\
+        // \\disassemble:
+        // \\  ->0159: LD [$cf1a], a
+        // \\    015c: JP $1f54
+        // \\    015f: LD a, $20
+        // \\    0161: LD c, $00
+        // \\    0163: LDH [rJOYP & $FF], a ; =$00
+        // \\
+        // \\registers:
+        // \\AF  = $0080 (---Z)
+        // \\BC  = $0013
+        // \\DE  = $00d8
+        // \\HL  = $014d
+        // \\SP  = $fffe
+        // \\PC  = $015c
+        // \\IME = Disabled
+        // \\
+        // \\disassemble:
+        // \\  ->015c: JP $1f54
+        // \\    015f: LD a, $20
+        // \\    0161: LD c, $00
+        // \\    0163: LDH [rJOYP & $FF], a ; =$00
+        // \\    0165: LDH a, [rJOYP & $FF] ; =$00
+        // \\
+        // \\registers:
+        // \\AF  = $0080 (---Z)
+        // \\BC  = $0013
+        // \\DE  = $00d8
+        // \\HL  = $014d
+        // \\SP  = $fffe
+        // \\PC  = $1f54
+        // \\IME = Disabled
+        // \\
+        // \\disassemble:
+        // \\  ->1f54: DI
+        // \\    1f55: XOR a
+        // \\    1f56: LDH [rIF & $FF], a ; =$0f
+        // \\    1f58: LDH [rIE & $FF], a ; =$ff
+        // \\    1f5a: LDH [rSCX & $FF], a ; =$43
         \\
-        \\disassemble:
-        \\  ->0159: LD [$cf1a], a
-        \\    015c: JP $1f54
-        \\    015f: LD a, $20
-        \\    0161: LD c, $00
-        \\    0163: LDH [rJOYP & $FF], a ; =$00
-        \\
-        \\registers:
-        \\AF  = $0080 (---Z)
-        \\BC  = $0013
-        \\DE  = $00d8
-        \\HL  = $014d
-        \\SP  = $fffe
-        \\PC  = $015c
-        \\IME = Disabled
-        \\
-        \\disassemble:
-        \\  ->015c: JP $1f54
-        \\    015f: LD a, $20
-        \\    0161: LD c, $00
-        \\    0163: LDH [rJOYP & $FF], a ; =$00
-        \\    0165: LDH a, [rJOYP & $FF] ; =$00
-        \\
-        \\registers:
-        \\AF  = $0080 (---Z)
-        \\BC  = $0013
-        \\DE  = $00d8
-        \\HL  = $014d
-        \\SP  = $fffe
-        \\PC  = $1f54
-        \\IME = Disabled
-        \\
-        \\disassemble:
-        \\  ->1f54: DI
-        \\    1f55: XOR a
-        \\    1f56: LDH [rIF & $FF], a ; =$0f
-        \\    1f58: LDH [rIE & $FF], a ; =$ff
-        \\    1f5a: LDH [rSCX & $FF], a ; =$43
     );
 
     var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
@@ -336,12 +337,15 @@ test "real world ROM" {
     var cpu = SM83{ .bus = bus };
     cpu.boot();
     const fmt = "registers:\n{}\n\ndisassemble:\n{}\n";
+    // const fmt_debug = "registers:\n{}\n\nopcode: {X:0>2}\ndisassemble:\n{}\n";
     var buf = std.ArrayList(u8).init(std.testing.allocator);
     defer buf.deinit();
     var writer = buf.writer();
 
     var i: usize = 0;
-    while (i < 5) : (i += 1) {
+    while (i < 6) : (i += 1) {
+        // const opcode = cpu.bus.read(cpu.pc);
+        // std.debug.print(fmt_debug, .{ cpu.registers(), opcode, cpu.disassemble(5) });
         try writer.print(fmt, .{ cpu.registers(), cpu.disassemble(5) });
         cpu.step();
     }

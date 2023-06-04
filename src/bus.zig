@@ -54,6 +54,13 @@ pub const Bus = struct {
         }
     }
 
+    pub fn write_16(self: *Bus, addr: u16, data: u16) void {
+        const lo: u8 = @intCast(u8, data << 8);
+        const hi: u8 = @intCast(u8, (data >> 8));
+        self.write(addr, lo);
+        self.write(addr + 1, hi);
+    }
+
     pub fn init(allocator: std.mem.Allocator, rom: Rom) !Bus {
         return Bus{
             .allocator = allocator,

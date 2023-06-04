@@ -189,17 +189,19 @@ pub const SM83 = struct {
                     }
                 },
                 .JR => {
-                    const condition = opcode.operands[0];
-                    const offset = self.read_operand_u8(&opcode.operands[1]);
-                    switch (condition.name) {
-                        .Z => {
-                            if (self.flag(Flag.zero)) {
-                                self.pc +%= offset;
-                            }
-                        },
+                    const offset = self.read_operand_u8(&opcode.operands[opcode.operands.len - 1]);
+                    const condition = if (opcode.operands.len == 1) true else switch (opcode.operands[0].name) {
+                        .Z => self.flag(Flag.zero),
+                        .NZ => !self.flag(Flag.zero),
+                        .C => self.flag(Flag.carry),
+                        .NC => !self.flag(Flag.carry),
                         else => {
-                            panic("Unsupported JR condition: {s}", .{condition.name.string()});
+                            panic("Unsupported JR condition: {s}", .{opcode.operands[0].name.string()});
                         },
+                    };
+
+                    if (condition) {
+                        self.pc +%= offset;
                     }
                 },
                 .CP => {
@@ -228,13 +230,20 @@ pub const SM83 = struct {
                     const to = opcode.operands[0];
                     const from = opcode.operands[1];
                     // FIXME: We should use something like `.double == true` instead
-                    if (from.bytes == 2) {
+                    if (from.bytes == 2 or to.bytes == 2) {
                         const data = self.read_operand_u16(&from);
                         self.write_operand_u16(data, &to);
                     } else {
                         const data = self.read_operand_u8(&from);
                         self.write_operand_u8(data, &to);
                     }
+                },
+                .XOR => {
+                    const operand = opcode.operands[0];
+                    const data = self.read_operand_u8(&operand);
+                    self.a = self.a ^ data;
+                    self.f = 0;
+                    self.set_flag(Flag.zero, self.a == 0);
                 },
                 else => {
                     panic("{s} not implemented!", .{opcode.mnemonic.string()});
@@ -338,6 +347,10 @@ pub const SM83 = struct {
 
     pub fn write_operand_u16(self: *SM83, data: u16, operand: *const Operand) void {
         switch (operand.name) {
+            .d16, .a16 => {
+                const addr = self.read_operand_u16(operand);
+                self.bus.write_16(addr, data);
+            },
             .BC => {
                 self.set_bc(data);
             },
