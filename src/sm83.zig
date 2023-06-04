@@ -36,6 +36,12 @@ pub const SM83 = struct {
     //
 
     a: u8 = 0,
+    /// Flags register
+    ///
+    /// See also:
+    ///
+    /// - `flag` method
+    /// - `set_flag` method
     f: u8 = 0,
     b: u8 = 0,
     c: u8 = 0,
@@ -43,14 +49,6 @@ pub const SM83 = struct {
     e: u8 = 0,
     h: u8 = 0,
     l: u8 = 0,
-
-    /// Flags register
-    ///
-    /// See also:
-    ///
-    /// - `flag` method
-    /// - `set_flag` method
-    flags: u8 = 0,
 
     /// Stack pointer
     sp: u16 = 0,
@@ -123,12 +121,12 @@ pub const SM83 = struct {
     // Flag methods
     //
 
-    pub fn flag(self: SM83, comptime mask: Flag) bool {
-        return (self.flags & @enumToInt(mask)) != 0;
+    pub fn flag(self: *const SM83, comptime mask: Flag) bool {
+        return (self.f & @enumToInt(mask)) != 0;
     }
 
     pub fn set_flag(self: *SM83, comptime mask: Flag, val: bool) void {
-        self.flags = if (val) self.flags | @enumToInt(mask) else self.flags & ~@enumToInt(mask);
+        self.f = if (val) self.f | @enumToInt(mask) else self.f & ~@enumToInt(mask);
     }
 
     /// Basic bootup simulation.
@@ -211,7 +209,7 @@ pub const SM83 = struct {
                     const result = self.a -% n;
                     self.set_flag(Flag.zero, result == 0);
                     self.set_flag(Flag.subtract, true);
-                    // TODO: self.set_flag(Flag.halfCarry, ???);
+                    self.set_flag(Flag.halfCarry, self.a & 8 == 0 and n & 8 == 8);
                     self.set_flag(Flag.carry, self.a < n);
                 },
                 .INC => {
@@ -362,6 +360,38 @@ pub const SM83 = struct {
     pub fn disassemble(self: *const SM83, count: u16) Disassembly {
         return Disassembly{ .cpu = self, .count = count };
     }
+
+    pub fn registers(self: *const SM83) Registers {
+        return Registers{ .cpu = self };
+    }
+};
+
+const Registers = struct {
+    cpu: *const SM83,
+    pub fn format(self: *const Registers, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        const fmt = (
+            \\AF  = ${x:0>4} ({s}{s}{s}{s})
+            \\BC  = ${x:0>4}
+            \\DE  = ${x:0>4}
+            \\HL  = ${x:0>4}
+            \\SP  = ${x:0>4}
+            \\PC  = ${x:0>4}
+            \\IME = Disabled
+        );
+
+        try writer.print(fmt, .{
+            self.cpu.af(),
+            if (self.cpu.flag(.carry)) "C" else "-",
+            if (self.cpu.flag(.halfCarry)) "H" else "-",
+            if (self.cpu.flag(.subtract)) "N" else "-",
+            if (self.cpu.flag(.zero)) "Z" else "-",
+            self.cpu.bc(),
+            self.cpu.de(),
+            self.cpu.hl(),
+            self.cpu.sp,
+            self.cpu.pc,
+        });
+    }
 };
 
 const Disassembly = struct {
@@ -372,9 +402,9 @@ const Disassembly = struct {
         var i: u16 = 0;
         while (i < self.count) : (i += 1) {
             if (addr == self.cpu.pc) {
-                try writer.print("\n->", .{});
+                try writer.print("  ->", .{});
             } else {
-                try writer.print("\n  ", .{});
+                try writer.print("    ", .{});
             }
             const opcode = self.cpu.opcode_at(addr);
 
@@ -411,9 +441,8 @@ const Disassembly = struct {
                 }
                 addr = next_addr;
             }
+            try writer.print("\n", .{});
         }
-
-        try writer.print("\n", .{});
     }
 };
 
