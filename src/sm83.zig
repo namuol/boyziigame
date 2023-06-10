@@ -229,8 +229,7 @@ pub const SM83 = struct {
                 .LD => {
                     const to = opcode.operands[0];
                     const from = opcode.operands[1];
-                    // FIXME: We should use something like `.double == true` instead
-                    if (from.bytes == 2 or to.bytes == 2) {
+                    if (from.immediate and from.bytes == 2) {
                         const data = self.read_operand_u16(&from);
                         self.write_operand_u16(data, &to);
                     } else {
@@ -250,8 +249,6 @@ pub const SM83 = struct {
                 },
             }
 
-            // TODO: Handle flags
-
             self.cyclesLeft = nextCyclesLeft;
         }
 
@@ -267,7 +264,7 @@ pub const SM83 = struct {
         return switch (operand.name) {
             .A => self.a,
             .B => self.b,
-            .C => self.c,
+            .C => if (operand.immediate) self.c else self.bus.read(0xFF00 +% @as(u16, self.c)),
             .D => self.d,
             .E => self.e,
             .H => self.h,
@@ -277,12 +274,19 @@ pub const SM83 = struct {
                 // structs instead so the type checker can help us deal with
                 // this tediousness
                 if (operand.immediate) {
-                    @panic("Cannot get BC as 16-bit immediate value");
+                    @panic("Cannot get BC as 8-bit immediate value");
                 }
 
                 return self.bus.read(self.bc());
             },
             .d8, .r8 => self.bus.read(self.pc),
+            .d16 => {
+                if (!operand.immediate) {
+                    @panic("Cannot read 16-bit immediate value for d16");
+                }
+                const addr = self.bus.read_16(self.pc);
+                return self.bus.read(addr);
+            },
             else => {
                 panic("read_operand_u8 for .{s} not implemented!", .{operand.name.string()});
             },
@@ -294,6 +298,7 @@ pub const SM83 = struct {
         switch (operand.name) {
             .A, .B, .C, .D, .E, .H, .L, .BC => {},
             .d8, .r8 => self.pc +%= 1,
+            .d16 => self.pc +%= 2,
             else => {
                 panic("read_operand_u8 for .{s} not implemented!", .{operand.name.string()});
             },
@@ -327,7 +332,10 @@ pub const SM83 = struct {
 
     pub fn read_operand_u16_safe(self: *const SM83, operand: *const Operand) u16 {
         return switch (operand.name) {
-            .d16, .a16 => self.bus.read_16(self.pc),
+            .d16, .a16 => if (operand.immediate)
+                self.bus.read_16(self.pc)
+            else
+                self.bus.read_16(self.bus.read_16(self.pc)),
             else => {
                 panic("read_operand_u16_safe for .{s} not implemented!", .{operand.name.string()});
             },

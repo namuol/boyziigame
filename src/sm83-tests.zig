@@ -337,15 +337,15 @@ test "real world ROM" {
     var cpu = SM83{ .bus = bus };
     cpu.boot();
     const fmt = "registers:\n{}\n\ndisassemble:\n{}\n";
-    // const fmt_debug = "registers:\n{}\n\nopcode: {X:0>2}\ndisassemble:\n{}\n";
+    const fmt_debug = "registers:\n{}\n\nopcode: {X:0>2}\ndisassemble:\n{}\n";
     var buf = std.ArrayList(u8).init(std.testing.allocator);
     defer buf.deinit();
     var writer = buf.writer();
 
     var i: usize = 0;
     while (i < 6) : (i += 1) {
-        // const opcode = cpu.bus.read(cpu.pc);
-        // std.debug.print(fmt_debug, .{ cpu.registers(), opcode, cpu.disassemble(5) });
+        const opcode = cpu.bus.read(cpu.pc);
+        std.debug.print(fmt_debug, .{ cpu.registers(), opcode, cpu.disassemble(5) });
         try writer.print(fmt, .{ cpu.registers(), cpu.disassemble(5) });
         cpu.step();
     }
