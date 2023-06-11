@@ -2,11 +2,13 @@
 
 const std = @import("std");
 const Rom = @import("./rom.zig").Rom;
+const SM83 = @import("./sm83.zig").SM83;
 
 pub const Bus = struct {
     allocator: std.mem.Allocator,
     rom: Rom,
     ram: []u8,
+    cpu: *const SM83 = undefined,
 
     // Temporary read-error sigil; we should probably look into how the bus
     // behaves when attempting to read from addresses that are out of range.
@@ -23,6 +25,7 @@ pub const Bus = struct {
             0xC000...0xCFFF => return self.ram[addr - 0xC000],
             // 4 KiB Work RAM (WRAM) - In CGB mode, switchable bank 1~7
             0xD000...0xDFFF => return self.ram[addr - 0xC000],
+            0xFF00...0xFFFF => return self.cpu.read_hw_register(@truncate(u8, addr & 0x00FF)),
             // TODO: Follow the rest from the guide
             else => return TEMP_READ_ERROR_SIGIL,
         }

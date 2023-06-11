@@ -14,7 +14,8 @@ const Bus = bus.Bus;
 
 const rom = @import("./rom.zig");
 const Rom = rom.Rom;
-const hardware_register_string = @import("./sm83-hardware-registers.zig").hardware_register_string;
+const hardware_registers = @import("./sm83-hardware-registers.zig");
+const hardware_register_string = hardware_registers.hardware_register_string;
 
 const opcodes = @import("./sm83-opcodes.zig");
 const Opcode = opcodes.Opcode;
@@ -30,7 +31,7 @@ const Flag = enum(u8) {
 };
 
 pub const SM83 = struct {
-    bus: Bus,
+    bus: *Bus,
 
     //
     // General purpose registers
@@ -61,6 +62,25 @@ pub const SM83 = struct {
     // Internals
     //
     cyclesLeft: u8 = 0,
+
+    /// Used to support the `DI` instruction.
+    ///
+    /// From the "Game Boy CPU Manual":
+    ///
+    /// > This instruction disables interrupts but not immediately. Interrupts
+    /// > are disabled after instruction after DI is executed.
+    disableInterruptsAfterNextInstruction: bool = false,
+    enableInterruptsAfterNextInstruction: bool = false,
+
+    hardwareRegisters: [256]u8 = [_]u8{0} ** 256,
+
+    pub fn read_hw_register(self: *const SM83, addr: u8) u8 {
+        return self.hardwareRegisters[addr];
+    }
+
+    pub fn write_hw_register(self: *SM83, addr: u8, data: u8) void {
+        self.hardwareRegisters[addr] = data;
+    }
 
     //
     // 16-bit register methods
@@ -154,9 +174,7 @@ pub const SM83 = struct {
         self.pc = 0x0100;
         self.sp = 0xFFFE;
 
-        // TODO: Initialize hardware registers (on the bus) based on this table:
-        //
-        // https://gbdev.io/pandocs/Power_Up_Sequence.html#hardware-registers
+        hardware_registers.dmg_reset(&self.hardwareRegisters);
     }
 
     pub fn cycle(self: *SM83) bool {
@@ -245,12 +263,25 @@ pub const SM83 = struct {
                     self.f = 0;
                     self.set_flag(Flag.zero, self.a == 0);
                 },
+                .DI => {
+                    self.disableInterruptsAfterNextInstruction = true;
+                },
+                .EI => {
+                    self.enableInterruptsAfterNextInstruction = true;
+                },
                 else => {
                     panic("{s} not implemented!", .{opcode.mnemonic.string()});
                 },
             }
 
             self.cyclesLeft = nextCyclesLeft;
+
+            if (self.disableInterruptsAfterNextInstruction and opcode.mnemonic != .DI) {
+                self.hardwareRegisters[0xFF] = 0x0F & 0b0000;
+            }
+            if (self.enableInterruptsAfterNextInstruction and opcode.mnemonic != .EI) {
+                self.hardwareRegisters[0xFF] = 0x0F & 0b1111;
+            }
         }
 
         self.cyclesLeft -= 1;
@@ -445,7 +476,7 @@ const Disassembly = struct {
             var j: u3 = 0;
 
             // For use with "; =$XX" comment suffixes
-            var read_val: u8 = 0;
+            var comment_val: u8 = 0;
 
             while (j < opcode.operands.len) : (j += 1) {
                 const operand = opcode.operands[j];
@@ -463,8 +494,11 @@ const Disassembly = struct {
                 if (operand.bytes == 2) {
                     try writer.print(" {}", .{OperandValue(u16){ .operand = &operand, .val = self.cpu.bus.read_16(addr), .addr = next_addr }});
                 } else if (operand.bytes == 1) {
-                    read_val = self.cpu.bus.read(addr);
-                    try writer.print(" {}", .{OperandValue(u8){ .operand = &operand, .val = read_val, .addr = next_addr }});
+                    const op = OperandValue(u8){ .operand = &operand, .val = self.cpu.bus.read(addr), .addr = next_addr };
+                    if (operand.name == .a8) {
+                        comment_val = op.val;
+                    }
+                    try writer.print(" {}", .{op});
                 } else if (operand.immediate) {
                     try writer.print(" {s}", .{operand.name.string()});
                 } else {
@@ -478,7 +512,7 @@ const Disassembly = struct {
             }
 
             if (opcode.mnemonic == .LDH) {
-                try writer.print(" ; =${x:0<2}", .{read_val});
+                try writer.print(" ; =${x:0>2}", .{comment_val});
             }
 
             try writer.print("\n", .{});
@@ -491,8 +525,8 @@ fn OperandValue(comptime T: type) type {
         operand: *const Operand,
         val: T,
         addr: u16,
-        const U8_IMM_FMT = "${x:0<2}";
-        const U8_FMT = "[${x:0<2}]";
+        const U8_IMM_FMT = "${x:0>2}";
+        const U8_FMT = "[${x:0>2}]";
         const I8_IMM_FMT = "{}";
         const U16_IMM_FMT = "${x:0>4}";
         const U16_FMT = "[${x:0>4}]";
@@ -507,7 +541,7 @@ fn OperandValue(comptime T: type) type {
                     if (hw_reg_str.len > 0) {
                         return writer.print("[{s} & $FF]", .{hw_reg_str});
                     } else {
-                        return writer.print("[$FF00 + ${x:0<2}]", .{self.val});
+                        return writer.print("[$FF00 + ${x:0>2}]", .{self.val});
                     }
                 },
                 .d8 => {
@@ -536,19 +570,20 @@ fn OperandValue(comptime T: type) type {
 
 const expect = std.testing.expect;
 test "16 bit registers" {
-    const bus_ = try Bus.init(std.testing.allocator, Rom{
+    var bus_ = try Bus.init(std.testing.allocator, Rom{
         ._raw_data = try std.testing.allocator.alloc(u8, 1),
         .allocator = std.testing.allocator,
     });
     defer bus_.deinit();
     defer bus_.rom.deinit();
 
-    try expect((SM83{ .bus = bus_, .a = 0xAA, .f = 0xBB }).af() == 0xAABB);
-    try expect((SM83{ .bus = bus_, .b = 0xAA, .c = 0xBB }).bc() == 0xAABB);
-    try expect((SM83{ .bus = bus_, .d = 0xAA, .e = 0xBB }).de() == 0xAABB);
-    try expect((SM83{ .bus = bus_, .h = 0xAA, .l = 0xBB }).hl() == 0xAABB);
+    try expect((SM83{ .bus = &bus_, .a = 0xAA, .f = 0xBB }).af() == 0xAABB);
+    try expect((SM83{ .bus = &bus_, .b = 0xAA, .c = 0xBB }).bc() == 0xAABB);
+    try expect((SM83{ .bus = &bus_, .d = 0xAA, .e = 0xBB }).de() == 0xAABB);
+    try expect((SM83{ .bus = &bus_, .h = 0xAA, .l = 0xBB }).hl() == 0xAABB);
 
-    var cpu = SM83{ .bus = bus_ };
+    var cpu = SM83{ .bus = &bus_ };
+    bus_.cpu = &cpu;
     cpu.set_af(0xAABB);
     try expect(cpu.a == 0xAA);
     try expect(cpu.f == 0xBB);
@@ -564,13 +599,14 @@ test "16 bit registers" {
 }
 
 test "flags" {
-    const bus_ = try Bus.init(std.testing.allocator, Rom{
+    var bus_ = try Bus.init(std.testing.allocator, Rom{
         ._raw_data = try std.testing.allocator.alloc(u8, 1),
         .allocator = std.testing.allocator,
     });
     defer bus_.deinit();
     defer bus_.rom.deinit();
-    var cpu = SM83{ .bus = bus_ };
+    var cpu = SM83{ .bus = &bus_ };
+    bus_.cpu = &cpu;
 
     try expect(cpu.flag(Flag.zero) == false);
     try expect(cpu.flag(Flag.subtract) == false);
@@ -623,14 +659,15 @@ test "flags" {
 }
 
 test "boot" {
-    const bus_ = try Bus.init(std.testing.allocator, Rom{
+    var bus_ = try Bus.init(std.testing.allocator, Rom{
         ._raw_data = try std.testing.allocator.alloc(u8, 1),
         .allocator = std.testing.allocator,
     });
     defer bus_.deinit();
     defer bus_.rom.deinit();
 
-    var cpu = SM83{ .bus = bus_ };
+    var cpu = SM83{ .bus = &bus_ };
+    bus_.cpu = &cpu;
     cpu.boot();
     try expect(cpu.a == 0x01);
     try expect(cpu.flag(Flag.zero) == true);
@@ -658,18 +695,19 @@ test "SM83::opcode" {
 
     // LD B, D
     raw_data[0x0003] = 0x42;
-    const bus_ = try Bus.init(std.testing.allocator, Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator });
+    var bus_ = try Bus.init(std.testing.allocator, Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator });
     defer bus_.deinit();
     defer bus_.rom.deinit();
-    const sm83 = SM83{ .bus = bus_ };
+    const cpu = SM83{ .bus = &bus_ };
+    bus_.cpu = &cpu;
 
-    var opcode = sm83.opcode_at(0x0000);
+    var opcode = cpu.opcode_at(0x0000);
     try expect(opcode.mnemonic == .NOP);
 
-    opcode = sm83.opcode_at(0x0001);
+    opcode = cpu.opcode_at(0x0001);
     try expect(opcode.mnemonic == .RLC);
 
-    opcode = sm83.opcode_at(0x0003);
+    opcode = cpu.opcode_at(0x0003);
     try expect(opcode.mnemonic == .LD);
     try expect(opcode.operands[0].name == .B);
     try expect(opcode.operands[1].name == .D);
