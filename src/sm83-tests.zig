@@ -278,22 +278,22 @@ test "real world ROM" {
         \\    015c: JP $1f54
         \\    015f: LD a, $20
         \\
-        // \\registers:
-        // \\AF  = $0080 (---Z)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $fffe
-        // \\PC  = $0159
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->0159: LD [$cf1a], a
-        // \\    015c: JP $1f54
-        // \\    015f: LD a, $20
-        // \\    0161: LD c, $00
-        // \\    0163: LDH [rJOYP & $FF], a ; =$00
-        // \\
+        \\registers:
+        \\AF  = $0080 (---Z)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $fffe
+        \\PC  = $0159
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->0159: LD [$cf1a], a
+        \\    015c: JP $1f54
+        \\    015f: LD a, $20
+        \\    0161: LD c, $00
+        \\    0163: LDH [rJOYP & $FF], a ; =$00
+        \\
         // \\registers:
         // \\AF  = $0080 (---Z)
         // \\BC  = $0013
@@ -343,7 +343,7 @@ test "real world ROM" {
     var writer = buf.writer();
 
     var i: usize = 0;
-    while (i < 6) : (i += 1) {
+    while (i < 7) : (i += 1) {
         const opcode = cpu.bus.read(cpu.pc);
         std.debug.print(fmt_debug, .{ cpu.registers(), opcode, cpu.disassemble(5) });
         try writer.print(fmt, .{ cpu.registers(), cpu.disassemble(5) });

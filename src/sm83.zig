@@ -14,6 +14,7 @@ const Bus = bus.Bus;
 
 const rom = @import("./rom.zig");
 const Rom = rom.Rom;
+const hardware_register_string = @import("./sm83-hardware-registers.zig").hardware_register_string;
 
 const opcodes = @import("./sm83-opcodes.zig");
 const Opcode = opcodes.Opcode;
@@ -318,10 +319,18 @@ pub const SM83 = struct {
 
             .BC => {
                 if (operand.immediate) {
-                    panic("Cannot write 8 bit value to BC directly", .{});
+                    panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
                 }
-
                 self.bus.write(self.bc(), data);
+            },
+
+            .a16 => {
+                if (operand.immediate) {
+                    panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
+                }
+                const addr = self.bus.read_16(self.pc);
+                self.pc +%= 2;
+                self.bus.write(addr, data);
             },
 
             else => {
@@ -434,6 +443,10 @@ const Disassembly = struct {
             try writer.print("{x:0>4}: {s}", .{ addr, opcode.mnemonic.string() });
             addr += 1;
             var j: u3 = 0;
+
+            // For use with "; =$XX" comment suffixes
+            var read_val: u8 = 0;
+
             while (j < opcode.operands.len) : (j += 1) {
                 const operand = opcode.operands[j];
                 const next_addr = addr + operand.bytes;
@@ -450,7 +463,8 @@ const Disassembly = struct {
                 if (operand.bytes == 2) {
                     try writer.print(" {}", .{OperandValue(u16){ .operand = &operand, .val = self.cpu.bus.read_16(addr), .addr = next_addr }});
                 } else if (operand.bytes == 1) {
-                    try writer.print(" {}", .{OperandValue(u8){ .operand = &operand, .val = self.cpu.bus.read(addr), .addr = next_addr }});
+                    read_val = self.cpu.bus.read(addr);
+                    try writer.print(" {}", .{OperandValue(u8){ .operand = &operand, .val = read_val, .addr = next_addr }});
                 } else if (operand.immediate) {
                     try writer.print(" {s}", .{operand.name.string()});
                 } else {
@@ -462,6 +476,11 @@ const Disassembly = struct {
                 }
                 addr = next_addr;
             }
+
+            if (opcode.mnemonic == .LDH) {
+                try writer.print(" ; =${x:0<2}", .{read_val});
+            }
+
             try writer.print("\n", .{});
         }
     }
@@ -479,7 +498,19 @@ fn OperandValue(comptime T: type) type {
         const U16_FMT = "[${x:0>4}]";
         pub fn format(self: *const OperandValue(T), comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
             return switch (self.operand.name) {
-                .a8, .d8 => {
+                .a8 => {
+                    if (self.operand.immediate) {
+                        return writer.print(U8_IMM_FMT, .{self.val});
+                    }
+
+                    const hw_reg_str = hardware_register_string(0xFF00 + @as(u16, self.val));
+                    if (hw_reg_str.len > 0) {
+                        return writer.print("[{s} & $FF]", .{hw_reg_str});
+                    } else {
+                        return writer.print("[$FF00 + ${x:0<2}]", .{self.val});
+                    }
+                },
+                .d8 => {
                     if (self.operand.immediate) {
                         return writer.print(U8_IMM_FMT, .{self.val});
                     } else {
