@@ -877,70 +877,70 @@ test "real world ROM log match" {
         \\    1f80: LD [hl], $00
         \\    1f82: INC hl
         \\
-        // \\registers:
-        // \\AF  = $00a0 (-H-Z)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $dfff
-        // \\PC  = $1f7a
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->1f7a: LD hl, $c000
-        // \\    1f7d: LD bc, $2000
-        // \\    1f80: LD [hl], $00
-        // \\    1f82: INC hl
-        // \\    1f83: DEC bc
-        // \\
-        // \\registers:
-        // \\AF  = $00a0 (-H-Z)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $c000
-        // \\SP  = $dfff
-        // \\PC  = $1f7d
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->1f7d: LD bc, $2000
-        // \\    1f80: LD [hl], $00
-        // \\    1f82: INC hl
-        // \\    1f83: DEC bc
-        // \\    1f84: LD a, b
-        // \\
-        // \\registers:
-        // \\AF  = $00a0 (-H-Z)
-        // \\BC  = $2000
-        // \\DE  = $00d8
-        // \\HL  = $c000
-        // \\SP  = $dfff
-        // \\PC  = $1f80
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->1f80: LD [hl], $00
-        // \\    1f82: INC hl
-        // \\    1f83: DEC bc
-        // \\    1f84: LD a, b
-        // \\    1f85: OR c
-        // \\
-        // \\registers:
-        // \\AF  = $00a0 (-H-Z)
-        // \\BC  = $2000
-        // \\DE  = $00d8
-        // \\HL  = $c000
-        // \\SP  = $dfff
-        // \\PC  = $1f82
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->1f82: INC hl
-        // \\    1f83: DEC bc
-        // \\    1f84: LD a, b
-        // \\    1f85: OR c
-        // \\    1f86: JR nz, $1f80
-        // \\
+        \\registers:
+        \\AF  = $00a0 (-H-Z)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $dfff
+        \\PC  = $1f7a
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->1f7a: LD hl, $c000
+        \\    1f7d: LD bc, $2000
+        \\    1f80: LD [hl], $00
+        \\    1f82: INC hl
+        \\    1f83: DEC bc
+        \\
+        \\registers:
+        \\AF  = $00a0 (-H-Z)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $c000
+        \\SP  = $dfff
+        \\PC  = $1f7d
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->1f7d: LD bc, $2000
+        \\    1f80: LD [hl], $00
+        \\    1f82: INC hl
+        \\    1f83: DEC bc
+        \\    1f84: LD a, b
+        \\
+        \\registers:
+        \\AF  = $00a0 (-H-Z)
+        \\BC  = $2000
+        \\DE  = $00d8
+        \\HL  = $c000
+        \\SP  = $dfff
+        \\PC  = $1f80
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->1f80: LD [hl], $00
+        \\    1f82: INC hl
+        \\    1f83: DEC bc
+        \\    1f84: LD a, b
+        \\    1f85: OR c
+        \\
+        \\registers:
+        \\AF  = $00a0 (-H-Z)
+        \\BC  = $2000
+        \\DE  = $00d8
+        \\HL  = $c000
+        \\SP  = $dfff
+        \\PC  = $1f82
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->1f82: INC hl
+        \\    1f83: DEC bc
+        \\    1f84: LD a, b
+        \\    1f85: OR c
+        \\    1f86: JR nz, $1f80
+        \\
         // \\registers:
         // \\AF  = $00a0 (-H-Z)
         // \\BC  = $2000
@@ -1066,15 +1066,15 @@ test "real world ROM log match" {
     cpu.boot();
 
     const fmt = "registers:\n{}\n\ndisassemble:\n{}\n";
-    // const fmt_debug = "registers:\n{}\n\nopcode: {X:0>2}\ndisassemble:\n{}\n";
+    const fmt_debug = "registers:\n{}\n\nopcode: {X:0>2}\ndisassemble:\n{}\n";
     var buf = std.ArrayList(u8).init(std.testing.allocator);
     defer buf.deinit();
     var writer = buf.writer();
 
     var i: usize = 0;
-    while (i < 42) : (i += 1) {
-        // const opcode = cpu.bus.read(cpu.pc);
-        // std.debug.print(fmt_debug, .{ cpu.registers(), opcode, cpu.disassemble(5) });
+    while (i < 46) : (i += 1) {
+        const opcode = cpu.bus.read(cpu.pc);
+        std.debug.print(fmt_debug, .{ cpu.registers(), opcode, cpu.disassemble(5) });
         try writer.print(fmt, .{ cpu.registers(), cpu.disassemble(5) });
         cpu.step();
     }

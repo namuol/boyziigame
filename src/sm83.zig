@@ -281,11 +281,23 @@ pub const SM83 = struct {
                         @panic("Unexpected number of operands for INC");
                     }
                     const param = opcode.operands[0];
-                    if (param.bytes == 2) {
-                        @panic("16 bit INC not implemented");
-                    } else {
-                        const data = self.read_operand_u8(&param);
-                        self.write_operand_u8(data + 1, &param);
+                    switch (param.name) {
+                        .A, .B, .C, .D, .E, .H, .L => {
+                            const data = self.read_operand_u8(&param);
+                            self.write_operand_u8(data +% 1, &param);
+                        },
+                        .BC, .DE, .HL, .SP => {
+                            if (!param.immediate) {
+                                const data = self.read_operand_u8(&param);
+                                self.write_operand_u8(data +% 1, &param);
+                            } else {
+                                const data = self.read_operand_u16(&param);
+                                self.write_operand_u16(data +% 1, &param);
+                            }
+                        },
+                        else => {
+                            panic("Unexpected INC param: {s}", .{param.name.string()});
+                        },
                     }
                 },
                 .LD, .LDH => {
@@ -416,6 +428,16 @@ pub const SM83 = struct {
 
                 return self.bus.read(self.bc());
             },
+            .HL => {
+                // FIXME: Perhaps we should have `Operand` and `Operand16`
+                // structs instead so the type checker can help us deal with
+                // this tediousness
+                if (operand.immediate) {
+                    @panic("Cannot get HL as 8-bit immediate value");
+                }
+
+                return self.bus.read(self.hl());
+            },
             .d8, .r8 => self.bus.read(self.pc),
             .a8 => {
                 const offset = self.bus.read(self.pc);
@@ -446,7 +468,7 @@ pub const SM83 = struct {
     pub fn read_operand_u8(self: *SM83, operand: *const Operand) u8 {
         const result = self.read_operand_u8_safe(operand);
         switch (operand.name) {
-            .A, .B, .C, .D, .E, .H, .L, .BC, ._08H, ._10H, ._18H, ._20H, ._28H, ._30H, ._38H => {},
+            .A, .B, .C, .D, .E, .H, .L, .BC, .HL, ._08H, ._10H, ._18H, ._20H, ._28H, ._30H, ._38H => {},
             .d8, .r8, .a8 => self.pc +%= 1,
             .d16 => self.pc +%= 2,
             else => {
@@ -473,6 +495,13 @@ pub const SM83 = struct {
                 self.bus.write(self.bc(), data);
             },
 
+            .HL => {
+                if (operand.immediate) {
+                    panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
+                }
+                self.bus.write(self.hl(), data);
+            },
+
             .a16 => {
                 if (operand.immediate) {
                     panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
@@ -496,10 +525,11 @@ pub const SM83 = struct {
 
     pub fn read_operand_u16_safe(self: *const SM83, operand: *const Operand) u16 {
         return switch (operand.name) {
-            .d16, .a16 => if (operand.immediate)
+            .d16, .a16 => (if (operand.immediate)
                 self.bus.read_16(self.pc)
             else
-                self.bus.read_16(self.bus.read_16(self.pc)),
+                self.bus.read_16(self.bus.read_16(self.pc))),
+            .HL => self.hl(),
             else => {
                 panic("read_operand_u16_safe for .{s} not implemented!", .{operand.name.string()});
             },
@@ -510,6 +540,7 @@ pub const SM83 = struct {
         const result = self.read_operand_u16_safe(operand);
         switch (operand.name) {
             .d16, .a16 => self.pc +%= 2,
+            .HL => {},
             else => {
                 panic("read_operand_u16 for .{s} not implemented!", .{operand.name.string()});
             },
@@ -525,6 +556,9 @@ pub const SM83 = struct {
             },
             .BC => {
                 self.set_bc(data);
+            },
+            .HL => {
+                self.set_hl(data);
             },
             .SP => {
                 self.sp = data;
