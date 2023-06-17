@@ -70,8 +70,21 @@ pub fn hardware_register_string(addr: u16) []const u8 {
         0xFF73 => "rUNKNOWN3", // (00h) - Bit 0-7 (Read/Write)
         0xFF74 => "rUNKNOWN4", // (00h) - Bit 0-7 (Read/Write) - CGB Mode Only
         0xFF75 => "rUNKNOWN5", // (8Fh) - Bit 4-6 (Read/Write)
-        0xFF76 => "rUNKNOWN6", // (00h) - Always 00h (Read Only)
-        0xFF77 => "rUNKNOWN7", // (00h) - Always 00h (Read Only)
+
+        // SameBoy and other rom disassemblies say these registers contain
+        // current amplitude data for PCM channels.
+        //
+        // May not get around to emulating these but for compatibility with
+        // SameBoy output I track them here.
+        //
+        // See https://github.com/LIJI32/GBVisualizer for details
+        0xFF76 => "rPCM12",
+        0xFF77 => "rPCM34",
+        // TODO: Fill the rest of these in at comptime?
+        0xFFFC => "rPCM34+$085",
+        0xFFFD => "rPCM34+$085",
+        0xFFFE => "rPCM34+$087",
+
         0xFFFF => "rIE", // Interrupt Enable (R/W)
         else => "",
     };

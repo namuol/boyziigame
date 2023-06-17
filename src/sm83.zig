@@ -223,6 +223,14 @@ pub const SM83 = struct {
                         self.pc +%= offset;
                     }
                 },
+                .CALL => {
+                    // Push address of next instruction onto stack
+                    const next_instruction_addr = self.pc +% opcode.bytes;
+                    self.bus.write_16(self.sp, next_instruction_addr);
+                    self.sp -%= 2;
+                    // Jump to the address specified by the call
+                    self.pc = self.read_operand_u16(&opcode.operands[0]);
+                },
                 .CP => {
                     // Compare A with n. This is basically an A - n subtraction
                     // instruction but the results are thrown away.
@@ -245,7 +253,7 @@ pub const SM83 = struct {
                         self.write_operand_u8(data + 1, &param);
                     }
                 },
-                .LD => {
+                .LD, .LDH => {
                     const to = opcode.operands[0];
                     const from = opcode.operands[1];
                     if (from.immediate and from.bytes == 2) {
@@ -364,6 +372,12 @@ pub const SM83 = struct {
                 self.bus.write(addr, data);
             },
 
+            .a8 => {
+                const addr = 0xFF00 + @as(u16, self.bus.read(self.pc));
+                self.pc +%= 1;
+                self.bus.write(addr, data);
+            },
+
             else => {
                 panic("write_operand_u8 for .{s} not implemented!", .{operand.name.string()});
             },
@@ -472,7 +486,13 @@ const Disassembly = struct {
             // For opcode debugging, uncomment this line and comment out the one after it:
             // try writer.print("{x:0>4}: ({X:0>2}) {s}", .{ addr, self.cpu.bus.read(addr), opcode.mnemonic.string() });
             try writer.print("{x:0>4}: {s}", .{ addr, opcode.mnemonic.string() });
-            addr += 1;
+
+            if (opcode.prefixed) {
+                addr += 2;
+            } else {
+                addr += 1;
+            }
+
             var j: u3 = 0;
 
             // For use with "; =$XX" comment suffixes

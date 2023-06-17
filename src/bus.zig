@@ -25,6 +25,7 @@ pub const Bus = struct {
             0xC000...0xCFFF => return self.ram[addr - 0xC000],
             // 4 KiB Work RAM (WRAM) - In CGB mode, switchable bank 1~7
             0xD000...0xDFFF => return self.ram[addr - 0xC000],
+            // Hardware registers
             0xFF00...0xFFFF => return self.cpu.read_hw_register(@truncate(u8, addr & 0x00FF)),
             // TODO: Follow the rest from the guide
             else => return TEMP_READ_ERROR_SIGIL,
@@ -58,8 +59,8 @@ pub const Bus = struct {
     }
 
     pub fn write_16(self: *Bus, addr: u16, data: u16) void {
-        const lo: u8 = @intCast(u8, data << 8);
-        const hi: u8 = @intCast(u8, (data >> 8));
+        const lo: u8 = @truncate(u8, data << 8);
+        const hi: u8 = @truncate(u8, (data >> 8));
         self.write(addr, lo);
         self.write(addr + 1, hi);
     }
