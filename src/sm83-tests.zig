@@ -180,7 +180,30 @@ test "disassemble" {
     try std.testing.expectEqualStrings(expected, actual);
 }
 
-test "real world ROM" {
+// test "real world ROM panic" {
+//     var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
+//     defer rom.deinit();
+
+//     var bus = try Bus.init(std.testing.allocator, rom);
+//     defer bus.deinit();
+
+//     var cpu = SM83{ .bus = &bus };
+//     bus.cpu = &cpu;
+//     cpu.boot();
+
+//     // const fmt_debug = "registers:\n{}\n\nopcode: {X:0>2}\ndisassemble:\n{}\n";
+//     var buf = std.ArrayList(u8).init(std.testing.allocator);
+//     defer buf.deinit();
+
+//     var i: usize = 0;
+//     while (i < 100) : (i += 1) {
+//         // const opcode = cpu.bus.read(cpu.pc);
+//         // std.debug.print(fmt_debug, .{ cpu.registers(), opcode, cpu.disassemble(5) });
+//         cpu.step();
+//     }
+// }
+
+test "real world ROM log match" {
     const expected = (
         \\registers:
         \\AF  = $01b0 (CH-Z)
@@ -710,150 +733,150 @@ test "real world ROM" {
         \\    0071: LDH a, [rLCDC & $FF] ; =$40
         \\    0073: AND $7f
         \\
-        // \\registers:
-        // \\AF  = $9180 (---Z)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $fffc
-        // \\PC  = $006d
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->006d: CP $91
-        // \\    006f: JR nz, $006b
-        // \\    0071: LDH a, [rLCDC & $FF] ; =$40
-        // \\    0073: AND $7f
-        // \\    0075: LDH [rLCDC & $FF], a ; =$40
-        // \\
-        // \\registers:
-        // \\AF  = $91c0 (--NZ)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $fffc
-        // \\PC  = $006f
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->006f: JR nz, $006b
-        // \\    0071: LDH a, [rLCDC & $FF] ; =$40
-        // \\    0073: AND $7f
-        // \\    0075: LDH [rLCDC & $FF], a ; =$40
-        // \\    0077: LD a, b
-        // \\
-        // \\registers:
-        // \\AF  = $91c0 (--NZ)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $fffc
-        // \\PC  = $0071
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->0071: LDH a, [rLCDC & $FF] ; =$40
-        // \\    0073: AND $7f
-        // \\    0075: LDH [rLCDC & $FF], a ; =$40
-        // \\    0077: LD a, b
-        // \\    0078: LDH [rIE & $FF], a ; =$ff
-        // \\
-        // \\registers:
-        // \\AF  = $80c0 (--NZ)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $fffc
-        // \\PC  = $0073
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->0073: AND $7f
-        // \\    0075: LDH [rLCDC & $FF], a ; =$40
-        // \\    0077: LD a, b
-        // \\    0078: LDH [rIE & $FF], a ; =$ff
-        // \\    007a: RET
-        // \\
-        // \\registers:
-        // \\AF  = $00a0 (-H-Z)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $fffc
-        // \\PC  = $0075
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->0075: LDH [rLCDC & $FF], a ; =$40
-        // \\    0077: LD a, b
-        // \\    0078: LDH [rIE & $FF], a ; =$ff
-        // \\    007a: RET
-        // \\    007b: LDH a, [rLCDC & $FF] ; =$40
-        // \\
-        // \\registers:
-        // \\AF  = $00a0 (-H-Z)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $fffc
-        // \\PC  = $0077
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->0077: LD a, b
-        // \\    0078: LDH [rIE & $FF], a ; =$ff
-        // \\    007a: RET
-        // \\    007b: LDH a, [rLCDC & $FF] ; =$40
-        // \\    007d: SET a, 7
-        // \\
-        // \\registers:
-        // \\AF  = $00a0 (-H-Z)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $fffc
-        // \\PC  = $0078
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->0078: LDH [rIE & $FF], a ; =$ff
-        // \\    007a: RET
-        // \\    007b: LDH a, [rLCDC & $FF] ; =$40
-        // \\    007d: SET a, 7
-        // \\    007f: LDH [rLCDC & $FF], a ; =$40
-        // \\
-        // \\registers:
-        // \\AF  = $00a0 (-H-Z)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $fffc
-        // \\PC  = $007a
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->007a: RET
-        // \\    007b: LDH a, [rLCDC & $FF] ; =$40
-        // \\    007d: SET a, 7
-        // \\    007f: LDH [rLCDC & $FF], a ; =$40
-        // \\    0081: RET
-        // \\
-        // \\registers:
-        // \\AF  = $00a0 (-H-Z)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $fffe
-        // \\PC  = $1f77
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->1f77: LD sp, $dfff
-        // \\    1f7a: LD hl, $c000
-        // \\    1f7d: LD bc, $2000
-        // \\    1f80: LD [hl], $00
-        // \\    1f82: INC hl
-        // \\
+        \\registers:
+        \\AF  = $9180 (---Z)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $fffc
+        \\PC  = $006d
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->006d: CP $91
+        \\    006f: JR nz, $006b
+        \\    0071: LDH a, [rLCDC & $FF] ; =$40
+        \\    0073: AND $7f
+        \\    0075: LDH [rLCDC & $FF], a ; =$40
+        \\
+        \\registers:
+        \\AF  = $91c0 (--NZ)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $fffc
+        \\PC  = $006f
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->006f: JR nz, $006b
+        \\    0071: LDH a, [rLCDC & $FF] ; =$40
+        \\    0073: AND $7f
+        \\    0075: LDH [rLCDC & $FF], a ; =$40
+        \\    0077: LD a, b
+        \\
+        \\registers:
+        \\AF  = $91c0 (--NZ)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $fffc
+        \\PC  = $0071
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->0071: LDH a, [rLCDC & $FF] ; =$40
+        \\    0073: AND $7f
+        \\    0075: LDH [rLCDC & $FF], a ; =$40
+        \\    0077: LD a, b
+        \\    0078: LDH [rIE & $FF], a ; =$ff
+        \\
+        \\registers:
+        \\AF  = $80c0 (--NZ)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $fffc
+        \\PC  = $0073
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->0073: AND $7f
+        \\    0075: LDH [rLCDC & $FF], a ; =$40
+        \\    0077: LD a, b
+        \\    0078: LDH [rIE & $FF], a ; =$ff
+        \\    007a: RET
+        \\
+        \\registers:
+        \\AF  = $00a0 (-H-Z)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $fffc
+        \\PC  = $0075
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->0075: LDH [rLCDC & $FF], a ; =$40
+        \\    0077: LD a, b
+        \\    0078: LDH [rIE & $FF], a ; =$ff
+        \\    007a: RET
+        \\    007b: LDH a, [rLCDC & $FF] ; =$40
+        \\
+        \\registers:
+        \\AF  = $00a0 (-H-Z)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $fffc
+        \\PC  = $0077
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->0077: LD a, b
+        \\    0078: LDH [rIE & $FF], a ; =$ff
+        \\    007a: RET
+        \\    007b: LDH a, [rLCDC & $FF] ; =$40
+        \\    007d: SET a, 7
+        \\
+        \\registers:
+        \\AF  = $00a0 (-H-Z)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $fffc
+        \\PC  = $0078
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->0078: LDH [rIE & $FF], a ; =$ff
+        \\    007a: RET
+        \\    007b: LDH a, [rLCDC & $FF] ; =$40
+        \\    007d: SET a, 7
+        \\    007f: LDH [rLCDC & $FF], a ; =$40
+        \\
+        \\registers:
+        \\AF  = $00a0 (-H-Z)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $fffc
+        \\PC  = $007a
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->007a: RET
+        \\    007b: LDH a, [rLCDC & $FF] ; =$40
+        \\    007d: SET a, 7
+        \\    007f: LDH [rLCDC & $FF], a ; =$40
+        \\    0081: RET
+        \\
+        \\registers:
+        \\AF  = $00a0 (-H-Z)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $fffe
+        \\PC  = $1f77
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->1f77: LD sp, $dfff
+        \\    1f7a: LD hl, $c000
+        \\    1f7d: LD bc, $2000
+        \\    1f80: LD [hl], $00
+        \\    1f82: INC hl
+        \\
         // \\registers:
         // \\AF  = $00a0 (-H-Z)
         // \\BC  = $0013
@@ -1049,7 +1072,7 @@ test "real world ROM" {
     var writer = buf.writer();
 
     var i: usize = 0;
-    while (i < 33) : (i += 1) {
+    while (i < 42) : (i += 1) {
         // const opcode = cpu.bus.read(cpu.pc);
         // std.debug.print(fmt_debug, .{ cpu.registers(), opcode, cpu.disassemble(5) });
         try writer.print(fmt, .{ cpu.registers(), cpu.disassemble(5) });

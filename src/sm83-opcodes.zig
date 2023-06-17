@@ -10463,11 +10463,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -10488,11 +10488,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -10513,11 +10513,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -10538,11 +10538,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -10563,11 +10563,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -10588,11 +10588,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -10613,12 +10613,12 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._0,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -10638,11 +10638,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -10663,11 +10663,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -10688,11 +10688,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -10713,11 +10713,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -10738,11 +10738,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -10763,11 +10763,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -10788,11 +10788,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -10813,12 +10813,12 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._1,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -10838,11 +10838,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -10863,11 +10863,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -10888,11 +10888,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -10913,11 +10913,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -10938,11 +10938,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -10963,11 +10963,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -10988,11 +10988,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -11013,12 +11013,12 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._2,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -11038,11 +11038,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -11063,11 +11063,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -11088,11 +11088,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -11113,11 +11113,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -11138,11 +11138,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -11163,11 +11163,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -11188,11 +11188,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -11213,12 +11213,12 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._3,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -11238,11 +11238,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -11263,11 +11263,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -11288,11 +11288,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -11313,11 +11313,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -11338,11 +11338,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -11363,11 +11363,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -11388,11 +11388,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -11413,12 +11413,12 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._4,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -11438,11 +11438,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -11463,11 +11463,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -11488,11 +11488,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -11513,11 +11513,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -11538,11 +11538,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -11563,11 +11563,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -11588,11 +11588,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -11613,12 +11613,12 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._5,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -11638,11 +11638,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -11663,11 +11663,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -11688,11 +11688,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -11713,11 +11713,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -11738,11 +11738,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -11763,11 +11763,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -11788,11 +11788,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -11813,12 +11813,12 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._6,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -11838,11 +11838,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -11863,11 +11863,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },
@@ -11888,11 +11888,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },
@@ -11913,11 +11913,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },
@@ -11938,11 +11938,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },
@@ -11963,11 +11963,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },
@@ -11988,11 +11988,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },
@@ -12013,12 +12013,12 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._7,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -12038,11 +12038,11 @@ pub const PREFIXED = [256]Opcode{
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },

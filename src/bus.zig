@@ -8,7 +8,7 @@ pub const Bus = struct {
     allocator: std.mem.Allocator,
     rom: Rom,
     ram: []u8,
-    cpu: *const SM83 = undefined,
+    cpu: *SM83 = undefined,
 
     // Temporary read-error sigil; we should probably look into how the bus
     // behaves when attempting to read from addresses that are out of range.
@@ -25,7 +25,7 @@ pub const Bus = struct {
             0xC000...0xCFFF => return self.ram[addr - 0xC000],
             // 4 KiB Work RAM (WRAM) - In CGB mode, switchable bank 1~7
             0xD000...0xDFFF => return self.ram[addr - 0xC000],
-            // Hardware registers
+            // Hardware registers/HRAM
             0xFF00...0xFFFF => return self.cpu.read_hw_register(@truncate(u8, addr & 0x00FF)),
             // TODO: Follow the rest from the guide
             else => return TEMP_READ_ERROR_SIGIL,
@@ -51,15 +51,19 @@ pub const Bus = struct {
             0xC000...0xCFFF => self.ram[addr - 0xC000] = data,
             // 4 KiB Work RAM (WRAM) - In CGB mode, switchable bank 1~7
             0xD000...0xDFFF => self.ram[addr - 0xC000] = data,
+
+            // Hardware registers/HRAM
+            0xFF00...0xFFFF => self.cpu.write_hw_register(@truncate(u8, addr & 0x00FF), data),
+
             // TODO: Follow the rest from the guide
             else => {
-                // Do nothing
+                @panic("Dunno how to write to that");
             },
         }
     }
 
     pub fn write_16(self: *Bus, addr: u16, data: u16) void {
-        const lo: u8 = @truncate(u8, data << 8);
+        const lo: u8 = @truncate(u8, data);
         const hi: u8 = @truncate(u8, (data >> 8));
         self.write(addr, lo);
         self.write(addr + 1, hi);

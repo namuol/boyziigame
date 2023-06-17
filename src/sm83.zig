@@ -75,10 +75,12 @@ pub const SM83 = struct {
     hardwareRegisters: [256]u8 = [_]u8{0} ** 256,
 
     pub fn read_hw_register(self: *const SM83, addr: u8) u8 {
+        // std.debug.print("read_hw_register(0x{x:0>2}) = 0x{x:0>2}\n", .{ addr, self.hardwareRegisters[addr] });
         return self.hardwareRegisters[addr];
     }
 
     pub fn write_hw_register(self: *SM83, addr: u8, data: u8) void {
+        // std.debug.print("write_hw_register(0x{x:0>2}, 0x{x:0>2})\n", .{ addr, data });
         self.hardwareRegisters[addr] = data;
     }
 
@@ -175,6 +177,12 @@ pub const SM83 = struct {
         self.sp = 0xFFFE;
 
         hardware_registers.dmg_reset(&self.hardwareRegisters);
+
+        // HACK: Initialize rLCD to 0x80; LCD & PPU enabled, all other flags unset
+        self.hardwareRegisters[0x40] = 0x80;
+
+        // HACK: Initialize rLY to 0x91 (145), first vblank row of pixels.
+        self.hardwareRegisters[0x44] = 0x91;
     }
 
     pub fn cycle(self: *SM83) bool {
@@ -229,11 +237,34 @@ pub const SM83 = struct {
                 },
                 .CALL => {
                     // Push address of next instruction onto stack
-                    const next_instruction_addr = self.pc +% opcode.bytes;
-                    self.bus.write_16(self.sp, next_instruction_addr);
+                    const next_instruction_addr = self.pc +% opcode.bytes -% 1;
+                    // std.debug.print("next_instruction_addr = ${x:0>4}\n", .{next_instruction_addr});
                     self.sp -%= 2;
+                    self.bus.write_16(self.sp, next_instruction_addr);
                     // Jump to the address specified by the call
                     self.pc = self.read_operand_u16(&opcode.operands[0]);
+                },
+                .RET => {
+                    switch (opcode.operands.len) {
+                        0 => {
+                            // Pop two bytes from stack & jump to that address.
+                            const addr = self.bus.read_16(self.sp);
+                            self.sp +%= 2;
+                            self.pc = addr;
+                        },
+                        else => {
+                            @panic("RET with nonzero operand not implemented!");
+                        },
+                    }
+                },
+                .RST => {
+                    // Push present address onto stack.
+                    self.bus.write_16(self.sp, self.pc);
+                    self.sp -%= 2;
+
+                    // Jump to address $0000 + n
+                    const offset = self.read_operand_u8(&opcode.operands[0]);
+                    self.pc = 0x0000 + @intCast(u16, offset);
                 },
                 .CP => {
                     // Compare A with n. This is basically an A - n subtraction
@@ -268,6 +299,16 @@ pub const SM83 = struct {
                         self.write_operand_u8(data, &to);
                     }
                 },
+                .AND => {
+                    const operand = opcode.operands[0];
+                    const data = self.read_operand_u8(&operand);
+                    self.a = self.a & data;
+                    self.f = 0;
+                    self.set_flag(Flag.zero, self.a == 0);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, true);
+                    self.set_flag(Flag.carry, false);
+                },
                 .XOR => {
                     const operand = opcode.operands[0];
                     const data = self.read_operand_u8(&operand);
@@ -282,18 +323,18 @@ pub const SM83 = struct {
                     self.enableInterruptsAfterNextInstruction = true;
                 },
 
-                // .ADD => {
-                //     const to = opcode.operands[0];
-                //     const from = opcode.operands[1];
-                //     const val = self.read_operand_u8(&to);
-                //     const n = self.read_operand_u8(&from);
-                //     const result = val +% n;
-                //     self.write_operand_u8(result, &to);
-                //     self.set_flag(Flag.zero, result == 0);
-                //     self.set_flag(Flag.subtract, true);
-                //     self.set_flag(Flag.halfCarry, val & 8 == 0 and n & 8 == 8);
-                //     self.set_flag(Flag.carry, val < n);
-                // },
+                .ADD => {
+                    const to = opcode.operands[0];
+                    const from = opcode.operands[1];
+                    const val = self.read_operand_u8(&to);
+                    const n = self.read_operand_u8(&from);
+                    const result = val +% n;
+                    self.write_operand_u8(result, &to);
+                    self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.subtract, true);
+                    self.set_flag(Flag.halfCarry, val & 8 == 0 and n & 8 == 8);
+                    self.set_flag(Flag.carry, val < n);
+                },
 
                 .RES => {
                     // Reset bit `b` in register `r`
@@ -387,6 +428,15 @@ pub const SM83 = struct {
                 const addr = self.bus.read_16(self.pc);
                 return self.bus.read(addr);
             },
+
+            ._08H => 0x08,
+            ._10H => 0x10,
+            ._18H => 0x18,
+            ._20H => 0x20,
+            ._28H => 0x28,
+            ._30H => 0x30,
+            ._38H => 0x38,
+
             else => {
                 panic("read_operand_u8 for .{s} not implemented!", .{operand.name.string()});
             },
@@ -396,7 +446,7 @@ pub const SM83 = struct {
     pub fn read_operand_u8(self: *SM83, operand: *const Operand) u8 {
         const result = self.read_operand_u8_safe(operand);
         switch (operand.name) {
-            .A, .B, .C, .D, .E, .H, .L, .BC => {},
+            .A, .B, .C, .D, .E, .H, .L, .BC, ._08H, ._10H, ._18H, ._20H, ._28H, ._30H, ._38H => {},
             .d8, .r8, .a8 => self.pc +%= 1,
             .d16 => self.pc +%= 2,
             else => {
@@ -475,6 +525,9 @@ pub const SM83 = struct {
             },
             .BC => {
                 self.set_bc(data);
+            },
+            .SP => {
+                self.sp = data;
             },
             else => {
                 panic("write_operand_u16 for .{s} not implemented!", .{operand.name.string()});
@@ -786,7 +839,7 @@ test "SM83::opcode" {
     var bus_ = try Bus.init(std.testing.allocator, Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator });
     defer bus_.deinit();
     defer bus_.rom.deinit();
-    const cpu = SM83{ .bus = &bus_ };
+    var cpu = SM83{ .bus = &bus_ };
     bus_.cpu = &cpu;
 
     var opcode = cpu.opcode_at(0x0000);
