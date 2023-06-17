@@ -630,22 +630,22 @@ test "real world ROM" {
         \\    0067: RES a, 0
         \\    0069: LDH [rIE & $FF], a ; =$ff
         \\
-        // \\registers:
-        // \\AF  = $0080 (---Z)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $fffc
-        // \\PC  = $0064
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->0064: LDH a, [rIE & $FF] ; =$ff
-        // \\    0066: LD b, a
-        // \\    0067: RES a, 0
-        // \\    0069: LDH [rIE & $FF], a ; =$ff
-        // \\    006b: LDH a, [rLY & $FF] ; =$44
-        // \\
+        \\registers:
+        \\AF  = $0080 (---Z)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $fffc
+        \\PC  = $0064
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->0064: LDH a, [rIE & $FF] ; =$ff
+        \\    0066: LD b, a
+        \\    0067: RES a, 0
+        \\    0069: LDH [rIE & $FF], a ; =$ff
+        \\    006b: LDH a, [rLY & $FF] ; =$44
+        \\
         // \\registers:
         // \\AF  = $0080 (---Z)
         // \\BC  = $0013
@@ -1049,7 +1049,7 @@ test "real world ROM" {
     var writer = buf.writer();
 
     var i: usize = 0;
-    while (i < 28) : (i += 1) {
+    while (i < 29) : (i += 1) {
         // const opcode = cpu.bus.read(cpu.pc);
         // std.debug.print(fmt_debug, .{ cpu.registers(), opcode, cpu.disassemble(5) });
         try writer.print(fmt, .{ cpu.registers(), cpu.disassemble(5) });

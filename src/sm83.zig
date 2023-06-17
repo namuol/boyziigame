@@ -320,6 +320,10 @@ pub const SM83 = struct {
                 return self.bus.read(self.bc());
             },
             .d8, .r8 => self.bus.read(self.pc),
+            .a8 => {
+                const offset = self.bus.read(self.pc);
+                return self.bus.read(0xFF00 +% @as(u16, offset));
+            },
             .d16 => {
                 if (!operand.immediate) {
                     @panic("Cannot read 16-bit immediate value for d16");
@@ -337,7 +341,7 @@ pub const SM83 = struct {
         const result = self.read_operand_u8_safe(operand);
         switch (operand.name) {
             .A, .B, .C, .D, .E, .H, .L, .BC => {},
-            .d8, .r8 => self.pc +%= 1,
+            .d8, .r8, .a8 => self.pc +%= 1,
             .d16 => self.pc +%= 2,
             else => {
                 panic("read_operand_u8 for .{s} not implemented!", .{operand.name.string()});
