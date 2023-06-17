@@ -678,38 +678,38 @@ test "real world ROM" {
         \\    006d: CP $91
         \\    006f: JR nz, $006b
         \\
-        // \\registers:
-        // \\AF  = $0080 (---Z)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $fffc
-        // \\PC  = $0069
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->0069: LDH [rIE & $FF], a ; =$ff
-        // \\    006b: LDH a, [rLY & $FF] ; =$44
-        // \\    006d: CP $91
-        // \\    006f: JR nz, $006b
-        // \\    0071: LDH a, [rLCDC & $FF] ; =$40
-        // \\
-        // \\registers:
-        // \\AF  = $0080 (---Z)
-        // \\BC  = $0013
-        // \\DE  = $00d8
-        // \\HL  = $014d
-        // \\SP  = $fffc
-        // \\PC  = $006b
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->006b: LDH a, [rLY & $FF] ; =$44
-        // \\    006d: CP $91
-        // \\    006f: JR nz, $006b
-        // \\    0071: LDH a, [rLCDC & $FF] ; =$40
-        // \\    0073: AND $7f
-        // \\
+        \\registers:
+        \\AF  = $0080 (---Z)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $fffc
+        \\PC  = $0069
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->0069: LDH [rIE & $FF], a ; =$ff
+        \\    006b: LDH a, [rLY & $FF] ; =$44
+        \\    006d: CP $91
+        \\    006f: JR nz, $006b
+        \\    0071: LDH a, [rLCDC & $FF] ; =$40
+        \\
+        \\registers:
+        \\AF  = $0080 (---Z)
+        \\BC  = $0013
+        \\DE  = $00d8
+        \\HL  = $014d
+        \\SP  = $fffc
+        \\PC  = $006b
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->006b: LDH a, [rLY & $FF] ; =$44
+        \\    006d: CP $91
+        \\    006f: JR nz, $006b
+        \\    0071: LDH a, [rLCDC & $FF] ; =$40
+        \\    0073: AND $7f
+        \\
         // \\registers:
         // \\AF  = $9180 (---Z)
         // \\BC  = $0013
@@ -1049,7 +1049,7 @@ test "real world ROM" {
     var writer = buf.writer();
 
     var i: usize = 0;
-    while (i < 31) : (i += 1) {
+    while (i < 33) : (i += 1) {
         // const opcode = cpu.bus.read(cpu.pc);
         // std.debug.print(fmt_debug, .{ cpu.registers(), opcode, cpu.disassemble(5) });
         try writer.print(fmt, .{ cpu.registers(), cpu.disassemble(5) });

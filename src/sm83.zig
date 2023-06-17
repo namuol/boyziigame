@@ -184,7 +184,11 @@ pub const SM83 = struct {
         // has reached 0.
         if (self.cyclesLeft == 0) {
             const opcode = self.opcode_at(self.pc);
-            self.pc +%= 1;
+            if (opcode.prefixed) {
+                self.pc +%= 2;
+            } else {
+                self.pc +%= 1;
+            }
 
             // Set the cycle counter to the first cycle count; for some
             // instructions like conditional jumps, the number of cycles
@@ -277,6 +281,19 @@ pub const SM83 = struct {
                 .EI => {
                     self.enableInterruptsAfterNextInstruction = true;
                 },
+
+                // .ADD => {
+                //     const to = opcode.operands[0];
+                //     const from = opcode.operands[1];
+                //     const val = self.read_operand_u8(&to);
+                //     const n = self.read_operand_u8(&from);
+                //     const result = val +% n;
+                //     self.write_operand_u8(result, &to);
+                //     self.set_flag(Flag.zero, result == 0);
+                //     self.set_flag(Flag.subtract, true);
+                //     self.set_flag(Flag.halfCarry, val & 8 == 0 and n & 8 == 8);
+                //     self.set_flag(Flag.carry, val < n);
+                // },
 
                 .RES => {
                     // Reset bit `b` in register `r`
