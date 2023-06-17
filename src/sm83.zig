@@ -277,6 +277,45 @@ pub const SM83 = struct {
                 .EI => {
                     self.enableInterruptsAfterNextInstruction = true;
                 },
+
+                .RES => {
+                    // Reset bit `b` in register `r`
+                    const bit = opcode.operands[1];
+                    const mask: u8 = switch (bit.name) {
+                        ._0 => 0b1111_1110,
+                        ._1 => 0b1111_1101,
+                        ._2 => 0b1111_1111,
+                        ._3 => 0b1111_0111,
+                        ._4 => 0b1110_1111,
+                        ._5 => 0b1101_1111,
+                        ._6 => 0b1011_1111,
+                        ._7 => 0b0111_1111,
+                        else => {
+                            panic("Unexpected bit operand for RES operation: {s}", .{bit.name.string()});
+                        },
+                    };
+                    const register = opcode.operands[0];
+                    switch (register.name) {
+                        .A => self.a &= mask,
+                        .B => self.b &= mask,
+                        .C => self.c &= mask,
+                        .D => self.d &= mask,
+                        .E => self.e &= mask,
+                        .H => self.h &= mask,
+                        .L => self.l &= mask,
+                        .HL => {
+                            // I assume we are meant to reset the bit of the
+                            // byte at the address contained in the `hl`
+                            // register:
+                            const addr = self.hl();
+                            const val = self.bus.read(addr) & mask;
+                            self.bus.write(addr, val);
+                        },
+                        else => {
+                            panic("Unexpected register operand for RES operation: {s}", .{register.name.string()});
+                        },
+                    }
+                },
                 else => {
                     panic("{s} not implemented!", .{opcode.mnemonic.string()});
                 },
@@ -576,7 +615,15 @@ fn OperandValue(comptime T: type) type {
                     }
                 },
                 .r8 => {
-                    return writer.print(U16_IMM_FMT, .{@intCast(u16, @intCast(i16, self.addr) +% @intCast(i8, self.val))});
+                    const offset = @bitCast(i8, @truncate(u8, self.val));
+
+                    // There *must* be a better way to do this in zig:
+                    const new_addr: u16 = if (offset > 0)
+                        self.addr +% @intCast(u16, offset)
+                    else
+                        self.addr -% @intCast(u16, -offset);
+
+                    return writer.print(U16_IMM_FMT, .{new_addr});
                 },
 
                 .a16, .d16 => {
