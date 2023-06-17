@@ -941,117 +941,118 @@ test "real world ROM log match" {
         \\    1f85: OR c
         \\    1f86: JR nz, $1f80
         \\
-        // \\registers:
-        // \\AF  = $00a0 (-H-Z)
-        // \\BC  = $2000
-        // \\DE  = $00d8
-        // \\HL  = $c001
-        // \\SP  = $dfff
-        // \\PC  = $1f83
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->1f83: DEC bc
-        // \\    1f84: LD a, b
-        // \\    1f85: OR c
-        // \\    1f86: JR nz, $1f80
-        // \\    1f88: CALL $2004
-        // \\
-        // \\registers:
-        // \\AF  = $00a0 (-H-Z)
-        // \\BC  = $1fff
-        // \\DE  = $00d8
-        // \\HL  = $c001
-        // \\SP  = $dfff
-        // \\PC  = $1f84
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->1f84: LD a, b
-        // \\    1f85: OR c
-        // \\    1f86: JR nz, $1f80
-        // \\    1f88: CALL $2004
-        // \\    1f8b: LD hl, $ff80
-        // \\
-        // \\registers:
-        // \\AF  = $1fa0 (-H-Z)
-        // \\BC  = $1fff
-        // \\DE  = $00d8
-        // \\HL  = $c001
-        // \\SP  = $dfff
-        // \\PC  = $1f85
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->1f85: OR c
-        // \\    1f86: JR nz, $1f80
-        // \\    1f88: CALL $2004
-        // \\    1f8b: LD hl, $ff80
-        // \\    1f8e: LD bc, $007f
-        // \\
-        // \\registers:
-        // \\AF  = $ff00 (----)
-        // \\BC  = $1fff
-        // \\DE  = $00d8
-        // \\HL  = $c001
-        // \\SP  = $dfff
-        // \\PC  = $1f86
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->1f86: JR nz, $1f80
-        // \\    1f88: CALL $2004
-        // \\    1f8b: LD hl, $ff80
-        // \\    1f8e: LD bc, $007f
-        // \\    1f91: CALL $36e0
-        // \\
-        // \\registers:
-        // \\AF  = $ff00 (----)
-        // \\BC  = $1fff
-        // \\DE  = $00d8
-        // \\HL  = $c001
-        // \\SP  = $dfff
-        // \\PC  = $1f80
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->1f80: LD [hl], $00
-        // \\    1f82: INC hl
-        // \\    1f83: DEC bc
-        // \\    1f84: LD a, b
-        // \\    1f85: OR c
-        // \\
-        // \\registers:
-        // \\AF  = $ff00 (----)
-        // \\BC  = $1fff
-        // \\DE  = $00d8
-        // \\HL  = $c001
-        // \\SP  = $dfff
-        // \\PC  = $1f82
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->1f82: INC hl
-        // \\    1f83: DEC bc
-        // \\    1f84: LD a, b
-        // \\    1f85: OR c
-        // \\    1f86: JR nz, $1f80
-        // \\
-        // \\registers:
-        // \\AF  = $ff00 (----)
-        // \\BC  = $1fff
-        // \\DE  = $00d8
-        // \\HL  = $c002
-        // \\SP  = $dfff
-        // \\PC  = $1f83
-        // \\IME = Disabled
-        // \\
-        // \\disassemble:
-        // \\  ->1f83: DEC bc
-        // \\    1f84: LD a, b
-        // \\    1f85: OR c
-        // \\    1f86: JR nz, $1f80
-        // \\    1f88: CALL $2004
+        \\registers:
+        \\AF  = $00a0 (-H-Z)
+        \\BC  = $2000
+        \\DE  = $00d8
+        \\HL  = $c001
+        \\SP  = $dfff
+        \\PC  = $1f83
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->1f83: DEC bc
+        \\    1f84: LD a, b
+        \\    1f85: OR c
+        \\    1f86: JR nz, $1f80
+        \\    1f88: CALL $2004
+        \\
+        \\registers:
+        \\AF  = $00a0 (-H-Z)
+        \\BC  = $1fff
+        \\DE  = $00d8
+        \\HL  = $c001
+        \\SP  = $dfff
+        \\PC  = $1f84
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->1f84: LD a, b
+        \\    1f85: OR c
+        \\    1f86: JR nz, $1f80
+        \\    1f88: CALL $2004
+        \\    1f8b: LD hl, $ff80
+        \\
+        \\registers:
+        \\AF  = $1fa0 (-H-Z)
+        \\BC  = $1fff
+        \\DE  = $00d8
+        \\HL  = $c001
+        \\SP  = $dfff
+        \\PC  = $1f85
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->1f85: OR c
+        \\    1f86: JR nz, $1f80
+        \\    1f88: CALL $2004
+        \\    1f8b: LD hl, $ff80
+        \\    1f8e: LD bc, $007f
+        \\
+        \\registers:
+        \\AF  = $ff00 (----)
+        \\BC  = $1fff
+        \\DE  = $00d8
+        \\HL  = $c001
+        \\SP  = $dfff
+        \\PC  = $1f86
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->1f86: JR nz, $1f80
+        \\    1f88: CALL $2004
+        \\    1f8b: LD hl, $ff80
+        \\    1f8e: LD bc, $007f
+        \\    1f91: CALL $36e0
+        \\
+        \\registers:
+        \\AF  = $ff00 (----)
+        \\BC  = $1fff
+        \\DE  = $00d8
+        \\HL  = $c001
+        \\SP  = $dfff
+        \\PC  = $1f80
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->1f80: LD [hl], $00
+        \\    1f82: INC hl
+        \\    1f83: DEC bc
+        \\    1f84: LD a, b
+        \\    1f85: OR c
+        \\
+        \\registers:
+        \\AF  = $ff00 (----)
+        \\BC  = $1fff
+        \\DE  = $00d8
+        \\HL  = $c001
+        \\SP  = $dfff
+        \\PC  = $1f82
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->1f82: INC hl
+        \\    1f83: DEC bc
+        \\    1f84: LD a, b
+        \\    1f85: OR c
+        \\    1f86: JR nz, $1f80
+        \\
+        \\registers:
+        \\AF  = $ff00 (----)
+        \\BC  = $1fff
+        \\DE  = $00d8
+        \\HL  = $c002
+        \\SP  = $dfff
+        \\PC  = $1f83
+        \\IME = Disabled
+        \\
+        \\disassemble:
+        \\  ->1f83: DEC bc
+        \\    1f84: LD a, b
+        \\    1f85: OR c
+        \\    1f86: JR nz, $1f80
+        \\    1f88: CALL $2004
+        \\
         \\
     );
 
@@ -1066,15 +1067,15 @@ test "real world ROM log match" {
     cpu.boot();
 
     const fmt = "registers:\n{}\n\ndisassemble:\n{}\n";
-    const fmt_debug = "registers:\n{}\n\nopcode: {X:0>2}\ndisassemble:\n{}\n";
+    // const fmt_debug = "registers:\n{}\n\nopcode: {X:0>2}\ndisassemble:\n{}\n";
     var buf = std.ArrayList(u8).init(std.testing.allocator);
     defer buf.deinit();
     var writer = buf.writer();
 
     var i: usize = 0;
-    while (i < 46) : (i += 1) {
-        const opcode = cpu.bus.read(cpu.pc);
-        std.debug.print(fmt_debug, .{ cpu.registers(), opcode, cpu.disassemble(5) });
+    while (i < 53) : (i += 1) {
+        // const opcode = cpu.bus.read(cpu.pc);
+        // std.debug.print(fmt_debug, .{ cpu.registers(), opcode, cpu.disassemble(5) });
         try writer.print(fmt, .{ cpu.registers(), cpu.disassemble(5) });
         cpu.step();
     }

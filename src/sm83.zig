@@ -220,7 +220,8 @@ pub const SM83 = struct {
                     }
                 },
                 .JR => {
-                    const offset = self.read_operand_u8(&opcode.operands[opcode.operands.len - 1]);
+                    const offset = @bitCast(i8, @truncate(u8, self.read_operand_u8(&opcode.operands[opcode.operands.len - 1])));
+
                     const condition = if (opcode.operands.len == 1) true else switch (opcode.operands[0].name) {
                         .Z => self.flag(Flag.zero),
                         .NZ => !self.flag(Flag.zero),
@@ -232,7 +233,12 @@ pub const SM83 = struct {
                     };
 
                     if (condition) {
-                        self.pc +%= offset;
+                        // There *must* be a better way to do this in zig:
+                        const new_addr: u16 = if (offset > 0)
+                            self.pc +% @intCast(u16, offset)
+                        else
+                            self.pc -% @intCast(u16, -offset);
+                        self.pc = new_addr;
                     }
                 },
                 .CALL => {
@@ -276,7 +282,7 @@ pub const SM83 = struct {
                     self.set_flag(Flag.halfCarry, self.a & 8 == 0 and n & 8 == 8);
                     self.set_flag(Flag.carry, self.a < n);
                 },
-                .INC => {
+                .INC, .DEC => {
                     if (opcode.operands.len > 1) {
                         @panic("Unexpected number of operands for INC");
                     }
@@ -284,19 +290,19 @@ pub const SM83 = struct {
                     switch (param.name) {
                         .A, .B, .C, .D, .E, .H, .L => {
                             const data = self.read_operand_u8(&param);
-                            self.write_operand_u8(data +% 1, &param);
+                            self.write_operand_u8(if (opcode.mnemonic == .INC) data +% 1 else data -% 1, &param);
                         },
                         .BC, .DE, .HL, .SP => {
                             if (!param.immediate) {
                                 const data = self.read_operand_u8(&param);
-                                self.write_operand_u8(data +% 1, &param);
+                                self.write_operand_u8(if (opcode.mnemonic == .INC) data +% 1 else data -% 1, &param);
                             } else {
                                 const data = self.read_operand_u16(&param);
-                                self.write_operand_u16(data +% 1, &param);
+                                self.write_operand_u16(if (opcode.mnemonic == .INC) data +% 1 else data -% 1, &param);
                             }
                         },
                         else => {
-                            panic("Unexpected INC param: {s}", .{param.name.string()});
+                            panic("Unexpected INC/DEC param: {s}", .{param.name.string()});
                         },
                     }
                 },
@@ -319,6 +325,16 @@ pub const SM83 = struct {
                     self.set_flag(Flag.zero, self.a == 0);
                     self.set_flag(Flag.subtract, false);
                     self.set_flag(Flag.halfCarry, true);
+                    self.set_flag(Flag.carry, false);
+                },
+                .OR => {
+                    const operand = opcode.operands[0];
+                    const data = self.read_operand_u8(&operand);
+                    self.a = self.a | data;
+                    self.f = 0;
+                    self.set_flag(Flag.zero, self.a == 0);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, false);
                     self.set_flag(Flag.carry, false);
                 },
                 .XOR => {
@@ -530,6 +546,7 @@ pub const SM83 = struct {
             else
                 self.bus.read_16(self.bus.read_16(self.pc))),
             .HL => self.hl(),
+            .BC => self.bc(),
             else => {
                 panic("read_operand_u16_safe for .{s} not implemented!", .{operand.name.string()});
             },
@@ -540,7 +557,7 @@ pub const SM83 = struct {
         const result = self.read_operand_u16_safe(operand);
         switch (operand.name) {
             .d16, .a16 => self.pc +%= 2,
-            .HL => {},
+            .HL, .BC => {},
             else => {
                 panic("read_operand_u16 for .{s} not implemented!", .{operand.name.string()});
             },
