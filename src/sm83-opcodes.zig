@@ -278,6 +278,8 @@ pub const Opcode = struct {
     operands: []const Operand,
     immediate: bool,
     flags: FlagBehaviors,
+    // i am lazy
+    prefixed: bool = false,
 };
 
 // The following were generated using this JS script and running it with the
@@ -5911,6 +5913,7 @@ pub const UNPREFIXED = [256]Opcode{
 pub const PREFIXED = [256]Opcode{
     // 0x00
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RLC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -5931,6 +5934,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x01
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RLC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -5951,6 +5955,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x02
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RLC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -5971,6 +5976,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x03
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RLC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -5991,6 +5997,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x04
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RLC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6011,6 +6018,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x05
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RLC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6031,6 +6039,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x06
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RLC,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -6051,6 +6060,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x07
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RLC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6071,6 +6081,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x08
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RRC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6091,6 +6102,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x09
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RRC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6111,6 +6123,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x0A
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RRC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6131,6 +6144,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x0B
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RRC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6151,6 +6165,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x0C
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RRC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6171,6 +6186,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x0D
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RRC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6191,6 +6207,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x0E
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RRC,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -6211,6 +6228,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x0F
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RRC,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6231,6 +6249,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x10
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6251,6 +6270,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x11
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6271,6 +6291,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x12
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6291,6 +6312,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x13
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6311,6 +6333,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x14
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6331,6 +6354,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x15
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6351,6 +6375,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x16
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RL,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -6371,6 +6396,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x17
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6391,6 +6417,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x18
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RR,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6411,6 +6438,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x19
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RR,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6431,6 +6459,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x1A
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RR,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6451,6 +6480,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x1B
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RR,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6471,6 +6501,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x1C
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RR,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6491,6 +6522,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x1D
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RR,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6511,6 +6543,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x1E
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RR,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -6531,6 +6564,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x1F
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RR,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6551,6 +6585,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x20
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SLA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6571,6 +6606,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x21
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SLA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6591,6 +6627,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x22
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SLA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6611,6 +6648,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x23
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SLA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6631,6 +6669,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x24
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SLA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6651,6 +6690,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x25
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SLA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6671,6 +6711,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x26
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SLA,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -6691,6 +6732,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x27
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SLA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6711,6 +6753,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x28
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6731,6 +6774,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x29
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6751,6 +6795,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x2A
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6771,6 +6816,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x2B
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6791,6 +6837,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x2C
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6811,6 +6858,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x2D
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6831,6 +6879,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x2E
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRA,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -6851,6 +6900,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x2F
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRA,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6871,6 +6921,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x30
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SWAP,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6891,6 +6942,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x31
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SWAP,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6911,6 +6963,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x32
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SWAP,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6931,6 +6984,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x33
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SWAP,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6951,6 +7005,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x34
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SWAP,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6971,6 +7026,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x35
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SWAP,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -6991,6 +7047,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x36
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SWAP,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -7011,6 +7068,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x37
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SWAP,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7031,6 +7089,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x38
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7051,6 +7110,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x39
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7071,6 +7131,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x3A
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7091,6 +7152,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x3B
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7111,6 +7173,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x3C
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7131,6 +7194,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x3D
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7151,6 +7215,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x3E
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRL,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -7171,6 +7236,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x3F
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SRL,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7191,6 +7257,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x40
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7215,6 +7282,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x41
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7239,6 +7307,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x42
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7263,6 +7332,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x43
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7287,6 +7357,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x44
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7311,6 +7382,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x45
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7335,6 +7407,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x46
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{12},
@@ -7359,6 +7432,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x47
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7383,6 +7457,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x48
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7407,6 +7482,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x49
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7431,6 +7507,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x4A
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7455,6 +7532,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x4B
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7479,6 +7557,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x4C
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7503,6 +7582,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x4D
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7527,6 +7607,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x4E
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{12},
@@ -7551,6 +7632,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x4F
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7575,6 +7657,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x50
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7599,6 +7682,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x51
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7623,6 +7707,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x52
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7647,6 +7732,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x53
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7671,6 +7757,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x54
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7695,6 +7782,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x55
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7719,6 +7807,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x56
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{12},
@@ -7743,6 +7832,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x57
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7767,6 +7857,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x58
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7791,6 +7882,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x59
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7815,6 +7907,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x5A
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7839,6 +7932,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x5B
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7863,6 +7957,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x5C
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7887,6 +7982,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x5D
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7911,6 +8007,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x5E
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{12},
@@ -7935,6 +8032,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x5F
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7959,6 +8057,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x60
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -7983,6 +8082,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x61
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8007,6 +8107,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x62
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8031,6 +8132,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x63
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8055,6 +8157,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x64
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8079,6 +8182,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x65
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8103,6 +8207,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x66
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{12},
@@ -8127,6 +8232,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x67
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8151,6 +8257,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x68
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8175,6 +8282,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x69
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8199,6 +8307,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x6A
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8223,6 +8332,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x6B
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8247,6 +8357,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x6C
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8271,6 +8382,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x6D
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8295,6 +8407,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x6E
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{12},
@@ -8319,6 +8432,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x6F
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8343,6 +8457,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x70
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8367,6 +8482,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x71
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8391,6 +8507,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x72
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8415,6 +8532,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x73
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8439,6 +8557,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x74
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8463,6 +8582,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x75
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8487,6 +8607,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x76
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{12},
@@ -8511,6 +8632,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x77
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8535,6 +8657,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x78
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8559,6 +8682,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x79
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8583,6 +8707,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x7A
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8607,6 +8732,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x7B
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8631,6 +8757,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x7C
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8655,6 +8782,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x7D
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8679,6 +8807,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x7E
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{12},
@@ -8703,6 +8832,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x7F
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.BIT,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -8727,16 +8857,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x80
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -8751,16 +8882,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x81
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -8775,16 +8907,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x82
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -8799,16 +8932,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x83
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -8823,16 +8957,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x84
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -8847,16 +8982,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x85
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -8871,17 +9007,18 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x86
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._0,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -8895,16 +9032,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x87
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._0,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._0,
                 .immediate = true,
             },
         },
@@ -8919,16 +9057,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x88
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -8943,16 +9082,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x89
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -8967,16 +9107,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x8A
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -8991,16 +9132,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x8B
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -9015,16 +9157,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x8C
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -9039,16 +9182,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x8D
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -9063,17 +9207,18 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x8E
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._1,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -9087,16 +9232,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x8F
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._1,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._1,
                 .immediate = true,
             },
         },
@@ -9111,16 +9257,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x90
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -9135,16 +9282,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x91
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -9159,16 +9307,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x92
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -9183,16 +9332,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x93
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -9207,16 +9357,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x94
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -9231,16 +9382,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x95
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -9255,17 +9407,18 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x96
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._2,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -9279,16 +9432,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x97
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._2,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._2,
                 .immediate = true,
             },
         },
@@ -9303,16 +9457,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x98
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -9327,16 +9482,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x99
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -9351,16 +9507,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x9A
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -9375,16 +9532,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x9B
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -9399,16 +9557,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x9C
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -9423,16 +9582,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x9D
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -9447,17 +9607,18 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x9E
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._3,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -9471,16 +9632,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0x9F
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._3,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._3,
                 .immediate = true,
             },
         },
@@ -9495,16 +9657,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xA0
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -9519,16 +9682,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xA1
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -9543,16 +9707,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xA2
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -9567,16 +9732,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xA3
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -9591,16 +9757,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xA4
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -9615,16 +9782,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xA5
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -9639,17 +9807,18 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xA6
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._4,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -9663,16 +9832,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xA7
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._4,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._4,
                 .immediate = true,
             },
         },
@@ -9687,16 +9857,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xA8
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -9711,16 +9882,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xA9
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -9735,16 +9907,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xAA
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -9759,16 +9932,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xAB
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -9783,16 +9957,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xAC
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -9807,16 +9982,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xAD
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -9831,17 +10007,18 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xAE
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._5,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -9855,16 +10032,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xAF
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._5,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._5,
                 .immediate = true,
             },
         },
@@ -9879,16 +10057,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xB0
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -9903,16 +10082,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xB1
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -9927,16 +10107,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xB2
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -9951,16 +10132,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xB3
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -9975,16 +10157,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xB4
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -9999,16 +10182,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xB5
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -10023,17 +10207,18 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xB6
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._6,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -10047,16 +10232,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xB7
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._6,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._6,
                 .immediate = true,
             },
         },
@@ -10071,16 +10257,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xB8
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.B,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.B,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },
@@ -10095,16 +10282,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xB9
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.C,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.C,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },
@@ -10119,16 +10307,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xBA
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.D,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.D,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },
@@ -10143,16 +10332,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xBB
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.E,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.E,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },
@@ -10167,16 +10357,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xBC
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.H,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.H,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },
@@ -10191,16 +10382,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xBD
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.L,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.L,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },
@@ -10215,17 +10407,18 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xBE
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{16},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
-                .immediate = true,
-            },
-            Operand{
                 .name = OperandName.HL,
                 .immediate = false,
+            },
+            Operand{
+                .name = OperandName._7,
+                .immediate = true,
             },
         },
         .immediate = false,
@@ -10239,16 +10432,17 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xBF
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.RES,
         .bytes = 2,
         .cycles = &[_]u5{8},
         .operands = &[_]Operand{
             Operand{
-                .name = OperandName._7,
+                .name = OperandName.A,
                 .immediate = true,
             },
             Operand{
-                .name = OperandName.A,
+                .name = OperandName._7,
                 .immediate = true,
             },
         },
@@ -10263,6 +10457,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xC0
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10287,6 +10482,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xC1
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10311,6 +10507,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xC2
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10335,6 +10532,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xC3
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10359,6 +10557,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xC4
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10383,6 +10582,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xC5
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10407,6 +10607,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xC6
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -10431,6 +10632,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xC7
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10455,6 +10657,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xC8
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10479,6 +10682,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xC9
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10503,6 +10707,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xCA
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10527,6 +10732,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xCB
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10551,6 +10757,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xCC
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10575,6 +10782,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xCD
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10599,6 +10807,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xCE
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -10623,6 +10832,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xCF
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10647,6 +10857,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xD0
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10671,6 +10882,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xD1
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10695,6 +10907,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xD2
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10719,6 +10932,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xD3
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10743,6 +10957,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xD4
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10767,6 +10982,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xD5
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10791,6 +11007,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xD6
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -10815,6 +11032,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xD7
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10839,6 +11057,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xD8
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10863,6 +11082,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xD9
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10887,6 +11107,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xDA
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10911,6 +11132,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xDB
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10935,6 +11157,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xDC
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10959,6 +11182,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xDD
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -10983,6 +11207,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xDE
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -11007,6 +11232,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xDF
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11031,6 +11257,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xE0
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11055,6 +11282,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xE1
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11079,6 +11307,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xE2
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11103,6 +11332,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xE3
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11127,6 +11357,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xE4
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11151,6 +11382,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xE5
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11175,6 +11407,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xE6
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -11199,6 +11432,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xE7
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11223,6 +11457,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xE8
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11247,6 +11482,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xE9
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11271,6 +11507,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xEA
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11295,6 +11532,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xEB
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11319,6 +11557,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xEC
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11343,6 +11582,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xED
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11367,6 +11607,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xEE
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -11391,6 +11632,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xEF
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11415,6 +11657,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xF0
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11439,6 +11682,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xF1
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11463,6 +11707,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xF2
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11487,6 +11732,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xF3
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11511,6 +11757,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xF4
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11535,6 +11782,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xF5
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11559,6 +11807,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xF6
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -11583,6 +11832,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xF7
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11607,6 +11857,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xF8
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11631,6 +11882,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xF9
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11655,6 +11907,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xFA
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11679,6 +11932,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xFB
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11703,6 +11957,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xFC
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11727,6 +11982,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xFD
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
@@ -11751,6 +12007,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xFE
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{16},
@@ -11775,6 +12032,7 @@ pub const PREFIXED = [256]Opcode{
 
     // 0xFF
     Opcode{
+        .prefixed = true,
         .mnemonic = Mnemonic.SET,
         .bytes = 2,
         .cycles = &[_]u5{8},
