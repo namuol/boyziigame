@@ -204,6 +204,7 @@ test "disassemble" {
 // }
 
 test "real world ROM log match" {
+    // From SameBoy; TODO use actual Gameboy-logs: https://github.com/wheremyfoodat/Gameboy-logs
     const expected = (
         \\registers:
         \\AF  = $01b0 (CH-Z)
