@@ -1,5 +1,8 @@
 //! Sharp SM83 CPU emulator implementation
 //!
+//! FIXME: This module contains more than SM83 CPU core stuff and actually does
+//!        a lot of other DMG System-on-a-Chip things so it should be renamed.
+//!
 //! References I've found helpful:
 //!
 //! - gekkio's guide: https://gekkio.fi/files/gb-docs/gbctr.pdf
@@ -73,14 +76,24 @@ pub const SM83 = struct {
     enableInterruptsAfterNextInstruction: bool = false,
 
     hardwareRegisters: [256]u8 = [_]u8{0} ** 256,
+    bootROM: *const [256:0]u8 = @embedFile("./dmg_boot.bin"),
+
+    pub fn boot_rom_enabled(self: *const SM83) bool {
+        // Should this be != 0x01?
+        return self.hardwareRegisters[0x50] == 0x00;
+    }
+
+    pub fn boot_rom_read(self: *const SM83, addr: u8) u8 {
+        return self.bootROM[addr];
+    }
 
     pub fn read_hw_register(self: *const SM83, addr: u8) u8 {
-        // std.debug.print("read_hw_register(0x{x:0>2}) = 0x{x:0>2}\n", .{ addr, self.hardwareRegisters[addr] });
+        // std.debug.print("\nread_hw_register(0x{x:0>2}) = 0x{x:0>2}\n", .{ addr, self.hardwareRegisters[addr] });
         return self.hardwareRegisters[addr];
     }
 
     pub fn write_hw_register(self: *SM83, addr: u8, data: u8) void {
-        // std.debug.print("write_hw_register(0x{x:0>2}, 0x{x:0>2})\n", .{ addr, data });
+        // std.debug.print("\nwrite_hw_register(0x{x:0>2}, 0x{x:0>2})\n", .{ addr, data });
         self.hardwareRegisters[addr] = data;
     }
 
@@ -173,16 +186,10 @@ pub const SM83 = struct {
         self.h = 0x01;
         self.l = 0x4D;
 
+        // Skip the boot rom
         self.pc = 0x0100;
         self.sp = 0xFFFE;
-
-        hardware_registers.dmg_reset(&self.hardwareRegisters);
-
-        // HACK: Initialize rLCD to 0x80; LCD & PPU enabled, all other flags unset
-        self.hardwareRegisters[0x40] = 0x80;
-
-        // HACK: Initialize rLY to 0x91 (145), first vblank row of pixels.
-        self.hardwareRegisters[0x44] = 0x91;
+        hardware_registers.simulate_dmg_boot(&self.hardwareRegisters);
     }
 
     pub fn cycle(self: *SM83) bool {
@@ -241,6 +248,16 @@ pub const SM83 = struct {
                         self.pc = new_addr;
                     }
                 },
+                .PUSH => {
+                    const data = self.read_operand_u16(&opcode.operands[0]);
+                    self.sp -%= 2;
+                    self.bus.write_16(self.sp, data);
+                },
+                .POP => {
+                    const data = self.bus.read_16(self.sp);
+                    self.sp +%= 2;
+                    self.write_operand_u16(data, &opcode.operands[0]);
+                },
                 .CALL => {
                     // Push address of next instruction onto stack
                     const next_instruction_addr = self.pc +% opcode.bytes -% 1;
@@ -276,11 +293,12 @@ pub const SM83 = struct {
                     // Compare A with n. This is basically an A - n subtraction
                     // instruction but the results are thrown away.
                     const n = self.read_operand_u8(&opcode.operands[0]);
-                    const result = self.a -% n;
+                    const val = self.a;
+                    const result = val -% n;
                     self.set_flag(Flag.zero, result == 0);
                     self.set_flag(Flag.subtract, true);
-                    self.set_flag(Flag.halfCarry, self.a & 8 == 0 and n & 8 == 8);
-                    self.set_flag(Flag.carry, self.a < n);
+                    self.set_flag(Flag.halfCarry, (val & 0xF) < (n & 0xF));
+                    self.set_flag(Flag.carry, val < n);
                 },
                 .INC, .DEC => {
                     if (opcode.operands.len > 1) {
@@ -289,8 +307,13 @@ pub const SM83 = struct {
                     const param = opcode.operands[0];
                     switch (param.name) {
                         .A, .B, .C, .D, .E, .H, .L => {
-                            const data = self.read_operand_u8(&param);
-                            self.write_operand_u8(if (opcode.mnemonic == .INC) data +% 1 else data -% 1, &param);
+                            const val = self.read_operand_u8(&param);
+                            const result = if (opcode.mnemonic == .INC) val +% 1 else val -% 1;
+                            self.write_operand_u8(result, &param);
+                            self.set_flag(Flag.zero, result == 0);
+                            self.set_flag(Flag.subtract, opcode.mnemonic == .DEC);
+                            const half_carry = if (opcode.mnemonic == .INC) (result & 0x0F) == 0 else (result & 0x0F) == 0x0F;
+                            self.set_flag(Flag.halfCarry, half_carry);
                         },
                         .BC, .DE, .HL, .SP => {
                             if (!param.immediate) {
@@ -359,8 +382,18 @@ pub const SM83 = struct {
                     const result = val +% n;
                     self.write_operand_u8(result, &to);
                     self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, (val & 0xF) + (n & 0xF) > 0x0F);
+                    self.set_flag(Flag.carry, (@intCast(u16, val) + @intCast(u16, n)) > 0xFF);
+                },
+                .SUB => {
+                    const n = self.read_operand_u8(&opcode.operands[0]);
+                    const val = self.a;
+                    const result = val -% n;
+                    self.a = result;
+                    self.set_flag(Flag.zero, result == 0);
                     self.set_flag(Flag.subtract, true);
-                    self.set_flag(Flag.halfCarry, val & 8 == 0 and n & 8 == 8);
+                    self.set_flag(Flag.halfCarry, (val & 0xF) < (n & 0xF));
                     self.set_flag(Flag.carry, val < n);
                 },
 
@@ -370,7 +403,7 @@ pub const SM83 = struct {
                     const mask: u8 = switch (bit.name) {
                         ._0 => 0b1111_1110,
                         ._1 => 0b1111_1101,
-                        ._2 => 0b1111_1111,
+                        ._2 => 0b1111_1011,
                         ._3 => 0b1111_0111,
                         ._4 => 0b1110_1111,
                         ._5 => 0b1101_1111,
@@ -401,6 +434,64 @@ pub const SM83 = struct {
                             panic("Unexpected register operand for RES operation: {s}", .{register.name.string()});
                         },
                     }
+                },
+                .BIT => {
+                    // Reset bit `b` in register `r`
+                    const bit = opcode.operands[0];
+                    const mask: u8 = switch (bit.name) {
+                        ._0 => 0b0000_0001,
+                        ._1 => 0b0000_0010,
+                        ._2 => 0b0000_0100,
+                        ._3 => 0b0000_1000,
+                        ._4 => 0b0001_0000,
+                        ._5 => 0b0010_0000,
+                        ._6 => 0b0100_0000,
+                        ._7 => 0b1000_0000,
+                        else => {
+                            panic("Unexpected bit operand for BIT operation: {s}", .{bit.name.string()});
+                        },
+                    };
+                    const register = opcode.operands[1];
+                    const is_bit_set = 0 != mask & switch (register.name) {
+                        .A => self.a,
+                        .B => self.b,
+                        .C => self.c,
+                        .D => self.d,
+                        .E => self.e,
+                        .H => self.h,
+                        .L => self.l,
+                        .HL => self.bus.read(self.hl()),
+                        else => {
+                            panic("Unexpected register operand for RES operation: {s}", .{register.name.string()});
+                        },
+                    };
+
+                    self.set_flag(Flag.zero, !is_bit_set);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, true);
+                },
+                .RL => {
+                    const val = self.read_operand_u8(&opcode.operands[0]);
+                    const carry: u8 = if (self.flag(Flag.carry)) 1 else 0;
+                    const result = val << 1 | carry;
+                    self.write_operand_u8(result, &opcode.operands[0]);
+                    //
+                    self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, false);
+                    self.set_flag(Flag.carry, (val & 0b1000_0000) != 0);
+                },
+                .RLA => {
+                    const val = self.a;
+                    const carry: u8 = if (self.flag(Flag.carry)) 1 else 0;
+                    const result = val << 1 | carry;
+                    self.a = result;
+
+                    // We always clear the zero flag for RLA, unlike RL
+                    self.set_flag(Flag.zero, false);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, false);
+                    self.set_flag(Flag.carry, (val & 0b1000_0000) != 0);
                 },
                 else => {
                     panic("{s} not implemented!", .{opcode.mnemonic.string()});
@@ -434,25 +525,25 @@ pub const SM83 = struct {
             .E => self.e,
             .H => self.h,
             .L => self.l,
-            .BC => {
+            .BC, .DE, .HL => {
                 // FIXME: Perhaps we should have `Operand` and `Operand16`
                 // structs instead so the type checker can help us deal with
                 // this tediousness
                 if (operand.immediate) {
                     @panic("Cannot get BC as 8-bit immediate value");
                 }
+                const addr = switch (operand.name) {
+                    .BC => self.bc(),
+                    .DE => self.de(),
+                    .HL => blk: {
+                        std.debug.print("\nHL = ${x:0>4}; (HL) = ${x:0>2};\n", .{ self.hl(), self.bus.read(self.hl()) });
+                        // wtf is this, zig?
+                        break :blk self.hl();
+                    },
+                    else => @panic("Should not be able to reach this"),
+                };
 
-                return self.bus.read(self.bc());
-            },
-            .HL => {
-                // FIXME: Perhaps we should have `Operand` and `Operand16`
-                // structs instead so the type checker can help us deal with
-                // this tediousness
-                if (operand.immediate) {
-                    @panic("Cannot get HL as 8-bit immediate value");
-                }
-
-                return self.bus.read(self.hl());
+                return self.bus.read(addr);
             },
             .d8, .r8 => self.bus.read(self.pc),
             .a8 => {
@@ -484,7 +575,7 @@ pub const SM83 = struct {
     pub fn read_operand_u8(self: *SM83, operand: *const Operand) u8 {
         const result = self.read_operand_u8_safe(operand);
         switch (operand.name) {
-            .A, .B, .C, .D, .E, .H, .L, .BC, .HL, ._08H, ._10H, ._18H, ._20H, ._28H, ._30H, ._38H => {},
+            .A, .B, .C, .D, .E, .H, .L, .BC, .DE, .HL, ._08H, ._10H, ._18H, ._20H, ._28H, ._30H, ._38H => {},
             .d8, .r8, .a8 => self.pc +%= 1,
             .d16 => self.pc +%= 2,
             else => {
@@ -498,7 +589,13 @@ pub const SM83 = struct {
         switch (operand.name) {
             .A => self.a = data,
             .B => self.b = data,
-            .C => self.c = data,
+            .C => {
+                if (operand.immediate) {
+                    self.c = data;
+                } else {
+                    self.bus.write(0xFF00 +% @as(u16, self.c), data);
+                }
+            },
             .D => self.d = data,
             .E => self.e = data,
             .H => self.h = data,
@@ -516,6 +613,12 @@ pub const SM83 = struct {
                     panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
                 }
                 self.bus.write(self.hl(), data);
+                if (operand.decrement) {
+                    self.set_hl(self.hl() -% 1);
+                }
+                if (operand.increment) {
+                    self.set_hl(self.hl() +% 1);
+                }
             },
 
             .a16 => {
@@ -545,8 +648,9 @@ pub const SM83 = struct {
                 self.bus.read_16(self.pc)
             else
                 self.bus.read_16(self.bus.read_16(self.pc))),
-            .HL => self.hl(),
             .BC => self.bc(),
+            .DE => self.de(),
+            .HL => self.hl(),
             else => {
                 panic("read_operand_u16_safe for .{s} not implemented!", .{operand.name.string()});
             },
@@ -557,7 +661,7 @@ pub const SM83 = struct {
         const result = self.read_operand_u16_safe(operand);
         switch (operand.name) {
             .d16, .a16 => self.pc +%= 2,
-            .HL, .BC => {},
+            .HL, .BC, .DE => {},
             else => {
                 panic("read_operand_u16 for .{s} not implemented!", .{operand.name.string()});
             },
@@ -574,8 +678,17 @@ pub const SM83 = struct {
             .BC => {
                 self.set_bc(data);
             },
+            .DE => {
+                self.set_de(data);
+            },
             .HL => {
                 self.set_hl(data);
+                if (operand.decrement) {
+                    self.set_hl(self.hl() -% 1);
+                }
+                if (operand.increment) {
+                    self.set_hl(self.hl() +% 1);
+                }
             },
             .SP => {
                 self.sp = data;
@@ -602,6 +715,29 @@ pub const SM83 = struct {
 
     pub fn registers(self: *const SM83) Registers {
         return Registers{ .cpu = self };
+    }
+
+    pub fn format(self: *const SM83, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        // A: 00 F: 00 B: 00 C: 00 D: 00 E: 00 H: 00 L: 00 SP: 0000 PC: 00:0000 (31 FE FF AF)
+        const fmt = "A: {X:0>2} F: {X:0>2} B: {X:0>2} C: {X:0>2} D: {X:0>2} E: {X:0>2} H: {X:0>2} L: {X:0>2} SP: {X:0>4} PC: 00:{X:0>4} ({X:0>2} {X:0>2} {X:0>2} {X:0>2})";
+        return writer.print(fmt, .{
+            self.a,
+            self.f,
+            self.b,
+            self.c,
+            self.d,
+            self.e,
+            self.h,
+            self.l,
+
+            self.sp,
+            self.pc,
+
+            self.bus.read(self.pc +% 0),
+            self.bus.read(self.pc +% 1),
+            self.bus.read(self.pc +% 2),
+            self.bus.read(self.pc +% 3),
+        });
     }
 };
 
@@ -721,7 +857,7 @@ fn OperandValue(comptime T: type) type {
                         return writer.print(U8_IMM_FMT, .{self.val});
                     }
 
-                    const hw_reg_str = hardware_register_string(0xFF00 + @as(u16, self.val));
+                    const hw_reg_str = hardware_register_string(@truncate(u8, self.val));
                     if (hw_reg_str.len > 0) {
                         return writer.print("[{s} & $FF]", .{hw_reg_str});
                     } else {
@@ -892,6 +1028,9 @@ test "SM83::opcode" {
     defer bus_.rom.deinit();
     var cpu = SM83{ .bus = &bus_ };
     bus_.cpu = &cpu;
+
+    // HACK: Disable boot ROM:
+    cpu.hardwareRegisters[0x50] = 0x01;
 
     var opcode = cpu.opcode_at(0x0000);
     try expect(opcode.mnemonic == .NOP);

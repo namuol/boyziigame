@@ -33,3 +33,4 @@ zig build
 ## Acknowledgements
 
 - `src/sm83-opcodes.json` originally sourced from https://gbdev.io/gb-opcodes
+- `dmg_boot.bin` sourced from [SameBoy](https://github.com/LIJI32/SameBoy) ([MIT License](https://github.com/LIJI32/SameBoy/blob/master/LICENSE))

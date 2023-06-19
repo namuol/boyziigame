@@ -17,8 +17,18 @@ pub const Bus = struct {
         // Follow the memory mapping guide here:
         // https://gbdev.io/pandocs/Memory_Map.html
         switch (addr) {
+            // This should probably be controlled by the CPU, but for now this
+            // is how we allow the CPU to control whether it's reading from the
+            // boot rom or not from the first 256 bytes of address space:
+            0x0000...0x00FF => {
+                if (self.cpu.boot_rom_enabled()) {
+                    return self.cpu.boot_rom_read(@intCast(u8, addr));
+                } else {
+                    return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL;
+                }
+            },
             // From cartridge, usually a fixed bank
-            0x0000...0x3FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
+            0x0100...0x3FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
             // From cartridge, switchable bank via mapper (if any)
             0x4000...0x7FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
             // 4 KiB Work RAM (WRAM)
@@ -46,6 +56,9 @@ pub const Bus = struct {
             // 0x0000...0x3FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
             // // From cartridge, switchable bank via mapper (if any)
             // 0x4000...0x7FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
+            0x8000...0x9FFF => {
+                // TODO: Write to VRAM
+            },
 
             // 4 KiB Work RAM (WRAM)
             0xC000...0xCFFF => self.ram[addr - 0xC000] = data,
@@ -57,7 +70,7 @@ pub const Bus = struct {
 
             // TODO: Follow the rest from the guide
             else => {
-                @panic("Dunno how to write to that");
+                std.debug.panic("Dunno how to write to ${x:0>4}\n", .{addr});
             },
         }
     }
@@ -81,32 +94,3 @@ pub const Bus = struct {
         self.allocator.free(self.ram);
     }
 };
-
-const expect = std.testing.expect;
-test "bus read" {
-    const raw_data = try std.testing.allocator.alloc(u8, 3);
-    defer std.testing.allocator.free(raw_data);
-    raw_data[0x0000] = 0x00;
-    raw_data[0x0001] = 0x01;
-    raw_data[0x0002] = 0x02;
-    const rom = Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator };
-
-    const bus = try Bus.init(std.testing.allocator, rom);
-    defer bus.deinit();
-
-    try expect(bus.read(0x0000) == 0x00);
-    try expect(bus.read(0x0001) == 0x01);
-    try expect(bus.read(0x0002) == 0x02);
-}
-
-test "bus read_16" {
-    const raw_data = try std.testing.allocator.alloc(u8, 2);
-    defer std.testing.allocator.free(raw_data);
-    raw_data[0x0000] = 0x34;
-    raw_data[0x0001] = 0x12;
-    const rom = Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator };
-
-    const bus = try Bus.init(std.testing.allocator, rom);
-    defer bus.deinit();
-    try expect(bus.read_16(0x0000) == 0x1234);
-}

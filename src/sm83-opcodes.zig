@@ -240,8 +240,8 @@ pub const Operand = struct {
     name: OperandName,
     immediate: bool,
     bytes: u2 = 0,
-    increment: ?bool = null,
-    decrement: ?bool = null,
+    increment: bool = false,
+    decrement: bool = false,
 
     pub fn format(self: *const Operand, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         if (self.immediate) {

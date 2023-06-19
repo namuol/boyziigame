@@ -15,15 +15,20 @@ test "basic cycle (LD)" {
     defer bus_.deinit();
     defer bus_.rom.deinit();
     var sm83 = SM83{ .bus = &bus_ };
+    bus_.cpu = &sm83;
 
     // LD BC, $1234
     raw_data[0x0000] = 0x01;
     raw_data[0x0001] = 0x34;
     raw_data[0x0002] = 0x12;
+
+    // HACK: Disable boot rom:
+    sm83.hardwareRegisters[0x50] = 0x01;
+
     var i: usize = 0;
     sm83.step();
-    try expect(sm83.bc() == 0x1234);
     try expect(sm83.pc == 0x0003);
+    try expect(sm83.bc() == 0x1234);
 
     // LD (BC), A
     // We write 0x42 to the start of RAM:
@@ -32,8 +37,8 @@ test "basic cycle (LD)" {
     sm83.set_bc(0xC000);
     i = 0;
     sm83.step();
-    try expect(sm83.bus.read(0xC000) == 0x42);
     try expect(sm83.pc == 0x0004);
+    try expect(sm83.bus.read(0xC000) == 0x42);
 
     // LD A, $42
     raw_data[0x0004] = 0x3E;
@@ -41,8 +46,8 @@ test "basic cycle (LD)" {
     sm83.a = 0;
     i = 0;
     sm83.step();
-    try expect(sm83.a == 0x42);
     try expect(sm83.pc == 0x0006);
+    try expect(sm83.a == 0x42);
 }
 
 test "basic cycle (INC)" {
@@ -66,6 +71,10 @@ test "basic cycle (INC)" {
     defer bus_.deinit();
     defer bus_.rom.deinit();
     var sm83 = SM83{ .bus = &bus_ };
+    bus_.cpu = &sm83;
+
+    // Disable bootROM so we read directly from ROM:
+    sm83.hardwareRegisters[0x50] = 0x01;
 
     sm83.step();
     try expect(sm83.a == 0x01);
@@ -97,6 +106,7 @@ test "disassemble" {
     defer bus.deinit();
 
     var cpu = SM83{ .bus = &bus };
+    bus.cpu = &cpu;
     cpu.boot();
 
     // Output format borrowed from the excellent SameBoy debugger:
@@ -1082,4 +1092,40 @@ test "real world ROM log match" {
     }
 
     try std.testing.expectEqualStrings(expected, buf.items);
+}
+
+test "bootrom log comparison" {
+    var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
+    defer rom.deinit();
+
+    var bus = try Bus.init(std.testing.allocator, rom);
+    defer bus.deinit();
+
+    var cpu = SM83{ .bus = &bus };
+    bus.cpu = &cpu;
+
+    // Load BootromLog.txt from https://github.com/wheremyfoodat/Gameboy-logs
+    const file = try std.fs.cwd().openFile("src/BootromLog.txt", .{});
+    defer file.close();
+
+    var buf_reader = std.io.bufferedReader(file.reader());
+    var in_stream = buf_reader.reader();
+
+    var buf: [1024]u8 = undefined;
+
+    // From the docs for Gameboy-logs:
+    //
+    // > For the convenience of anyone who uses them, LY (MMIO register at
+    // > 0xFF44) is stubbed to 0x90 permanently.
+    cpu.hardwareRegisters[0x44] = 0x90;
+
+    while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |expected| {
+        var actual = std.ArrayList(u8).init(std.testing.allocator);
+        defer actual.deinit();
+        var writer = actual.writer();
+        try writer.print("{}", .{cpu});
+
+        try std.testing.expectEqualStrings(expected, actual.items);
+        cpu.step();
+    }
 }

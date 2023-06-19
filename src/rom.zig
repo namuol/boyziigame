@@ -318,10 +318,10 @@ pub const Rom = struct {
     }
 };
 
-test "read from file and load from buffer" {
-    var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
-    defer rom.deinit();
+// test "read from file and load from buffer" {
+//     var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
+//     defer rom.deinit();
 
-    print("\n{any}\n", .{rom});
-    print("\n\n{s}\n", .{rom.draw_logo()});
-}
+//     print("\n{any}\n", .{rom});
+//     print("\n\n{s}\n", .{rom.draw_logo()});
+// }

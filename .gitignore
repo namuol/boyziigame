@@ -1,2 +1,7 @@
 zig-cache
 zig-out
+main
+*.gb
+*.sav
+*.o
+src/dmg_boot.bin
