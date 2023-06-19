@@ -259,13 +259,28 @@ pub const SM83 = struct {
                     self.write_operand_u16(data, &opcode.operands[0]);
                 },
                 .CALL => {
-                    // Push address of next instruction onto stack
+                    const condition = switch (opcode.operands[0].name) {
+                        .NZ => !self.flag(Flag.zero),
+                        .Z => self.flag(Flag.zero),
+                        .NC => !self.flag(Flag.carry),
+                        .C => self.flag(Flag.carry),
+                        .a16 => true,
+                        else => {
+                            std.debug.panic("Condition .{s} not implemented for CALL", .{opcode.operands[0].name.string()});
+                        },
+                    };
+
                     const next_instruction_addr = self.pc +% opcode.bytes -% 1;
-                    // std.debug.print("next_instruction_addr = ${x:0>4}\n", .{next_instruction_addr});
-                    self.sp -%= 2;
-                    self.bus.write_16(self.sp, next_instruction_addr);
-                    // Jump to the address specified by the call
-                    self.pc = self.read_operand_u16(&opcode.operands[0]);
+                    const addr = self.read_operand_u16(&opcode.operands[opcode.operands.len - 1]);
+
+                    if (condition) {
+                        // Push address of next instruction onto stack
+                        // std.debug.print("next_instruction_addr = ${x:0>4}\n", .{next_instruction_addr});
+                        self.sp -%= 2;
+                        self.bus.write_16(self.sp, next_instruction_addr);
+                        // Jump to the address specified by the call
+                        self.pc = addr;
+                    }
                 },
                 .RET => {
                     switch (opcode.operands.len) {
@@ -550,9 +565,9 @@ pub const SM83 = struct {
                 const offset = self.bus.read(self.pc);
                 return self.bus.read(0xFF00 +% @as(u16, offset));
             },
-            .d16 => {
-                if (!operand.immediate) {
-                    @panic("Cannot read 16-bit immediate value for d16");
+            .a16, .d16 => {
+                if (operand.immediate) {
+                    std.debug.panic("Cannot read 16-bit immediate value for d16/a16 (CPU: {})", .{self});
                 }
                 const addr = self.bus.read_16(self.pc);
                 return self.bus.read(addr);
@@ -575,9 +590,17 @@ pub const SM83 = struct {
     pub fn read_operand_u8(self: *SM83, operand: *const Operand) u8 {
         const result = self.read_operand_u8_safe(operand);
         switch (operand.name) {
-            .A, .B, .C, .D, .E, .H, .L, .BC, .DE, .HL, ._08H, ._10H, ._18H, ._20H, ._28H, ._30H, ._38H => {},
+            .A, .B, .C, .D, .E, .H, .L, .AF, .BC, .DE, ._08H, ._10H, ._18H, ._20H, ._28H, ._30H, ._38H => {},
+            .HL => {
+                if (operand.decrement) {
+                    self.set_hl(self.hl() -% 1);
+                }
+                if (operand.increment) {
+                    self.set_hl(self.hl() +% 1);
+                }
+            },
             .d8, .r8, .a8 => self.pc +%= 1,
-            .d16 => self.pc +%= 2,
+            .a16, .d16 => self.pc +%= 2,
             else => {
                 panic("read_operand_u8 for .{s} not implemented!", .{operand.name.string()});
             },
@@ -606,6 +629,12 @@ pub const SM83 = struct {
                     panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
                 }
                 self.bus.write(self.bc(), data);
+            },
+            .DE => {
+                if (operand.immediate) {
+                    panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
+                }
+                self.bus.write(self.de(), data);
             },
 
             .HL => {
@@ -648,6 +677,7 @@ pub const SM83 = struct {
                 self.bus.read_16(self.pc)
             else
                 self.bus.read_16(self.bus.read_16(self.pc))),
+            .AF => self.af(),
             .BC => self.bc(),
             .DE => self.de(),
             .HL => self.hl(),
@@ -661,7 +691,7 @@ pub const SM83 = struct {
         const result = self.read_operand_u16_safe(operand);
         switch (operand.name) {
             .d16, .a16 => self.pc +%= 2,
-            .HL, .BC, .DE => {},
+            .AF, .BC, .DE, .HL => {},
             else => {
                 panic("read_operand_u16 for .{s} not implemented!", .{operand.name.string()});
             },
@@ -674,6 +704,9 @@ pub const SM83 = struct {
             .d16, .a16 => {
                 const addr = self.read_operand_u16(operand);
                 self.bus.write_16(addr, data);
+            },
+            .AF => {
+                self.set_af(data);
             },
             .BC => {
                 self.set_bc(data);

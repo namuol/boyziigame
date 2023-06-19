@@ -1094,11 +1094,44 @@ test "real world ROM log match" {
     try std.testing.expectEqualStrings(expected, buf.items);
 }
 
-test "bootrom log comparison" {
-    // FIXME: Need to figure out what ROM was used for the original log files so
-    // the header checksum passes. I could manually craft one by reverse
-    // engineering each byte from the checksum log...
-    var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
+// test "bootrom log comparison" {
+//     var rom = try Rom.from_file("test-roms/01-special.gb", std.testing.allocator);
+//     defer rom.deinit();
+
+//     var bus = try Bus.init(std.testing.allocator, rom);
+//     defer bus.deinit();
+
+//     var cpu = SM83{ .bus = &bus };
+//     bus.cpu = &cpu;
+
+//     // Load BootromLog.txt from https://github.com/wheremyfoodat/Gameboy-logs
+//     const file = try std.fs.cwd().openFile("src/BootromLog.txt", .{});
+//     defer file.close();
+
+//     var buf_reader = std.io.bufferedReader(file.reader());
+//     var in_stream = buf_reader.reader();
+
+//     var buf: [1024]u8 = undefined;
+
+//     // From the docs for Gameboy-logs:
+//     //
+//     // > For the convenience of anyone who uses them, LY (MMIO register at
+//     // > 0xFF44) is stubbed to 0x90 permanently.
+//     cpu.hardwareRegisters[0x44] = 0x90;
+
+//     while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |expected| {
+//         var actual = std.ArrayList(u8).init(std.testing.allocator);
+//         defer actual.deinit();
+//         var writer = actual.writer();
+//         try writer.print("{}", .{cpu});
+
+//         try std.testing.expectEqualStrings(expected, actual.items);
+//         cpu.step();
+//     }
+// }
+
+test "blargg 01-special log comparison" {
+    var rom = try Rom.from_file("test-roms/01-special.gb", std.testing.allocator);
     defer rom.deinit();
 
     var bus = try Bus.init(std.testing.allocator, rom);
@@ -1107,8 +1140,8 @@ test "bootrom log comparison" {
     var cpu = SM83{ .bus = &bus };
     bus.cpu = &cpu;
 
-    // Load BootromLog.txt from https://github.com/wheremyfoodat/Gameboy-logs
-    const file = try std.fs.cwd().openFile("src/BootromLog.txt", .{});
+    // https://github.com/wheremyfoodat/Gameboy-logs - Blargg1LYStubbed.zip
+    const file = try std.fs.cwd().openFile("test-roms/01-special.txt", .{});
     defer file.close();
 
     var buf_reader = std.io.bufferedReader(file.reader());
@@ -1122,7 +1155,15 @@ test "bootrom log comparison" {
     // > 0xFF44) is stubbed to 0x90 permanently.
     cpu.hardwareRegisters[0x44] = 0x90;
 
+    // Run until we reach the start of the program ROM (basically just run the
+    // boot ROM):
+    while (cpu.pc != 0x0100) {
+        cpu.step();
+    }
+    var line_number: u64 = 0;
+    // Now start comparing our log:
     while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |expected| {
+        std.debug.print("\n{s}\n", .{expected});
         var actual = std.ArrayList(u8).init(std.testing.allocator);
         defer actual.deinit();
         var writer = actual.writer();
@@ -1130,5 +1171,6 @@ test "bootrom log comparison" {
 
         try std.testing.expectEqualStrings(expected, actual.items);
         cpu.step();
+        line_number += 1;
     }
 }
