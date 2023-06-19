@@ -1095,6 +1095,9 @@ test "real world ROM log match" {
 }
 
 test "bootrom log comparison" {
+    // FIXME: Need to figure out what ROM was used for the original log files so
+    // the header checksum passes. I could manually craft one by reverse
+    // engineering each byte from the checksum log...
     var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
     defer rom.deinit();
 
