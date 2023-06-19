@@ -536,7 +536,7 @@ pub const SM83 = struct {
                     .BC => self.bc(),
                     .DE => self.de(),
                     .HL => blk: {
-                        std.debug.print("\nHL = ${x:0>4}; (HL) = ${x:0>2};\n", .{ self.hl(), self.bus.read(self.hl()) });
+                        // std.debug.print("\nHL = ${x:0>4}; (HL) = ${x:0>2};\n", .{ self.hl(), self.bus.read(self.hl()) });
                         // wtf is this, zig?
                         break :blk self.hl();
                     },

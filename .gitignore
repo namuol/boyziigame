@@ -5,3 +5,4 @@ main
 *.sav
 *.o
 src/dmg_boot.bin
+test-roms
