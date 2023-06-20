@@ -280,19 +280,31 @@ pub const SM83 = struct {
                         self.bus.write_16(self.sp, next_instruction_addr);
                         // Jump to the address specified by the call
                         self.pc = addr;
+                    } else {
+                        nextCyclesLeft = opcode.cycles[1];
                     }
                 },
                 .RET => {
-                    switch (opcode.operands.len) {
-                        0 => {
-                            // Pop two bytes from stack & jump to that address.
-                            const addr = self.bus.read_16(self.sp);
-                            self.sp +%= 2;
-                            self.pc = addr;
+                    const condition = switch (opcode.operands.len) {
+                        0 => true,
+                        else => switch (opcode.operands[0].name) {
+                            .Z => self.flag(Flag.zero),
+                            .NZ => !self.flag(Flag.zero),
+                            .C => self.flag(Flag.carry),
+                            .NC => !self.flag(Flag.carry),
+                            else => {
+                                std.debug.panic("Condition .{s} not implemented for RET", .{opcode.operands[0].name.string()});
+                            },
                         },
-                        else => {
-                            @panic("RET with nonzero operand not implemented!");
-                        },
+                    };
+
+                    if (condition) {
+                        // Pop two bytes from stack & jump to that address.
+                        const addr = self.bus.read_16(self.sp);
+                        self.sp +%= 2;
+                        self.pc = addr;
+                    } else {
+                        nextCyclesLeft = opcode.cycles[1];
                     }
                 },
                 .RST => {
@@ -392,14 +404,41 @@ pub const SM83 = struct {
                 .ADD => {
                     const to = opcode.operands[0];
                     const from = opcode.operands[1];
+                    if (to.is_double() and from.is_double()) {
+                        const val = self.read_operand_u16(&to);
+                        const n = self.read_operand_u16(&from);
+                        const result = val +% n;
+                        self.write_operand_u16(result, &to);
+                        self.set_flag(Flag.subtract, false);
+                        self.set_flag(Flag.halfCarry, ((val & 0x0FFF) + (n & 0x0FFF)) > 0x0FFF);
+                        self.set_flag(Flag.carry, (@intCast(u32, val) + @intCast(u32, n)) > 0xFFFF);
+                    } else {
+                        const val = self.read_operand_u8(&to);
+                        const n = self.read_operand_u8(&from);
+                        const result = val +% n;
+                        self.write_operand_u8(result, &to);
+                        self.set_flag(Flag.zero, result == 0);
+                        self.set_flag(Flag.subtract, false);
+                        self.set_flag(Flag.halfCarry, ((val & 0x0F) + (n & 0x0F)) > 0x0F);
+                        self.set_flag(Flag.carry, (@intCast(u16, val) + @intCast(u16, n)) > 0xFF);
+                    }
+                },
+                .ADC => {
+                    const to = opcode.operands[0];
+                    const from = opcode.operands[1];
                     const val = self.read_operand_u8(&to);
                     const n = self.read_operand_u8(&from);
-                    const result = val +% n;
+                    var result = val +% n;
+                    var delta: u8 = 0;
+                    if (self.flag(Flag.carry)) {
+                        delta = 1;
+                        result +%= delta;
+                    }
                     self.write_operand_u8(result, &to);
                     self.set_flag(Flag.zero, result == 0);
                     self.set_flag(Flag.subtract, false);
-                    self.set_flag(Flag.halfCarry, (val & 0xF) + (n & 0xF) > 0x0F);
-                    self.set_flag(Flag.carry, (@intCast(u16, val) + @intCast(u16, n)) > 0xFF);
+                    self.set_flag(Flag.halfCarry, ((val & 0x0F) + (n & 0x0F) + delta) > 0x0F);
+                    self.set_flag(Flag.carry, (@intCast(u16, val) + @intCast(u16, n) + @intCast(u16, delta)) > 0xFF);
                 },
                 .SUB => {
                     const n = self.read_operand_u8(&opcode.operands[0]);
@@ -485,23 +524,50 @@ pub const SM83 = struct {
                     self.set_flag(Flag.subtract, false);
                     self.set_flag(Flag.halfCarry, true);
                 },
+                .RR => {
+                    const val = self.read_operand_u8(&opcode.operands[0]);
+                    const carry: u8 = if (self.flag(Flag.carry)) 0b1000_0000 else 0;
+                    const result = val >> 1 | carry;
+                    self.write_operand_u8(result, &opcode.operands[0]);
+                    self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, false);
+                    self.set_flag(Flag.carry, (val & 1) != 0);
+                },
                 .RL => {
                     const val = self.read_operand_u8(&opcode.operands[0]);
                     const carry: u8 = if (self.flag(Flag.carry)) 1 else 0;
                     const result = val << 1 | carry;
                     self.write_operand_u8(result, &opcode.operands[0]);
-                    //
                     self.set_flag(Flag.zero, result == 0);
                     self.set_flag(Flag.subtract, false);
                     self.set_flag(Flag.halfCarry, false);
                     self.set_flag(Flag.carry, (val & 0b1000_0000) != 0);
+                },
+                .SRL => {
+                    const val = self.read_operand_u8(&opcode.operands[0]);
+                    const result = (val >> 1) & 0b0111_1111;
+                    self.write_operand_u8(result, &opcode.operands[0]);
+                    self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, false);
+                    self.set_flag(Flag.carry, (val & 1) != 0);
+                },
+                .RRA => {
+                    const val = self.a;
+                    const carry: u8 = if (self.flag(Flag.carry)) 0b1000_0000 else 0;
+                    const result = val >> 1 | carry;
+                    self.a = result;
+                    self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, false);
+                    self.set_flag(Flag.carry, (val & 1) != 0);
                 },
                 .RLA => {
                     const val = self.a;
                     const carry: u8 = if (self.flag(Flag.carry)) 1 else 0;
                     const result = val << 1 | carry;
                     self.a = result;
-
                     // We always clear the zero flag for RLA, unlike RL
                     self.set_flag(Flag.zero, false);
                     self.set_flag(Flag.subtract, false);

@@ -242,6 +242,12 @@ pub const Operand = struct {
     bytes: u2 = 0,
     increment: bool = false,
     decrement: bool = false,
+    pub fn is_double(self: *const Operand) bool {
+        return switch (self.name) {
+            .a16, .d16, .AF, .BC, .DE, .HL, .SP => true,
+            else => false,
+        };
+    }
 
     pub fn format(self: *const Operand, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         if (self.immediate) {
