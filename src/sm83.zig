@@ -126,7 +126,8 @@ pub const SM83 = struct {
     }
     pub fn set_af(self: *SM83, val: u16) void {
         self.a = @truncate(u8, (val & 0xFF00) >> 8);
-        self.f = @truncate(u8, val & 0xFF);
+        // Note: We ignore lower nibble on F:
+        self.f = @truncate(u8, val & 0xF0);
     }
 
     pub fn bc(self: SM83) u16 {
@@ -215,15 +216,32 @@ pub const SM83 = struct {
             switch (opcode.mnemonic) {
                 .NOP => {},
                 .JP => {
+                    var condition = true;
+                    var addr_opcode_index: u3 = 0;
                     switch (opcode.operands.len) {
-                        1 => {
-                            const addr = self.read_operand_u16(&opcode.operands[0]);
-                            self.pc = addr;
+                        1 => {},
+                        2 => {
+                            condition = switch (opcode.operands[0].name) {
+                                .Z => self.flag(Flag.zero),
+                                .NZ => !self.flag(Flag.zero),
+                                .C => self.flag(Flag.carry),
+                                .NC => !self.flag(Flag.carry),
+                                else => {
+                                    panic("Unsupported JP condition: {s}", .{opcode.operands[0].name.string()});
+                                },
+                            };
+                            addr_opcode_index = 1;
                         },
-                        // 2 => {},
                         else => {
                             panic("JP with {d} opcodes not supported!", .{opcode.operands.len});
                         },
+                    }
+
+                    const addr = self.read_operand_u16(&opcode.operands[addr_opcode_index]);
+                    if (condition) {
+                        self.pc = addr;
+                    } else {
+                        nextCyclesLeft = opcode.cycles[1];
                     }
                 },
                 .JR => {
