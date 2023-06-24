@@ -469,6 +469,28 @@ pub const SM83 = struct {
                     self.set_flag(Flag.carry, val < n);
                 },
 
+                // https://ehaskins.com/2018-01-30%20Z80%20DAA/
+                .DAA => {
+                    var result: u8 = self.a;
+                    if (self.flag(Flag.halfCarry) or (result & 0x0F) > 9) {
+                        const nibble = (result & 0x0F) + 0x06;
+                        if (nibble > 0x0F) {
+                            result +%= 0x10;
+                        }
+                        result = (nibble & 0x0F) + (result & 0xF0);
+                    }
+
+                    if (self.flag(Flag.carry) or (result >> 4) > 9) {
+                        const nibble = (result >> 4) + 0x06;
+                        self.set_flag(Flag.carry, nibble > 0x0F);
+                        result = (((nibble & 0x0F) << 4) & 0xF0) + (result & 0x0F);
+                    }
+
+                    self.a = result;
+                    self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.halfCarry, false);
+                },
+
                 .RES => {
                     // Reset bit `b` in register `r`
                     const bit = opcode.operands[1];
