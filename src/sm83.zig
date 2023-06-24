@@ -471,24 +471,23 @@ pub const SM83 = struct {
 
                 // https://ehaskins.com/2018-01-30%20Z80%20DAA/
                 .DAA => {
-                    var result: u8 = self.a;
-                    if (self.flag(Flag.halfCarry) or (result & 0x0F) > 9) {
-                        const nibble = (result & 0x0F) + 0x06;
-                        if (nibble > 0x0F) {
-                            result +%= 0x10;
-                        }
-                        result = (nibble & 0x0F) + (result & 0xF0);
+                    var correction: u8 = 0x00;
+                    var set_carry: bool = false;
+
+                    if (self.flag(.halfCarry) or (!self.flag(.subtract) and ((self.a & 0x0F) > 0x09))) {
+                        correction |= 0x06;
                     }
 
-                    if (self.flag(Flag.carry) or (result >> 4) > 9) {
-                        const nibble = (result >> 4) + 0x06;
-                        self.set_flag(Flag.carry, nibble > 0x0F);
-                        result = (((nibble & 0x0F) << 4) & 0xF0) + (result & 0x0F);
+                    if (self.flag(.carry) or (!self.flag(.subtract) and (self.a > 0x99))) {
+                        correction |= 0x60;
+                        set_carry = true;
                     }
 
-                    self.a = result;
-                    self.set_flag(Flag.zero, result == 0);
-                    self.set_flag(Flag.halfCarry, false);
+                    self.a = if (self.flag(.subtract)) self.a -% correction else self.a +% correction;
+
+                    self.set_flag(.zero, self.a == 0);
+                    self.set_flag(.halfCarry, false);
+                    self.set_flag(.carry, set_carry);
                 },
 
                 .RES => {
@@ -598,7 +597,7 @@ pub const SM83 = struct {
                     const carry: u8 = if (self.flag(Flag.carry)) 0b1000_0000 else 0;
                     const result = val >> 1 | carry;
                     self.a = result;
-                    self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.zero, false);
                     self.set_flag(Flag.subtract, false);
                     self.set_flag(Flag.halfCarry, false);
                     self.set_flag(Flag.carry, (val & 1) != 0);
@@ -1053,7 +1052,7 @@ test "16 bit registers" {
     bus_.cpu = &cpu;
     cpu.set_af(0xAABB);
     try expect(cpu.a == 0xAA);
-    try expect(cpu.f == 0xBB);
+    try expect(cpu.f == 0xB0);
     cpu.set_bc(0xAABB);
     try expect(cpu.b == 0xAA);
     try expect(cpu.c == 0xBB);
