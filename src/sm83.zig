@@ -362,11 +362,17 @@ pub const SM83 = struct {
                         },
                         .BC, .DE, .HL, .SP => {
                             if (!param.immediate) {
-                                const data = self.read_operand_u8(&param);
-                                self.write_operand_u8(if (opcode.mnemonic == .INC) data +% 1 else data -% 1, &param);
+                                const val = self.read_operand_u8(&param);
+                                const result = if (opcode.mnemonic == .INC) val +% 1 else val -% 1;
+                                self.write_operand_u8(result, &param);
+                                self.set_flag(Flag.zero, result == 0);
+                                self.set_flag(Flag.subtract, opcode.mnemonic == .DEC);
+                                const half_carry = if (opcode.mnemonic == .INC) (result & 0x0F) == 0 else (result & 0x0F) == 0x0F;
+                                self.set_flag(Flag.halfCarry, half_carry);
                             } else {
-                                const data = self.read_operand_u16(&param);
-                                self.write_operand_u16(if (opcode.mnemonic == .INC) data +% 1 else data -% 1, &param);
+                                const val = self.read_operand_u16(&param);
+                                const result = if (opcode.mnemonic == .INC) val +% 1 else val -% 1;
+                                self.write_operand_u16(result, &param);
                             }
                         },
                         else => {

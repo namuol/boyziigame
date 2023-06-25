@@ -12,7 +12,7 @@ pub const Bus = struct {
 
     // Temporary read-error sigil; we should probably look into how the bus
     // behaves when attempting to read from addresses that are out of range.
-    const TEMP_READ_ERROR_SIGIL: u8 = 0xAA;
+    const TEMP_READ_ERROR_SIGIL: u8 = 0x42;
     pub fn read(self: *const Bus, addr: u16) u8 {
         // Follow the memory mapping guide here:
         // https://gbdev.io/pandocs/Memory_Map.html
