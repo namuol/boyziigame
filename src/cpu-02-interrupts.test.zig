@@ -43,6 +43,11 @@ test "blargg 02-interrupts log comparison" {
 
     // Now start comparing our log:
     while (try in_stream.readUntilDelimiterOrEof(&expectedBuf, '\n')) |expected| {
+        while (line_number == 152480 and cpu.halted) {
+            // std.debug.print("waiting...\n", .{});
+            cpu.step();
+        }
+        // std.debug.print("{} {s}\n", .{ line_number, expected });
         try std.testing.expectEqualStrings(expected, try std.fmt.bufPrint(&actualBuf, "{}", .{cpu}));
         cpu.step();
         line_number += 1;

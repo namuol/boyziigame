@@ -24,14 +24,22 @@ const opcodes = @import("./sm83-opcodes.zig");
 const Opcode = opcodes.Opcode;
 const Operand = opcodes.Operand;
 
-const panic = std.debug.panic;
-
 const Flag = enum(u8) {
     zero = 0b1 << 7,
     subtract = 0b1 << 6,
     halfCarry = 0b1 << 5,
     carry = 0b1 << 4,
 };
+
+const Interrupt = enum(u8) {
+    timer = 0b0000_0100,
+};
+
+const DMG_CPU_HZ: u32 = 4194304;
+
+const INT_FLAG_TIMER: u8 = 0b1 << 2;
+
+const INT_VEC_TIMER: u16 = 0x0050;
 
 pub const SM83 = struct {
     bus: *Bus,
@@ -61,11 +69,6 @@ pub const SM83 = struct {
     /// Program counter
     pc: u16 = 0,
 
-    //
-    // Internals
-    //
-    cyclesLeft: u8 = 0,
-
     /// Used to support the `DI` instruction.
     ///
     /// From the "Game Boy CPU Manual":
@@ -74,9 +77,29 @@ pub const SM83 = struct {
     /// > are disabled after instruction after DI is executed.
     disableInterruptsAfterNextInstruction: bool = false,
     enableInterruptsAfterNextInstruction: bool = false,
+    interruptMasterEnable: bool = false,
+    halted: bool = false,
 
     hardwareRegisters: [256]u8 = [_]u8{0} ** 256,
     bootROM: *const [256:0]u8 = @embedFile("./dmg_boot.bin"),
+
+    //
+    // Internals
+    //
+
+    /// How many cycles until the next instruction?
+    cyclesLeft: u8 = 0,
+
+    /// Increments once per cycle. Useful for timer simulation.
+    ticks: u32 = 0,
+    cycleRate: u32 = DMG_CPU_HZ,
+    debugLastPC: u16 = 0x0000,
+
+    pub fn panic(self: *const SM83, comptime format_: []const u8, args: anytype) noreturn {
+        std.debug.print("LAST PC @ PANIC: ${X:0>4}\n", .{self.debugLastPC});
+        std.debug.print("CPU STATE @ PANIC:\n{}\n", .{self});
+        std.debug.panic(format_, args);
+    }
 
     pub fn boot_rom_enabled(self: *const SM83) bool {
         // Should this be != 0x01?
@@ -94,7 +117,23 @@ pub const SM83 = struct {
 
     pub fn write_hw_register(self: *SM83, addr: u8, data: u8) void {
         // std.debug.print("\nwrite_hw_register(0x{x:0>2}, 0x{x:0>2})\n", .{ addr, data });
-        self.hardwareRegisters[addr] = data;
+        switch (addr) {
+            // Writing any value to DIV register resets it to $00
+            0x04 => {
+                self.hardwareRegisters[addr] = 0x00;
+            },
+            0xFF => {
+                std.debug.print("rIE = ${X:0>2}\n", .{data});
+                self.hardwareRegisters[addr] = data;
+            },
+            0x0F => {
+                std.debug.print("rIF = ${X:0>2}\n", .{data});
+                self.hardwareRegisters[addr] = data;
+            },
+            else => {
+                self.hardwareRegisters[addr] = data;
+            },
+        }
     }
 
     //
@@ -194,11 +233,17 @@ pub const SM83 = struct {
     }
 
     pub fn cycle(self: *SM83) bool {
-        const stepped = self.cyclesLeft == 0;
+        var stepped: bool = false;
+
+        // Only for debugging:
+        self.debugLastPC = self.pc;
+
         // We are not (yet) implementing a "cycle accurate" emulator, so we
         // essentially just do all our execution at once, once our cycle counter
         // has reached 0.
-        if (self.cyclesLeft == 0) {
+        if (!self.halted and self.cyclesLeft == 0) {
+            stepped = true;
+
             const opcode = self.opcode_at(self.pc);
             if (opcode.prefixed) {
                 self.pc +%= 2;
@@ -214,7 +259,9 @@ pub const SM83 = struct {
             var nextCyclesLeft = opcode.cycles[0];
 
             switch (opcode.mnemonic) {
-                .NOP => {},
+                .NOP => {
+                    std.debug.print("NOP\n", .{});
+                },
                 .JP => {
                     var condition = true;
                     var addr_opcode_index: u3 = 0;
@@ -227,13 +274,13 @@ pub const SM83 = struct {
                                 .C => self.flag(Flag.carry),
                                 .NC => !self.flag(Flag.carry),
                                 else => {
-                                    panic("Unsupported JP condition: {s}", .{opcode.operands[0].name.string()});
+                                    self.panic("Unsupported JP condition: {s}", .{opcode.operands[0].name.string()});
                                 },
                             };
                             addr_opcode_index = 1;
                         },
                         else => {
-                            panic("JP with {d} opcodes not supported!", .{opcode.operands.len});
+                            self.panic("JP with {d} opcodes not supported!", .{opcode.operands.len});
                         },
                     }
 
@@ -253,7 +300,7 @@ pub const SM83 = struct {
                         .C => self.flag(Flag.carry),
                         .NC => !self.flag(Flag.carry),
                         else => {
-                            panic("Unsupported JR condition: {s}", .{opcode.operands[0].name.string()});
+                            self.panic("Unsupported JR condition: {s}", .{opcode.operands[0].name.string()});
                         },
                     };
 
@@ -284,7 +331,7 @@ pub const SM83 = struct {
                         .C => self.flag(Flag.carry),
                         .a16 => true,
                         else => {
-                            std.debug.panic("Condition .{s} not implemented for CALL", .{opcode.operands[0].name.string()});
+                            self.panic("Condition .{s} not implemented for CALL", .{opcode.operands[0].name.string()});
                         },
                     };
 
@@ -311,7 +358,7 @@ pub const SM83 = struct {
                             .C => self.flag(Flag.carry),
                             .NC => !self.flag(Flag.carry),
                             else => {
-                                std.debug.panic("Condition .{s} not implemented for RET", .{opcode.operands[0].name.string()});
+                                self.panic("Condition .{s} not implemented for RET", .{opcode.operands[0].name.string()});
                             },
                         },
                     };
@@ -376,19 +423,40 @@ pub const SM83 = struct {
                             }
                         },
                         else => {
-                            panic("Unexpected INC/DEC param: {s}", .{param.name.string()});
+                            self.panic("Unexpected INC/DEC param: {s}", .{param.name.string()});
                         },
                     }
                 },
                 .LD, .LDH => {
-                    const to = opcode.operands[0];
-                    const from = opcode.operands[1];
-                    if (from.immediate and from.bytes == 2) {
-                        const data = self.read_operand_u16(&from);
+                    if (opcode.operands.len == 3) {
+                        // Special case: LD HL, SP + r8
+                        const to = opcode.operands[0];
+                        const val = self.sp;
+                        const n = self.read_operand_u8(&opcode.operands[2]);
+                        const offset = @bitCast(i8, @truncate(u8, n));
+
+                        // There *must* be a better way to do this in zig:
+                        const data: u16 = if (offset > 0)
+                            self.sp +% @intCast(u16, offset)
+                        else
+                            self.sp -% @intCast(u16, -offset);
+
                         self.write_operand_u16(data, &to);
+
+                        self.set_flag(.zero, false);
+                        self.set_flag(.subtract, false);
+                        self.set_flag(.halfCarry, (@intCast(i32, val & 0x000F) + @intCast(i32, n & 0x0F)) > 0x0F);
+                        self.set_flag(.carry, (@intCast(i32, val & 0x00FF) + @intCast(i32, n)) > 0xFF);
                     } else {
-                        const data = self.read_operand_u8(&from);
-                        self.write_operand_u8(data, &to);
+                        const to = opcode.operands[0];
+                        const from = opcode.operands[1];
+                        if (from.immediate and from.bytes == 2) {
+                            const data = self.read_operand_u16(&from);
+                            self.write_operand_u16(data, &to);
+                        } else {
+                            const data = self.read_operand_u8(&from);
+                            self.write_operand_u8(data, &to);
+                        }
                     }
                 },
                 .AND => {
@@ -418,11 +486,16 @@ pub const SM83 = struct {
                     self.f = 0;
                     self.set_flag(Flag.zero, self.a == 0);
                 },
+
                 .DI => {
                     self.disableInterruptsAfterNextInstruction = true;
                 },
                 .EI => {
                     self.enableInterruptsAfterNextInstruction = true;
+                },
+                .HALT => {
+                    self.halted = true;
+                    std.debug.print("HALT\n", .{});
                 },
 
                 .ADD => {
@@ -509,7 +582,7 @@ pub const SM83 = struct {
                         ._6 => 0b1011_1111,
                         ._7 => 0b0111_1111,
                         else => {
-                            panic("Unexpected bit operand for RES operation: {s}", .{bit.name.string()});
+                            self.panic("Unexpected bit operand for RES operation: {s}", .{bit.name.string()});
                         },
                     };
                     const register = opcode.operands[0];
@@ -530,7 +603,7 @@ pub const SM83 = struct {
                             self.bus.write(addr, val);
                         },
                         else => {
-                            panic("Unexpected register operand for RES operation: {s}", .{register.name.string()});
+                            self.panic("Unexpected register operand for RES operation: {s}", .{register.name.string()});
                         },
                     }
                 },
@@ -547,7 +620,7 @@ pub const SM83 = struct {
                         ._6 => 0b0100_0000,
                         ._7 => 0b1000_0000,
                         else => {
-                            panic("Unexpected bit operand for BIT operation: {s}", .{bit.name.string()});
+                            self.panic("Unexpected bit operand for BIT operation: {s}", .{bit.name.string()});
                         },
                     };
                     const register = opcode.operands[1];
@@ -561,7 +634,7 @@ pub const SM83 = struct {
                         .L => self.l,
                         .HL => self.bus.read(self.hl()),
                         else => {
-                            panic("Unexpected register operand for RES operation: {s}", .{register.name.string()});
+                            self.panic("Unexpected register operand for RES operation: {s}", .{register.name.string()});
                         },
                     };
 
@@ -620,26 +693,102 @@ pub const SM83 = struct {
                     self.set_flag(Flag.carry, (val & 0b1000_0000) != 0);
                 },
                 else => {
-                    panic("{s} not implemented!", .{opcode.mnemonic.string()});
+                    self.panic("{s} not implemented!", .{opcode.mnemonic.string()});
                 },
             }
 
             self.cyclesLeft = nextCyclesLeft;
 
             if (self.disableInterruptsAfterNextInstruction and opcode.mnemonic != .DI) {
+                std.debug.print("Interrupts disabled!\n", .{});
                 self.hardwareRegisters[0xFF] = 0x0F & 0b0000;
+                self.interruptMasterEnable = false;
+                self.disableInterruptsAfterNextInstruction = false;
             }
             if (self.enableInterruptsAfterNextInstruction and opcode.mnemonic != .EI) {
+                std.debug.print("Interrupts enabled!\n", .{});
                 self.hardwareRegisters[0xFF] = 0x0F & 0b1111;
+                self.interruptMasterEnable = true;
+                self.enableInterruptsAfterNextInstruction = false;
             }
         }
 
-        self.cyclesLeft -= 1;
-        return stepped;
+        if (!self.halted) {
+            self.cyclesLeft -= 1;
+        }
+
+        //
+        // TIMERS
+        //
+        const timersTicked = (self.ticks % 4) == 0;
+
+        // The DIV register (FF04) increments at a rate of 1/4th the CPU cycle
+        // rate, so we can simply check if the current tick is a 4th-tick.
+        if (timersTicked) {
+            self.hardwareRegisters[0x04] +%= 1;
+        }
+
+        const tac: u8 = self.hardwareRegisters[0x07];
+        const timerEnabled: bool = tac & 0b0000_0100 != 0;
+        if (timerEnabled) {
+            const timerCycleDivisor: u32 = switch (@truncate(u2, tac)) {
+                0 => 1024,
+                1 => 16,
+                2 => 64,
+                3 => 256,
+            };
+
+            if ((self.ticks % timerCycleDivisor) == 0) {
+                self.hardwareRegisters[0x05] +%= 1;
+                // std.debug.print("FF05 = {X:0>2} cyclesLeft: {}\n", .{ self.hardwareRegisters[0x05], self.cyclesLeft });
+                // When the value overflows (exceeds $FF) it is reset to the
+                // value specified in TMA (FF06) and an interrupt is requested.
+                if (self.hardwareRegisters[0x05] == 0x00) {
+                    self.hardwareRegisters[0x05] = self.hardwareRegisters[0x06];
+                    self.hardwareRegisters[0x0F] |= INT_FLAG_TIMER;
+                }
+            }
+        }
+
+        // As soon as an interrupt is pending, we un-halt the CPU
+        if (self.halted and ((self.hardwareRegisters[0x0F]) != 0x00)) {
+            std.debug.print("unHALTed\n", .{});
+            self.halted = false;
+        }
+
+        var interruptHandled: bool = false;
+        if (!interruptHandled and self.maybe_interrupt(INT_FLAG_TIMER, INT_VEC_TIMER)) {
+            std.debug.print("\nTimer interrupt!\n", .{});
+            interruptHandled = true;
+        }
+
+        //
+        // DONE
+        //
+
+        self.ticks +%= 1;
+
+        return stepped or (self.halted and timersTicked) or interruptHandled;
     }
 
     pub fn step(self: *SM83) void {
         while (!self.cycle()) {}
+    }
+
+    pub fn maybe_interrupt(self: *SM83, interruptFlag: u8, interruptVector: u16) bool {
+        if (self.interruptMasterEnable and
+            (self.hardwareRegisters[0xFF] & interruptFlag) != 0 and
+            (self.hardwareRegisters[0x0F] & interruptFlag) != 0)
+        {
+            self.interruptMasterEnable = false;
+            self.sp -%= 2;
+            self.hardwareRegisters[0x0F] &= ~interruptFlag;
+            self.bus.write_16(self.sp, self.pc);
+            self.pc = interruptVector;
+            return true;
+        }
+
+        return false;
     }
 
     pub fn read_operand_u8_safe(self: *const SM83, operand: *const Operand) u8 {
@@ -651,16 +800,17 @@ pub const SM83 = struct {
             .E => self.e,
             .H => self.h,
             .L => self.l,
-            .BC, .DE, .HL => {
+            .BC, .DE, .HL, .SP => {
                 // FIXME: Perhaps we should have `Operand` and `Operand16`
                 // structs instead so the type checker can help us deal with
                 // this tediousness
                 if (operand.immediate) {
-                    @panic("Cannot get BC as 8-bit immediate value");
+                    self.panic("Cannot get {s} as 8-bit immediate value", .{operand.name.string()});
                 }
                 const addr = switch (operand.name) {
                     .BC => self.bc(),
                     .DE => self.de(),
+                    .SP => self.sp,
                     .HL => blk: {
                         // std.debug.print("\nHL = ${x:0>4}; (HL) = ${x:0>2};\n", .{ self.hl(), self.bus.read(self.hl()) });
                         // wtf is this, zig?
@@ -678,7 +828,7 @@ pub const SM83 = struct {
             },
             .a16, .d16 => {
                 if (operand.immediate) {
-                    std.debug.panic("Cannot read 16-bit immediate value for d16/a16 (CPU: {})", .{self});
+                    self.panic("Cannot read 16-bit immediate value for d16/a16 (CPU: {})", .{self});
                 }
                 const addr = self.bus.read_16(self.pc);
                 return self.bus.read(addr);
@@ -693,7 +843,7 @@ pub const SM83 = struct {
             ._38H => 0x38,
 
             else => {
-                panic("read_operand_u8 for .{s} not implemented!", .{operand.name.string()});
+                self.panic("read_operand_u8 for .{s} not implemented!", .{operand.name.string()});
             },
         };
     }
@@ -701,7 +851,7 @@ pub const SM83 = struct {
     pub fn read_operand_u8(self: *SM83, operand: *const Operand) u8 {
         const result = self.read_operand_u8_safe(operand);
         switch (operand.name) {
-            .A, .B, .C, .D, .E, .H, .L, .AF, .BC, .DE, ._08H, ._10H, ._18H, ._20H, ._28H, ._30H, ._38H => {},
+            .A, .B, .C, .D, .E, .H, .L, .AF, .BC, .DE, .SP, ._08H, ._10H, ._18H, ._20H, ._28H, ._30H, ._38H => {},
             .HL => {
                 if (operand.decrement) {
                     self.set_hl(self.hl() -% 1);
@@ -713,7 +863,7 @@ pub const SM83 = struct {
             .d8, .r8, .a8 => self.pc +%= 1,
             .a16, .d16 => self.pc +%= 2,
             else => {
-                panic("read_operand_u8 for .{s} not implemented!", .{operand.name.string()});
+                self.panic("read_operand_u8 for .{s} not implemented!", .{operand.name.string()});
             },
         }
         return result;
@@ -737,20 +887,20 @@ pub const SM83 = struct {
 
             .BC => {
                 if (operand.immediate) {
-                    panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
+                    self.panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
                 }
                 self.bus.write(self.bc(), data);
             },
             .DE => {
                 if (operand.immediate) {
-                    panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
+                    self.panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
                 }
                 self.bus.write(self.de(), data);
             },
 
             .HL => {
                 if (operand.immediate) {
-                    panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
+                    self.panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
                 }
                 self.bus.write(self.hl(), data);
                 if (operand.decrement) {
@@ -763,7 +913,7 @@ pub const SM83 = struct {
 
             .a16 => {
                 if (operand.immediate) {
-                    panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
+                    self.panic("Cannot write 8 bit immediate value to .{s}", .{operand.name.string()});
                 }
                 const addr = self.bus.read_16(self.pc);
                 self.pc +%= 2;
@@ -777,7 +927,7 @@ pub const SM83 = struct {
             },
 
             else => {
-                panic("write_operand_u8 for .{s} not implemented!", .{operand.name.string()});
+                self.panic("write_operand_u8 for .{s} not implemented!", .{operand.name.string()});
             },
         }
     }
@@ -793,7 +943,7 @@ pub const SM83 = struct {
             .DE => self.de(),
             .HL => self.hl(),
             else => {
-                panic("read_operand_u16_safe for .{s} not implemented!", .{operand.name.string()});
+                self.panic("read_operand_u16_safe for .{s} not implemented!", .{operand.name.string()});
             },
         };
     }
@@ -804,7 +954,7 @@ pub const SM83 = struct {
             .d16, .a16 => self.pc +%= 2,
             .AF, .BC, .DE, .HL => {},
             else => {
-                panic("read_operand_u16 for .{s} not implemented!", .{operand.name.string()});
+                self.panic("read_operand_u16 for .{s} not implemented!", .{operand.name.string()});
             },
         }
         return result;
@@ -838,7 +988,7 @@ pub const SM83 = struct {
                 self.sp = data;
             },
             else => {
-                panic("write_operand_u16 for .{s} not implemented!", .{operand.name.string()});
+                self.panic("write_operand_u16 for .{s} not implemented!", .{operand.name.string()});
             },
         }
     }
