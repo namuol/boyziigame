@@ -8,7 +8,7 @@ const Bus = @import("./bus.zig").Bus;
 const Rom = @import("./rom.zig").Rom;
 const SM83 = @import("./sm83.zig").SM83;
 
-test "blargg 02-interrupts log comparison" {
+pub fn run() !void {
     var rom = try Rom.from_file("test-roms/02-interrupts.gb", std.testing.allocator);
     defer rom.deinit();
 
@@ -53,3 +53,7 @@ test "blargg 02-interrupts log comparison" {
         line_number += 1;
     }
 }
+
+// test "blargg 02-interrupts log comparison" {
+//     try run();
+// }

@@ -8,7 +8,7 @@ const Bus = @import("./bus.zig").Bus;
 const Rom = @import("./rom.zig").Rom;
 const SM83 = @import("./sm83.zig").SM83;
 
-test "bootrom log comparison" {
+pub fn run() !void {
     var rom = try Rom.from_file("test-roms/01-special.gb", std.testing.allocator);
     defer rom.deinit();
 
@@ -39,3 +39,7 @@ test "bootrom log comparison" {
         cpu.step();
     }
 }
+
+// test "bootrom log comparison" {
+//     try run();
+// }

@@ -123,11 +123,11 @@ pub const SM83 = struct {
                 self.hardwareRegisters[addr] = 0x00;
             },
             0xFF => {
-                std.debug.print("rIE = ${X:0>2}\n", .{data});
+                // std.debug.print("rIE = ${X:0>2}\n", .{data});
                 self.hardwareRegisters[addr] = data;
             },
             0x0F => {
-                std.debug.print("rIF = ${X:0>2}\n", .{data});
+                // std.debug.print("rIF = ${X:0>2}\n", .{data});
                 self.hardwareRegisters[addr] = data;
             },
             else => {
@@ -493,7 +493,7 @@ pub const SM83 = struct {
                 },
                 .HALT => {
                     self.halted = true;
-                    std.debug.print("HALT\n", .{});
+                    // std.debug.print("HALT\n", .{});
                 },
 
                 .ADD => {
@@ -563,6 +563,23 @@ pub const SM83 = struct {
                     self.set_flag(Flag.subtract, true);
                     self.set_flag(Flag.halfCarry, (val & 0xF) < (n & 0xF));
                     self.set_flag(Flag.carry, val < n);
+                },
+                .SBC => {
+                    const to = opcode.operands[0];
+                    const from = opcode.operands[1];
+                    const val = self.read_operand_u8(&to);
+                    const n = self.read_operand_u8(&from);
+                    var result = val -% n;
+                    var delta: u8 = 0;
+                    if (self.flag(Flag.carry)) {
+                        delta = 1;
+                        result -%= delta;
+                    }
+                    self.write_operand_u8(result, &to);
+                    self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.subtract, true);
+                    self.set_flag(Flag.halfCarry, (val & 0xF) < ((n & 0xF) + delta));
+                    self.set_flag(Flag.carry, @intCast(u16, val) < (@intCast(u16, n) + @intCast(u16, delta)));
                 },
 
                 // https://ehaskins.com/2018-01-30%20Z80%20DAA/
@@ -717,13 +734,13 @@ pub const SM83 = struct {
             self.cyclesLeft = nextCyclesLeft;
 
             if (self.disableInterruptsAfterNextInstruction and opcode.mnemonic != .DI) {
-                std.debug.print("Interrupts disabled!\n", .{});
+                // std.debug.print("Interrupts disabled!\n", .{});
                 self.hardwareRegisters[0xFF] = 0x0F & 0b0000;
                 self.interruptMasterEnable = false;
                 self.disableInterruptsAfterNextInstruction = false;
             }
             if (self.enableInterruptsAfterNextInstruction and opcode.mnemonic != .EI) {
-                std.debug.print("Interrupts enabled!\n", .{});
+                // std.debug.print("Interrupts enabled!\n", .{});
                 self.hardwareRegisters[0xFF] = 0x0F & 0b1111;
                 self.interruptMasterEnable = true;
                 self.enableInterruptsAfterNextInstruction = false;
@@ -769,13 +786,13 @@ pub const SM83 = struct {
 
         // As soon as an interrupt is pending, we un-halt the CPU
         if (self.halted and ((self.hardwareRegisters[0x0F]) != 0x00)) {
-            std.debug.print("unHALTed\n", .{});
+            // std.debug.print("unHALTed\n", .{});
             self.halted = false;
         }
 
         var interruptHandled: bool = false;
         if (!interruptHandled and self.maybe_interrupt(INT_FLAG_TIMER, INT_VEC_TIMER)) {
-            std.debug.print("\nTimer interrupt!\n", .{});
+            // std.debug.print("\nTimer interrupt!\n", .{});
             interruptHandled = true;
         }
 
