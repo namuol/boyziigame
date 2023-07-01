@@ -1,8 +1,18 @@
-# Boyz II Game
+# BoyZ II Game
 
 Another Game Boy emulator written in Zig, for fun.
 
 At least that's the plan.
+
+## Why the name?
+
+- Zig, Game Boy
+- Boy (Zig) Game
+- Boy(Z II G)ame
+
+It's a play on "[Boyz II Men](https://en.wikipedia.org/wiki/Boyz_II_Men)", the
+name of an R&B group I know mainly for their hits from the 90s, which were on
+the radio around the same time I would spend countless hours on my Game Boy.
 
 ## Dependencies
 

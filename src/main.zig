@@ -33,10 +33,11 @@ const ray = @cImport({
 });
 
 pub fn main() void {
-    const screen_width = 800;
-    const screen_height = 450;
+    // Double width; main screen on left hand side, debugging info on right hand side:
+    const screen_width = 160 * 4 * 2;
+    const screen_height = 144 * 4;
 
-    ray.InitWindow(screen_width, screen_height, "raylib [core] example - basic window");
+    ray.InitWindow(screen_width, screen_height, "BoyZ II Game");
     defer ray.CloseWindow(); // Close window and OpenGL context
 
     ray.SetTargetFPS(60); // Set our game to run at 60 frames-per-second
@@ -53,7 +54,7 @@ pub fn main() void {
         defer ray.EndDrawing();
 
         ray.ClearBackground(ray.RAYWHITE);
-        ray.DrawText("WA", 190, 200, 20, ray.LIGHTGRAY);
+        ray.DrawText("BoyZ II Game", 190, 200, 20, ray.LIGHTGRAY);
         //----------------------------------------------------------------------------------
     }
 }
