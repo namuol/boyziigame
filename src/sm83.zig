@@ -487,6 +487,11 @@ pub const SM83 = struct {
                     self.f = 0;
                     self.set_flag(Flag.zero, self.a == 0);
                 },
+                .CPL => {
+                    self.a = ~self.a;
+                    self.set_flag(Flag.subtract, true);
+                    self.set_flag(Flag.halfCarry, true);
+                },
 
                 .DI => {
                     self.disableInterruptsAfterNextInstruction = true;
@@ -605,47 +610,18 @@ pub const SM83 = struct {
                     self.set_flag(.halfCarry, false);
                     self.set_flag(.carry, set_carry);
                 },
-
-                .RES => {
-                    // Reset bit `b` in register `r`
-                    const bit = opcode.operands[1];
-                    const mask: u8 = switch (bit.name) {
-                        ._0 => 0b1111_1110,
-                        ._1 => 0b1111_1101,
-                        ._2 => 0b1111_1011,
-                        ._3 => 0b1111_0111,
-                        ._4 => 0b1110_1111,
-                        ._5 => 0b1101_1111,
-                        ._6 => 0b1011_1111,
-                        ._7 => 0b0111_1111,
-                        else => {
-                            self.panic("Unexpected bit operand for RES operation: {s}", .{bit.name.string()});
-                        },
-                    };
-                    const register = opcode.operands[0];
-                    switch (register.name) {
-                        .A => self.a &= mask,
-                        .B => self.b &= mask,
-                        .C => self.c &= mask,
-                        .D => self.d &= mask,
-                        .E => self.e &= mask,
-                        .H => self.h &= mask,
-                        .L => self.l &= mask,
-                        .HL => {
-                            // I assume we are meant to reset the bit of the
-                            // byte at the address contained in the `hl`
-                            // register:
-                            const addr = self.hl();
-                            const val = self.bus.read(addr) & mask;
-                            self.bus.write(addr, val);
-                        },
-                        else => {
-                            self.panic("Unexpected register operand for RES operation: {s}", .{register.name.string()});
-                        },
-                    }
+                .CCF => {
+                    self.set_flag(.subtract, false);
+                    self.set_flag(.halfCarry, false);
+                    self.set_flag(.carry, !self.flag(.carry));
+                },
+                .SCF => {
+                    self.set_flag(.subtract, false);
+                    self.set_flag(.halfCarry, false);
+                    self.set_flag(.carry, true);
                 },
                 .BIT => {
-                    // Reset bit `b` in register `r`
+                    // Test bit `b` in register `r`
                     const bit = opcode.operands[0];
                     const mask: u8 = switch (bit.name) {
                         ._0 => 0b0000_0001,
@@ -679,6 +655,44 @@ pub const SM83 = struct {
                     self.set_flag(Flag.subtract, false);
                     self.set_flag(Flag.halfCarry, true);
                 },
+                .RES, .SET => {
+                    // Set/Reset bit `b` in register `r`
+                    const register = opcode.operands[0];
+                    const bit = opcode.operands[1];
+
+                    const mask: u8 = switch (bit.name) {
+                        ._0 => 0b0000_0001,
+                        ._1 => 0b0000_0010,
+                        ._2 => 0b0000_0100,
+                        ._3 => 0b0000_1000,
+                        ._4 => 0b0001_0000,
+                        ._5 => 0b0010_0000,
+                        ._6 => 0b0100_0000,
+                        ._7 => 0b1000_0000,
+                        else => {
+                            self.panic("Unexpected bit operand for {s} operation: {s}", .{ opcode.mnemonic.string(), bit.name.string() });
+                        },
+                    };
+
+                    const val = self.read_operand_u8(&register);
+                    var result: u8 = val;
+                    if (opcode.mnemonic == .RES) {
+                        result = val & (~mask);
+                    } else {
+                        result = val | mask;
+                    }
+
+                    self.write_operand_u8(result, &register);
+                },
+                .SWAP => {
+                    const val = self.read_operand_u8(&opcode.operands[0]);
+                    const result = (val >> 4 | val << 4);
+                    self.write_operand_u8(result, &opcode.operands[0]);
+                    self.set_flag(.zero, result == 0);
+                    self.set_flag(.subtract, false);
+                    self.set_flag(.halfCarry, false);
+                    self.set_flag(.carry, false);
+                },
                 .RR => {
                     const val = self.read_operand_u8(&opcode.operands[0]);
                     const carry: u8 = if (self.flag(Flag.carry)) 0b1000_0000 else 0;
@@ -698,6 +712,24 @@ pub const SM83 = struct {
                     self.set_flag(Flag.subtract, false);
                     self.set_flag(Flag.halfCarry, false);
                     self.set_flag(Flag.carry, (val & 0b1000_0000) != 0);
+                },
+                .SLA => {
+                    const val = self.read_operand_u8(&opcode.operands[0]);
+                    const result = (val << 1) & 0b1111_1110;
+                    self.write_operand_u8(result, &opcode.operands[0]);
+                    self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, false);
+                    self.set_flag(Flag.carry, (val & 0b1000_0000) != 0);
+                },
+                .SRA => {
+                    const val = self.read_operand_u8(&opcode.operands[0]);
+                    const result = (val >> 1) | (val & 0b1000_0000);
+                    self.write_operand_u8(result, &opcode.operands[0]);
+                    self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, false);
+                    self.set_flag(Flag.carry, (val & 0b0000_0001) != 0);
                 },
                 .SRL => {
                     const val = self.read_operand_u8(&opcode.operands[0]);
@@ -723,11 +755,46 @@ pub const SM83 = struct {
                     const carry: u8 = if (self.flag(Flag.carry)) 1 else 0;
                     const result = val << 1 | carry;
                     self.a = result;
-                    // We always clear the zero flag for RLA, unlike RL
                     self.set_flag(Flag.zero, false);
                     self.set_flag(Flag.subtract, false);
                     self.set_flag(Flag.halfCarry, false);
                     self.set_flag(Flag.carry, (val & 0b1000_0000) != 0);
+                },
+                .RLCA => {
+                    const val = self.a;
+                    const result = val << 1 | (val >> 7);
+                    self.a = result;
+                    self.set_flag(Flag.zero, false);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, false);
+                    self.set_flag(Flag.carry, (val & 0b1000_0000) != 0);
+                },
+                .RRCA => {
+                    const val = self.a;
+                    const result = val >> 1 | (val << 7);
+                    self.a = result;
+                    self.set_flag(Flag.zero, false);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, false);
+                    self.set_flag(Flag.carry, (val & 1) != 0);
+                },
+                .RLC => {
+                    const val = self.read_operand_u8(&opcode.operands[0]);
+                    const result = val << 1 | (val >> 7);
+                    self.write_operand_u8(result, &opcode.operands[0]);
+                    self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, false);
+                    self.set_flag(Flag.carry, (val & 0b1000_0000) != 0);
+                },
+                .RRC => {
+                    const val = self.read_operand_u8(&opcode.operands[0]);
+                    const result = val >> 1 | (val << 7);
+                    self.write_operand_u8(result, &opcode.operands[0]);
+                    self.set_flag(Flag.zero, result == 0);
+                    self.set_flag(Flag.subtract, false);
+                    self.set_flag(Flag.halfCarry, false);
+                    self.set_flag(Flag.carry, (val & 1) != 0);
                 },
                 else => {
                     self.panic("{s} not implemented!", .{opcode.mnemonic.string()});
