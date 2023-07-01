@@ -259,9 +259,7 @@ pub const SM83 = struct {
             var nextCyclesLeft = opcode.cycles[0];
 
             switch (opcode.mnemonic) {
-                .NOP => {
-                    std.debug.print("NOP\n", .{});
-                },
+                .NOP => {},
                 .JP => {
                     var condition = true;
                     var addr_opcode_index: u3 = 0;
@@ -450,7 +448,7 @@ pub const SM83 = struct {
                     } else {
                         const to = opcode.operands[0];
                         const from = opcode.operands[1];
-                        if (from.immediate and from.bytes == 2) {
+                        if (from.immediate and (from.bytes == 2 or from.name == .SP or from.name == .HL)) {
                             const data = self.read_operand_u16(&from);
                             self.write_operand_u16(data, &to);
                         } else {
@@ -501,23 +499,42 @@ pub const SM83 = struct {
                 .ADD => {
                     const to = opcode.operands[0];
                     const from = opcode.operands[1];
-                    if (to.is_double() and from.is_double()) {
+
+                    if (to.name == .SP) {
                         const val = self.read_operand_u16(&to);
-                        const n = self.read_operand_u16(&from);
-                        const result = val +% n;
-                        self.write_operand_u16(result, &to);
-                        self.set_flag(Flag.subtract, false);
-                        self.set_flag(Flag.halfCarry, ((val & 0x0FFF) + (n & 0x0FFF)) > 0x0FFF);
-                        self.set_flag(Flag.carry, (@intCast(u32, val) + @intCast(u32, n)) > 0xFFFF);
-                    } else {
-                        const val = self.read_operand_u8(&to);
                         const n = self.read_operand_u8(&from);
-                        const result = val +% n;
-                        self.write_operand_u8(result, &to);
-                        self.set_flag(Flag.zero, result == 0);
+                        const offset = @bitCast(i8, n);
+
+                        // There *must* be a better way to do this in zig:
+                        const result: u16 = if (offset > 0)
+                            val +% @intCast(u16, offset)
+                        else
+                            val -% @intCast(u16, -offset);
+
+                        self.write_operand_u16(result, &to);
+                        self.set_flag(Flag.zero, false);
                         self.set_flag(Flag.subtract, false);
-                        self.set_flag(Flag.halfCarry, ((val & 0x0F) + (n & 0x0F)) > 0x0F);
-                        self.set_flag(Flag.carry, (@intCast(u16, val) + @intCast(u16, n)) > 0xFF);
+                        self.set_flag(Flag.halfCarry, ((val & 0x000F) + (n & 0x000F)) > 0x000F);
+                        self.set_flag(Flag.carry, ((val & 0x00FF) + (n & 0x00FF)) > 0x00FF);
+                    } else {
+                        if (to.is_double() and from.is_double()) {
+                            const val = self.read_operand_u16(&to);
+                            const n = self.read_operand_u16(&from);
+                            const result = val +% n;
+                            self.write_operand_u16(result, &to);
+                            self.set_flag(Flag.subtract, false);
+                            self.set_flag(Flag.halfCarry, ((val & 0x0FFF) + (n & 0x0FFF)) > 0x0FFF);
+                            self.set_flag(Flag.carry, (@intCast(u32, val) + @intCast(u32, n)) > 0xFFFF);
+                        } else {
+                            const val = self.read_operand_u8(&to);
+                            const n = self.read_operand_u8(&from);
+                            const result = val +% n;
+                            self.write_operand_u8(result, &to);
+                            self.set_flag(Flag.zero, result == 0);
+                            self.set_flag(Flag.subtract, false);
+                            self.set_flag(Flag.halfCarry, ((val & 0x0F) + (n & 0x0F)) > 0x0F);
+                            self.set_flag(Flag.carry, (@intCast(u16, val) + @intCast(u16, n)) > 0xFF);
+                        }
                     }
                 },
                 .ADC => {
@@ -942,6 +959,7 @@ pub const SM83 = struct {
             .BC => self.bc(),
             .DE => self.de(),
             .HL => self.hl(),
+            .SP => self.sp,
             else => {
                 self.panic("read_operand_u16_safe for .{s} not implemented!", .{operand.name.string()});
             },
@@ -952,7 +970,7 @@ pub const SM83 = struct {
         const result = self.read_operand_u16_safe(operand);
         switch (operand.name) {
             .d16, .a16 => self.pc +%= 2,
-            .AF, .BC, .DE, .HL => {},
+            .AF, .BC, .DE, .HL, .SP => {},
             else => {
                 self.panic("read_operand_u16 for .{s} not implemented!", .{operand.name.string()});
             },
@@ -963,7 +981,8 @@ pub const SM83 = struct {
     pub fn write_operand_u16(self: *SM83, data: u16, operand: *const Operand) void {
         switch (operand.name) {
             .d16, .a16 => {
-                const addr = self.read_operand_u16(operand);
+                const addr = self.bus.read_16(self.pc);
+                self.pc +%= 2;
                 self.bus.write_16(addr, data);
             },
             .AF => {

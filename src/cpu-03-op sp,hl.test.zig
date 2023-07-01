@@ -8,8 +8,8 @@ const Bus = @import("./bus.zig").Bus;
 const Rom = @import("./rom.zig").Rom;
 const SM83 = @import("./sm83.zig").SM83;
 
-test "blargg 01-special log comparison" {
-    var rom = try Rom.from_file("test-roms/01-special.gb", std.testing.allocator);
+test "blargg 03-op sp,hl log comparison" {
+    var rom = try Rom.from_file("test-roms/03-op sp,hl.gb", std.testing.allocator);
     defer rom.deinit();
 
     var bus = try Bus.init(std.testing.allocator, rom);
@@ -18,8 +18,8 @@ test "blargg 01-special log comparison" {
     var cpu = SM83{ .bus = &bus };
     bus.cpu = &cpu;
 
-    // https://github.com/wheremyfoodat/Gameboy-logs - Blargg1LYStubbed.zip
-    const file = try std.fs.cwd().openFile("test-roms/01-special.txt", .{});
+    // https://github.com/wheremyfoodat/Gameboy-logs - Blargg3LYStubbed.zip
+    const file = try std.fs.cwd().openFile("test-roms/03-op sp,hl.txt", .{});
     defer file.close();
 
     var buf_reader = std.io.bufferedReader(file.reader());
@@ -38,9 +38,10 @@ test "blargg 01-special log comparison" {
     // Run until we reach the start of the program ROM (basically just run the
     // boot ROM):
     while (cpu.pc != 0x0100) {
+        // std.debug.print("{}\n", .{cpu});
         cpu.step();
     }
-    var line_number: u64 = 0;
+    var line_number: u64 = 1;
 
     // Now start comparing our log:
     while (try in_stream.readUntilDelimiterOrEof(&readBuf, '\n')) |expected| {

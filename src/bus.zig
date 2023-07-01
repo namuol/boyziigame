@@ -59,6 +59,9 @@ pub const Bus = struct {
             0x8000...0x9FFF => {
                 // TODO: Write to VRAM
             },
+            0xA000...0xBFFF => {
+                // TODO: Write to external RAM
+            },
 
             // 4 KiB Work RAM (WRAM)
             0xC000...0xCFFF => self.ram[addr - 0xC000] = data,
@@ -70,7 +73,7 @@ pub const Bus = struct {
 
             // TODO: Follow the rest from the guide
             else => {
-                std.debug.panic("Dunno how to write to ${x:0>4}\n", .{addr});
+                self.cpu.panic("Dunno how to write to ${x:0>4}\n", .{addr});
             },
         }
     }
@@ -83,11 +86,18 @@ pub const Bus = struct {
     }
 
     pub fn init(allocator: std.mem.Allocator, rom: Rom) !Bus {
-        return Bus{
+        var self = Bus{
             .allocator = allocator,
             .rom = rom,
             .ram = try allocator.alloc(u8, 8 * 1024),
         };
+
+        var i: usize = 0;
+        while (i < 8 * 1024) : (i += 1) {
+            self.ram[i] = 0x00;
+        }
+
+        return self;
     }
 
     pub fn deinit(self: *const Bus) void {
