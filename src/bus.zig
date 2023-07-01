@@ -2,13 +2,13 @@
 
 const std = @import("std");
 const Rom = @import("./rom.zig").Rom;
-const SM83 = @import("./sm83.zig").SM83;
+const CPU = @import("./cpu.zig").CPU;
 
 pub const Bus = struct {
     allocator: std.mem.Allocator,
     rom: Rom,
     ram: []u8,
-    cpu: *SM83 = undefined,
+    cpu: *CPU = undefined,
 
     // Temporary read-error sigil; we should probably look into how the bus
     // behaves when attempting to read from addresses that are out of range.

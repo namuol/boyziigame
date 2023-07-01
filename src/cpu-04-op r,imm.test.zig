@@ -1,4 +1,4 @@
-//! SM83 "integration" tests
+//! CPU "integration" tests
 
 const std = @import("std");
 const expect = std.testing.expect;
@@ -6,7 +6,7 @@ const expect = std.testing.expect;
 // No gods, no kings, only bus
 const Bus = @import("./bus.zig").Bus;
 const Rom = @import("./rom.zig").Rom;
-const SM83 = @import("./sm83.zig").SM83;
+const CPU = @import("./cpu.zig").CPU;
 
 pub fn run() !void {
     var rom = try Rom.from_file("test-roms/04-op r,imm.gb", std.testing.allocator);
@@ -15,7 +15,7 @@ pub fn run() !void {
     var bus = try Bus.init(std.testing.allocator, rom);
     defer bus.deinit();
 
-    var cpu = SM83{ .bus = &bus };
+    var cpu = CPU{ .bus = &bus };
     bus.cpu = &cpu;
 
     // https://github.com/wheremyfoodat/Gameboy-logs - Blargg4LYStubbed.zip

@@ -1,7 +1,4 @@
-//! Sharp SM83 CPU emulator implementation
-//!
-//! FIXME: This module contains more than SM83 CPU core stuff and actually does
-//!        a lot of other DMG System-on-a-Chip things so it should be renamed.
+//! DMG System-on-a-Chip implementation.
 //!
 //! References I've found helpful:
 //!
@@ -17,10 +14,10 @@ const Bus = bus.Bus;
 
 const rom = @import("./rom.zig");
 const Rom = rom.Rom;
-const hardware_registers = @import("./sm83-hardware-registers.zig");
+const hardware_registers = @import("./hardware-registers.zig");
 const hardware_register_string = hardware_registers.hardware_register_string;
 
-const opcodes = @import("./sm83-opcodes.zig");
+const opcodes = @import("./opcodes.zig");
 const Opcode = opcodes.Opcode;
 const Operand = opcodes.Operand;
 
@@ -41,7 +38,7 @@ const INT_FLAG_TIMER: u8 = 0b1 << 2;
 
 const INT_VEC_TIMER: u16 = 0x0050;
 
-pub const SM83 = struct {
+pub const CPU = struct {
     bus: *Bus,
 
     //
@@ -95,27 +92,27 @@ pub const SM83 = struct {
     cycleRate: u32 = DMG_CPU_HZ,
     debugLastPC: u16 = 0x0000,
 
-    pub fn panic(self: *const SM83, comptime format_: []const u8, args: anytype) noreturn {
+    pub fn panic(self: *const CPU, comptime format_: []const u8, args: anytype) noreturn {
         std.debug.print("LAST PC @ PANIC: ${X:0>4}\n", .{self.debugLastPC});
         std.debug.print("CPU STATE @ PANIC:\n{}\n", .{self});
         std.debug.panic(format_, args);
     }
 
-    pub fn boot_rom_enabled(self: *const SM83) bool {
+    pub fn boot_rom_enabled(self: *const CPU) bool {
         // Should this be != 0x01?
         return self.hardwareRegisters[0x50] == 0x00;
     }
 
-    pub fn boot_rom_read(self: *const SM83, addr: u8) u8 {
+    pub fn boot_rom_read(self: *const CPU, addr: u8) u8 {
         return self.bootROM[addr];
     }
 
-    pub fn read_hw_register(self: *const SM83, addr: u8) u8 {
+    pub fn read_hw_register(self: *const CPU, addr: u8) u8 {
         // std.debug.print("\nread_hw_register(0x{x:0>2}) = 0x{x:0>2}\n", .{ addr, self.hardwareRegisters[addr] });
         return self.hardwareRegisters[addr];
     }
 
-    pub fn write_hw_register(self: *SM83, addr: u8, data: u8) void {
+    pub fn write_hw_register(self: *CPU, addr: u8, data: u8) void {
         // std.debug.print("\nwrite_hw_register(0x{x:0>2}, 0x{x:0>2})\n", .{ addr, data });
         switch (addr) {
             // Writing any value to DIV register resets it to $00
@@ -145,14 +142,14 @@ pub const SM83 = struct {
     //
     // ```
     // test "read 16 bit registers" {
-    //     var cpu = SM83 {};
+    //     var cpu = CPU {};
     //     cpu.a = 0xAA;
     //     cpu.f = 0xFF;
     //     try expect(cpu.af == 0xAAFF);
     // }
     //
     // test "write 16 bit registers" {
-    //     var cpu = SM83 {};
+    //     var cpu = CPU {};
     //     cpu.af = 0xAAFF;
     //     try expect(cpu.a == 0xAA);
     //     try expect(cpu.f == 0xFF);
@@ -160,35 +157,35 @@ pub const SM83 = struct {
     // ```
     //
 
-    pub fn af(self: SM83) u16 {
+    pub fn af(self: CPU) u16 {
         return @as(u16, self.a) << 8 | @as(u16, self.f);
     }
-    pub fn set_af(self: *SM83, val: u16) void {
+    pub fn set_af(self: *CPU, val: u16) void {
         self.a = @truncate(u8, (val & 0xFF00) >> 8);
         // Note: We ignore lower nibble on F:
         self.f = @truncate(u8, val & 0xF0);
     }
 
-    pub fn bc(self: SM83) u16 {
+    pub fn bc(self: CPU) u16 {
         return @as(u16, self.b) << 8 | @as(u16, self.c);
     }
-    pub fn set_bc(self: *SM83, val: u16) void {
+    pub fn set_bc(self: *CPU, val: u16) void {
         self.b = @truncate(u8, (val & 0xFF00) >> 8);
         self.c = @truncate(u8, val & 0xFF);
     }
 
-    pub fn de(self: SM83) u16 {
+    pub fn de(self: CPU) u16 {
         return @as(u16, self.d) << 8 | @as(u16, self.e);
     }
-    pub fn set_de(self: *SM83, val: u16) void {
+    pub fn set_de(self: *CPU, val: u16) void {
         self.d = @truncate(u8, (val & 0xFF00) >> 8);
         self.e = @truncate(u8, val & 0xFF);
     }
 
-    pub fn hl(self: SM83) u16 {
+    pub fn hl(self: CPU) u16 {
         return @as(u16, self.h) << 8 | @as(u16, self.l);
     }
-    pub fn set_hl(self: *SM83, val: u16) void {
+    pub fn set_hl(self: *CPU, val: u16) void {
         self.h = @truncate(u8, (val & 0xFF00) >> 8);
         self.l = @truncate(u8, val & 0xFF);
     }
@@ -197,11 +194,11 @@ pub const SM83 = struct {
     // Flag methods
     //
 
-    pub fn flag(self: *const SM83, comptime mask: Flag) bool {
+    pub fn flag(self: *const CPU, comptime mask: Flag) bool {
         return (self.f & @enumToInt(mask)) != 0;
     }
 
-    pub fn set_flag(self: *SM83, comptime mask: Flag, val: bool) void {
+    pub fn set_flag(self: *CPU, comptime mask: Flag, val: bool) void {
         self.f = if (val) self.f | @enumToInt(mask) else self.f & ~@enumToInt(mask);
     }
 
@@ -213,7 +210,7 @@ pub const SM83 = struct {
     /// Guide here: https://gbdev.io/pandocs/Power_Up_Sequence.html#cpu-registers
     ///
     /// This behavior follows the entry for `DMG` model.
-    pub fn boot(self: *SM83) void {
+    pub fn boot(self: *CPU) void {
         self.a = 0x01;
         self.set_flag(Flag.zero, true);
         self.set_flag(Flag.subtract, false);
@@ -232,7 +229,7 @@ pub const SM83 = struct {
         hardware_registers.simulate_dmg_boot(&self.hardwareRegisters);
     }
 
-    pub fn cycle(self: *SM83) bool {
+    pub fn cycle(self: *CPU) bool {
         var stepped: bool = false;
 
         // Only for debugging:
@@ -875,11 +872,11 @@ pub const SM83 = struct {
         return stepped or (self.halted and timersTicked) or interruptHandled;
     }
 
-    pub fn step(self: *SM83) void {
+    pub fn step(self: *CPU) void {
         while (!self.cycle()) {}
     }
 
-    pub fn maybe_interrupt(self: *SM83, interruptFlag: u8, interruptVector: u16) bool {
+    pub fn maybe_interrupt(self: *CPU, interruptFlag: u8, interruptVector: u16) bool {
         if (self.interruptMasterEnable and
             (self.hardwareRegisters[0xFF] & interruptFlag) != 0 and
             (self.hardwareRegisters[0x0F] & interruptFlag) != 0)
@@ -895,7 +892,7 @@ pub const SM83 = struct {
         return false;
     }
 
-    pub fn read_operand_u8_safe(self: *const SM83, operand: *const Operand) u8 {
+    pub fn read_operand_u8_safe(self: *const CPU, operand: *const Operand) u8 {
         return switch (operand.name) {
             .A => self.a,
             .B => self.b,
@@ -953,7 +950,7 @@ pub const SM83 = struct {
         };
     }
 
-    pub fn read_operand_u8(self: *SM83, operand: *const Operand) u8 {
+    pub fn read_operand_u8(self: *CPU, operand: *const Operand) u8 {
         const result = self.read_operand_u8_safe(operand);
         switch (operand.name) {
             .A, .B, .C, .D, .E, .H, .L, .AF, .BC, .DE, .SP, ._00H, ._08H, ._10H, ._18H, ._20H, ._28H, ._30H, ._38H => {},
@@ -974,7 +971,7 @@ pub const SM83 = struct {
         return result;
     }
 
-    pub fn write_operand_u8(self: *SM83, data: u8, operand: *const Operand) void {
+    pub fn write_operand_u8(self: *CPU, data: u8, operand: *const Operand) void {
         switch (operand.name) {
             .A => self.a = data,
             .B => self.b = data,
@@ -1037,7 +1034,7 @@ pub const SM83 = struct {
         }
     }
 
-    pub fn read_operand_u16_safe(self: *const SM83, operand: *const Operand) u16 {
+    pub fn read_operand_u16_safe(self: *const CPU, operand: *const Operand) u16 {
         return switch (operand.name) {
             .d16, .a16 => (if (operand.immediate)
                 self.bus.read_16(self.pc)
@@ -1054,7 +1051,7 @@ pub const SM83 = struct {
         };
     }
 
-    pub fn read_operand_u16(self: *SM83, operand: *const Operand) u16 {
+    pub fn read_operand_u16(self: *CPU, operand: *const Operand) u16 {
         const result = self.read_operand_u16_safe(operand);
         switch (operand.name) {
             .d16, .a16 => self.pc +%= 2,
@@ -1066,7 +1063,7 @@ pub const SM83 = struct {
         return result;
     }
 
-    pub fn write_operand_u16(self: *SM83, data: u16, operand: *const Operand) void {
+    pub fn write_operand_u16(self: *CPU, data: u16, operand: *const Operand) void {
         switch (operand.name) {
             .d16, .a16 => {
                 const addr = self.bus.read_16(self.pc);
@@ -1100,7 +1097,7 @@ pub const SM83 = struct {
         }
     }
 
-    pub fn opcode_at(self: *const SM83, addr: u16) Opcode {
+    pub fn opcode_at(self: *const CPU, addr: u16) Opcode {
         const op = self.bus.read(addr);
         if (op == 0xCB) {
             const prefixed_op = self.bus.read(addr + 1);
@@ -1110,15 +1107,15 @@ pub const SM83 = struct {
         }
     }
 
-    pub fn disassemble(self: *const SM83, count: u16) Disassembly {
+    pub fn disassemble(self: *const CPU, count: u16) Disassembly {
         return Disassembly{ .cpu = self, .count = count };
     }
 
-    pub fn registers(self: *const SM83) Registers {
+    pub fn registers(self: *const CPU) Registers {
         return Registers{ .cpu = self };
     }
 
-    pub fn format(self: *const SM83, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+    pub fn format(self: *const CPU, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         // A: 00 F: 00 B: 00 C: 00 D: 00 E: 00 H: 00 L: 00 SP: 0000 PC: 00:0000 (31 FE FF AF)
         const fmt = "A: {X:0>2} F: {X:0>2} B: {X:0>2} C: {X:0>2} D: {X:0>2} E: {X:0>2} H: {X:0>2} L: {X:0>2} SP: {X:0>4} PC: 00:{X:0>4} ({X:0>2} {X:0>2} {X:0>2} {X:0>2})";
         return writer.print(fmt, .{
@@ -1143,7 +1140,7 @@ pub const SM83 = struct {
 };
 
 const Registers = struct {
-    cpu: *const SM83,
+    cpu: *const CPU,
     pub fn format(self: *const Registers, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         const fmt = (
             \\AF  = ${x:0>4} ({s}{s}{s}{s})
@@ -1171,7 +1168,7 @@ const Registers = struct {
 };
 
 const Disassembly = struct {
-    cpu: *const SM83,
+    cpu: *const CPU,
     count: u16,
     pub fn format(self: *const Disassembly, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         var addr = self.cpu.pc;
@@ -1306,12 +1303,12 @@ test "16 bit registers" {
     defer bus_.deinit();
     defer bus_.rom.deinit();
 
-    try expect((SM83{ .bus = &bus_, .a = 0xAA, .f = 0xBB }).af() == 0xAABB);
-    try expect((SM83{ .bus = &bus_, .b = 0xAA, .c = 0xBB }).bc() == 0xAABB);
-    try expect((SM83{ .bus = &bus_, .d = 0xAA, .e = 0xBB }).de() == 0xAABB);
-    try expect((SM83{ .bus = &bus_, .h = 0xAA, .l = 0xBB }).hl() == 0xAABB);
+    try expect((CPU{ .bus = &bus_, .a = 0xAA, .f = 0xBB }).af() == 0xAABB);
+    try expect((CPU{ .bus = &bus_, .b = 0xAA, .c = 0xBB }).bc() == 0xAABB);
+    try expect((CPU{ .bus = &bus_, .d = 0xAA, .e = 0xBB }).de() == 0xAABB);
+    try expect((CPU{ .bus = &bus_, .h = 0xAA, .l = 0xBB }).hl() == 0xAABB);
 
-    var cpu = SM83{ .bus = &bus_ };
+    var cpu = CPU{ .bus = &bus_ };
     bus_.cpu = &cpu;
     cpu.set_af(0xAABB);
     try expect(cpu.a == 0xAA);
@@ -1334,7 +1331,7 @@ test "flags" {
     });
     defer bus_.deinit();
     defer bus_.rom.deinit();
-    var cpu = SM83{ .bus = &bus_ };
+    var cpu = CPU{ .bus = &bus_ };
     bus_.cpu = &cpu;
 
     try expect(cpu.flag(Flag.zero) == false);
@@ -1395,7 +1392,7 @@ test "boot" {
     defer bus_.deinit();
     defer bus_.rom.deinit();
 
-    var cpu = SM83{ .bus = &bus_ };
+    var cpu = CPU{ .bus = &bus_ };
     bus_.cpu = &cpu;
     cpu.boot();
     try expect(cpu.a == 0x01);
@@ -1413,7 +1410,7 @@ test "boot" {
     try expect(cpu.sp == 0xFFFE);
 }
 
-test "SM83::opcode" {
+test "CPU::opcode" {
     const raw_data = try std.testing.allocator.alloc(u8, 4);
     // NOP
     raw_data[0x0000] = 0x00;
@@ -1427,7 +1424,7 @@ test "SM83::opcode" {
     var bus_ = try Bus.init(std.testing.allocator, Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator });
     defer bus_.deinit();
     defer bus_.rom.deinit();
-    var cpu = SM83{ .bus = &bus_ };
+    var cpu = CPU{ .bus = &bus_ };
     bus_.cpu = &cpu;
 
     // HACK: Disable boot ROM:

@@ -1,4 +1,4 @@
-//! SM83 "integration" tests
+//! CPU "integration" tests
 
 const std = @import("std");
 const expect = std.testing.expect;
@@ -6,7 +6,7 @@ const expect = std.testing.expect;
 // No gods, no kings, only bus
 const Bus = @import("./bus.zig").Bus;
 const Rom = @import("./rom.zig").Rom;
-const SM83 = @import("./sm83.zig").SM83;
+const CPU = @import("./cpu.zig").CPU;
 
 test "basic cycle (LD)" {
     const raw_data = try std.testing.allocator.alloc(u8, 10);
@@ -14,8 +14,8 @@ test "basic cycle (LD)" {
     var bus_ = try Bus.init(std.testing.allocator, Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator });
     defer bus_.deinit();
     defer bus_.rom.deinit();
-    var sm83 = SM83{ .bus = &bus_ };
-    bus_.cpu = &sm83;
+    var cpu = CPU{ .bus = &bus_ };
+    bus_.cpu = &cpu;
 
     // LD BC, $1234
     raw_data[0x0000] = 0x01;
@@ -23,31 +23,31 @@ test "basic cycle (LD)" {
     raw_data[0x0002] = 0x12;
 
     // HACK: Disable boot rom:
-    sm83.hardwareRegisters[0x50] = 0x01;
+    cpu.hardwareRegisters[0x50] = 0x01;
 
     var i: usize = 0;
-    sm83.step();
-    try expect(sm83.pc == 0x0003);
-    try expect(sm83.bc() == 0x1234);
+    cpu.step();
+    try expect(cpu.pc == 0x0003);
+    try expect(cpu.bc() == 0x1234);
 
     // LD (BC), A
     // We write 0x42 to the start of RAM:
     raw_data[0x0003] = 0x02;
-    sm83.a = 0x42;
-    sm83.set_bc(0xC000);
+    cpu.a = 0x42;
+    cpu.set_bc(0xC000);
     i = 0;
-    sm83.step();
-    try expect(sm83.pc == 0x0004);
-    try expect(sm83.bus.read(0xC000) == 0x42);
+    cpu.step();
+    try expect(cpu.pc == 0x0004);
+    try expect(cpu.bus.read(0xC000) == 0x42);
 
     // LD A, $42
     raw_data[0x0004] = 0x3E;
     raw_data[0x0005] = 0x42;
-    sm83.a = 0;
+    cpu.a = 0;
     i = 0;
-    sm83.step();
-    try expect(sm83.pc == 0x0006);
-    try expect(sm83.a == 0x42);
+    cpu.step();
+    try expect(cpu.pc == 0x0006);
+    try expect(cpu.a == 0x42);
 }
 
 test "basic cycle (INC)" {
@@ -70,32 +70,32 @@ test "basic cycle (INC)" {
     var bus_ = try Bus.init(std.testing.allocator, Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator });
     defer bus_.deinit();
     defer bus_.rom.deinit();
-    var sm83 = SM83{ .bus = &bus_ };
-    bus_.cpu = &sm83;
+    var cpu = CPU{ .bus = &bus_ };
+    bus_.cpu = &cpu;
 
     // Disable bootROM so we read directly from ROM:
-    sm83.hardwareRegisters[0x50] = 0x01;
+    cpu.hardwareRegisters[0x50] = 0x01;
 
-    sm83.step();
-    try expect(sm83.a == 0x01);
+    cpu.step();
+    try expect(cpu.a == 0x01);
 
-    sm83.step();
-    try expect(sm83.b == 0x01);
+    cpu.step();
+    try expect(cpu.b == 0x01);
 
-    sm83.step();
-    try expect(sm83.c == 0x01);
+    cpu.step();
+    try expect(cpu.c == 0x01);
 
-    sm83.step();
-    try expect(sm83.d == 0x01);
+    cpu.step();
+    try expect(cpu.d == 0x01);
 
-    sm83.step();
-    try expect(sm83.e == 0x01);
+    cpu.step();
+    try expect(cpu.e == 0x01);
 
-    sm83.step();
-    try expect(sm83.h == 0x01);
+    cpu.step();
+    try expect(cpu.h == 0x01);
 
-    sm83.step();
-    try expect(sm83.l == 0x01);
+    cpu.step();
+    try expect(cpu.l == 0x01);
 }
 
 test "disassemble" {
@@ -105,7 +105,7 @@ test "disassemble" {
     var bus = try Bus.init(std.testing.allocator, rom);
     defer bus.deinit();
 
-    var cpu = SM83{ .bus = &bus };
+    var cpu = CPU{ .bus = &bus };
     bus.cpu = &cpu;
     cpu.boot();
 
@@ -197,7 +197,7 @@ test "disassemble" {
 //     var bus = try Bus.init(std.testing.allocator, rom);
 //     defer bus.deinit();
 
-//     var cpu = SM83{ .bus = &bus };
+//     var cpu = CPU{ .bus = &bus };
 //     bus.cpu = &cpu;
 //     cpu.boot();
 
@@ -1073,7 +1073,7 @@ test "real world ROM log match" {
     var bus = try Bus.init(std.testing.allocator, rom);
     defer bus.deinit();
 
-    var cpu = SM83{ .bus = &bus };
+    var cpu = CPU{ .bus = &bus };
     bus.cpu = &cpu;
     cpu.boot();
 
