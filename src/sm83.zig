@@ -347,7 +347,7 @@ pub const SM83 = struct {
                         nextCyclesLeft = opcode.cycles[1];
                     }
                 },
-                .RET => {
+                .RET, .RETI => {
                     const condition = switch (opcode.operands.len) {
                         0 => true,
                         else => switch (opcode.operands[0].name) {
@@ -366,14 +366,17 @@ pub const SM83 = struct {
                         const addr = self.bus.read_16(self.sp);
                         self.sp +%= 2;
                         self.pc = addr;
+                        if (opcode.mnemonic == .RETI) {
+                            self.interruptMasterEnable = true;
+                        }
                     } else {
                         nextCyclesLeft = opcode.cycles[1];
                     }
                 },
                 .RST => {
                     // Push present address onto stack.
-                    self.bus.write_16(self.sp, self.pc);
                     self.sp -%= 2;
+                    self.bus.write_16(self.sp, self.pc);
 
                     // Jump to address $0000 + n
                     const offset = self.read_operand_u8(&opcode.operands[0]);
@@ -868,6 +871,7 @@ pub const SM83 = struct {
                 return self.bus.read(addr);
             },
 
+            ._00H => 0x00,
             ._08H => 0x08,
             ._10H => 0x10,
             ._18H => 0x18,
@@ -885,7 +889,7 @@ pub const SM83 = struct {
     pub fn read_operand_u8(self: *SM83, operand: *const Operand) u8 {
         const result = self.read_operand_u8_safe(operand);
         switch (operand.name) {
-            .A, .B, .C, .D, .E, .H, .L, .AF, .BC, .DE, .SP, ._08H, ._10H, ._18H, ._20H, ._28H, ._30H, ._38H => {},
+            .A, .B, .C, .D, .E, .H, .L, .AF, .BC, .DE, .SP, ._00H, ._08H, ._10H, ._18H, ._20H, ._28H, ._30H, ._38H => {},
             .HL => {
                 if (operand.decrement) {
                     self.set_hl(self.hl() -% 1);

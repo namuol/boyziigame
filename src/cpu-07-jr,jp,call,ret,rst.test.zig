@@ -9,7 +9,7 @@ const Rom = @import("./rom.zig").Rom;
 const SM83 = @import("./sm83.zig").SM83;
 
 pub fn run() !void {
-    var rom = try Rom.from_file("test-roms/05-op rp.gb", std.testing.allocator);
+    var rom = try Rom.from_file("test-roms/07-jr,jp,call,ret,rst.gb", std.testing.allocator);
     defer rom.deinit();
 
     var bus = try Bus.init(std.testing.allocator, rom);
@@ -18,8 +18,8 @@ pub fn run() !void {
     var cpu = SM83{ .bus = &bus };
     bus.cpu = &cpu;
 
-    // https://github.com/wheremyfoodat/Gameboy-logs - Blargg5LYStubbed.zip
-    const file = try std.fs.cwd().openFile("test-roms/05-op rp.txt", .{});
+    // https://github.com/wheremyfoodat/Gameboy-logs - Blargg7LYStubbed.zip
+    const file = try std.fs.cwd().openFile("test-roms/07-jr,jp,call,ret,rst.txt", .{});
     defer file.close();
 
     var buf_reader = std.io.bufferedReader(file.reader());
@@ -45,14 +45,23 @@ pub fn run() !void {
 
     // Now start comparing our log:
     while (try in_stream.readUntilDelimiterOrEof(&readBuf, '\n')) |expected| {
+        // Annoyingly, the logs do not contain any traces when the CPU is in
+        // address range $0000-$0100 (inclusive)
+        //
+        // Since we're testing RST, we are jumping into that address range many
+        // times in this test, so we need to let the CPU run while it's in that
+        // range before we can resume comparing log output.
+        while (cpu.pc < 0x100) {
+            cpu.step();
+        }
         const expected_str = try std.fmt.bufPrint(&expectedBuf, "{}: {s}", .{ line_number, expected });
         const actual_str = try std.fmt.bufPrint(&actualBuf, "{}: {s}", .{ line_number, cpu });
         try std.testing.expectEqualStrings(expected_str, actual_str);
-        cpu.step();
         line_number += 1;
+        cpu.step();
     }
 }
 
-// test "blargg 05-op rp log comparison" {
+// test "blargg 07-jr,jp,call,ret,rst log comparison" {
 //     try run();
 // }

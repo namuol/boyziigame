@@ -18,7 +18,7 @@ pub fn run() !void {
     var cpu = SM83{ .bus = &bus };
     bus.cpu = &cpu;
 
-    // https://github.com/wheremyfoodat/Gameboy-logs - Blargg4LYStubbed.zip
+    // https://github.com/wheremyfoodat/Gameboy-logs - Blargg6LYStubbed.zip
     const file = try std.fs.cwd().openFile("test-roms/06-ld r,r.txt", .{});
     defer file.close();
 
