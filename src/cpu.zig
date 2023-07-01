@@ -793,8 +793,14 @@ pub const CPU = struct {
                     self.set_flag(Flag.halfCarry, false);
                     self.set_flag(Flag.carry, (val & 1) != 0);
                 },
-                else => {
-                    self.panic("{s} not implemented!", .{opcode.mnemonic.string()});
+                .STOP => {
+                    self.panic("STOP not implemented", .{});
+                },
+                .ILLEGAL_D3, .ILLEGAL_DB, .ILLEGAL_DD, .ILLEGAL_E3, .ILLEGAL_E4, .ILLEGAL_EB, .ILLEGAL_EC, .ILLEGAL_ED, .ILLEGAL_F4, .ILLEGAL_FC, .ILLEGAL_FD => {
+                    self.panic("{s} opcode not implemented", .{opcode.mnemonic.string()});
+                },
+                .PREFIX => {
+                    self.panic("PREFIX opcode should not be reachable", .{});
                 },
             }
 
