@@ -1,0 +1,58 @@
+const std = @import("std");
+
+const CPU = @import("./cpu.zig").CPU;
+const LCD = @import("./lcd.zig").LCD;
+const Bus = @import("./bus.zig").Bus;
+const Rom = @import("./rom.zig").Rom;
+
+pub const Console = struct {
+    allocator: std.mem.Allocator,
+
+    rom: Rom,
+    bus: Bus,
+    cpu: CPU,
+    lcd: LCD,
+
+    pub fn init(rom_file_path: []const u8, allocator: std.mem.Allocator) !*Console {
+        var self = try allocator.create(Console);
+        errdefer allocator.destroy(self);
+
+        self.allocator = allocator;
+
+        self.rom = try Rom.from_file(rom_file_path, allocator);
+        self.bus = try Bus.init(allocator, &self.rom);
+        self.cpu = try CPU.init(allocator, &self.bus);
+        self.lcd = try LCD.init(allocator);
+
+        self.bus.cpu = &self.cpu;
+        self.cpu.bus = &self.bus;
+
+        return self;
+    }
+
+    pub fn deinit(self: *const Console) void {
+        self.lcd.deinit();
+        self.cpu.deinit();
+        self.bus.deinit();
+        self.rom.deinit();
+
+        self.allocator.destroy(self);
+    }
+
+    pub fn frame(self: *Console) void {
+        const cyclesPerFrame = self.cpu.cycleRate / 60;
+        var i: usize = 0;
+        // HACK; roughly approximate frame
+        while (i < cyclesPerFrame) : (i += 1) {
+            _ = self.cpu.cycle();
+        }
+    }
+};
+
+test "init" {
+    var console = try Console.init("./pokemon_blue.gb", std.testing.allocator);
+    defer console.deinit();
+    std.debug.print("{}\n", .{console.cpu});
+    console.cpu.step();
+    std.debug.print("{}\n", .{console.cpu});
+}

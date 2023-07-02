@@ -9,8 +9,7 @@
 const std = @import("std");
 
 // No gods, no kings, only bus
-const bus = @import("./bus.zig");
-const Bus = bus.Bus;
+const Bus = @import("./bus.zig").Bus;
 
 const rom = @import("./rom.zig");
 const Rom = rom.Rom;
@@ -39,7 +38,7 @@ const INT_FLAG_TIMER: u8 = 0b1 << 2;
 const INT_VEC_TIMER: u16 = 0x0050;
 
 pub const CPU = struct {
-    bus: *Bus,
+    bus: *Bus = undefined,
 
     //
     // General purpose registers
@@ -77,7 +76,9 @@ pub const CPU = struct {
     interruptMasterEnable: bool = false,
     halted: bool = false,
 
-    hardwareRegisters: [256]u8 = [_]u8{0} ** 256,
+    allocator: std.mem.Allocator,
+
+    hardwareRegisters: []u8 = undefined,
     bootROM: *const [256:0]u8 = @embedFile("./dmg_boot.bin"),
 
     //
@@ -91,6 +92,23 @@ pub const CPU = struct {
     ticks: u32 = 0,
     cycleRate: u32 = DMG_CPU_HZ,
     debugLastPC: u16 = 0x0000,
+
+    pub fn init(allocator: std.mem.Allocator, bus: *Bus) !CPU {
+        var ref = CPU{
+            .bus = bus,
+            .allocator = allocator,
+            .hardwareRegisters = try allocator.alloc(u8, 256),
+        };
+        var i: usize = 0;
+        while (i < 256) : (i += 1) {
+            ref.hardwareRegisters[i] = 0x00;
+        }
+        return ref;
+    }
+
+    pub fn deinit(self: *const CPU) void {
+        self.allocator.free(self.hardwareRegisters);
+    }
 
     pub fn panic(self: *const CPU, comptime format_: []const u8, args: anytype) noreturn {
         std.debug.print("LAST PC @ PANIC: ${X:0>4}\n", .{self.debugLastPC});
@@ -226,7 +244,7 @@ pub const CPU = struct {
         // Skip the boot rom
         self.pc = 0x0100;
         self.sp = 0xFFFE;
-        hardware_registers.simulate_dmg_boot(&self.hardwareRegisters);
+        hardware_registers.simulate_dmg_boot(self.hardwareRegisters);
     }
 
     pub fn cycle(self: *CPU) bool {
@@ -1302,19 +1320,19 @@ fn OperandValue(comptime T: type) type {
 
 const expect = std.testing.expect;
 test "16 bit registers" {
-    var bus_ = try Bus.init(std.testing.allocator, Rom{
+    var bus_ = try Bus.init(std.testing.allocator, &Rom{
         ._raw_data = try std.testing.allocator.alloc(u8, 1),
         .allocator = std.testing.allocator,
     });
     defer bus_.deinit();
     defer bus_.rom.deinit();
 
-    try expect((CPU{ .bus = &bus_, .a = 0xAA, .f = 0xBB }).af() == 0xAABB);
-    try expect((CPU{ .bus = &bus_, .b = 0xAA, .c = 0xBB }).bc() == 0xAABB);
-    try expect((CPU{ .bus = &bus_, .d = 0xAA, .e = 0xBB }).de() == 0xAABB);
-    try expect((CPU{ .bus = &bus_, .h = 0xAA, .l = 0xBB }).hl() == 0xAABB);
+    try expect((CPU{ .allocator = std.testing.allocator, .bus = &bus_, .a = 0xAA, .f = 0xBB }).af() == 0xAABB);
+    try expect((CPU{ .allocator = std.testing.allocator, .bus = &bus_, .b = 0xAA, .c = 0xBB }).bc() == 0xAABB);
+    try expect((CPU{ .allocator = std.testing.allocator, .bus = &bus_, .d = 0xAA, .e = 0xBB }).de() == 0xAABB);
+    try expect((CPU{ .allocator = std.testing.allocator, .bus = &bus_, .h = 0xAA, .l = 0xBB }).hl() == 0xAABB);
 
-    var cpu = CPU{ .bus = &bus_ };
+    var cpu = CPU{ .allocator = std.testing.allocator, .bus = &bus_ };
     bus_.cpu = &cpu;
     cpu.set_af(0xAABB);
     try expect(cpu.a == 0xAA);
@@ -1331,13 +1349,13 @@ test "16 bit registers" {
 }
 
 test "flags" {
-    var bus_ = try Bus.init(std.testing.allocator, Rom{
+    var bus_ = try Bus.init(std.testing.allocator, &Rom{
         ._raw_data = try std.testing.allocator.alloc(u8, 1),
         .allocator = std.testing.allocator,
     });
     defer bus_.deinit();
     defer bus_.rom.deinit();
-    var cpu = CPU{ .bus = &bus_ };
+    var cpu = CPU{ .allocator = std.testing.allocator, .bus = &bus_ };
     bus_.cpu = &cpu;
 
     try expect(cpu.flag(Flag.zero) == false);
@@ -1391,14 +1409,14 @@ test "flags" {
 }
 
 test "boot" {
-    var bus_ = try Bus.init(std.testing.allocator, Rom{
+    var bus_ = try Bus.init(std.testing.allocator, &Rom{
         ._raw_data = try std.testing.allocator.alloc(u8, 1),
         .allocator = std.testing.allocator,
     });
     defer bus_.deinit();
     defer bus_.rom.deinit();
 
-    var cpu = CPU{ .bus = &bus_ };
+    var cpu = CPU{ .allocator = std.testing.allocator, .bus = &bus_ };
     bus_.cpu = &cpu;
     cpu.boot();
     try expect(cpu.a == 0x01);
@@ -1427,10 +1445,10 @@ test "CPU::opcode" {
 
     // LD B, D
     raw_data[0x0003] = 0x42;
-    var bus_ = try Bus.init(std.testing.allocator, Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator });
+    var bus_ = try Bus.init(std.testing.allocator, &Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator });
     defer bus_.deinit();
     defer bus_.rom.deinit();
-    var cpu = CPU{ .bus = &bus_ };
+    var cpu = CPU{ .allocator = std.testing.allocator, .bus = &bus_ };
     bus_.cpu = &cpu;
 
     // HACK: Disable boot ROM:

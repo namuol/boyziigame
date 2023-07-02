@@ -160,7 +160,7 @@ pub fn hardware_register_string(reg: u8) []const u8 {
 }
 
 /// https://gbdev.io/pandocs/Power_Up_Sequence.html#hardware-registers
-pub fn simulate_dmg_boot(r: *[256]u8) void {
+pub fn simulate_dmg_boot(r: []u8) void {
     // JOYP
     r[0x00] = 0xCF;
     // SB

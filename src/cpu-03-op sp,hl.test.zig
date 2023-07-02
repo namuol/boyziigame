@@ -15,7 +15,7 @@ pub fn run() !void {
     var bus = try Bus.init(std.testing.allocator, rom);
     defer bus.deinit();
 
-    var cpu = CPU{ .bus = &bus };
+    var cpu = try CPU.init(std.testing.allocator, &bus);
     bus.cpu = &cpu;
 
     // https://github.com/wheremyfoodat/Gameboy-logs - Blargg3LYStubbed.zip

@@ -105,7 +105,7 @@ test "disassemble" {
     var bus = try Bus.init(std.testing.allocator, rom);
     defer bus.deinit();
 
-    var cpu = CPU{ .bus = &bus };
+    var cpu = try CPU.init(std.testing.allocator, &bus);
     bus.cpu = &cpu;
     cpu.boot();
 
@@ -197,7 +197,7 @@ test "disassemble" {
 //     var bus = try Bus.init(std.testing.allocator, rom);
 //     defer bus.deinit();
 
-//     var cpu = CPU{ .bus = &bus };
+//     var cpu = try CPU.init(std.testing.allocator, &bus);
 //     bus.cpu = &cpu;
 //     cpu.boot();
 
@@ -1073,7 +1073,7 @@ test "real world ROM log match" {
     var bus = try Bus.init(std.testing.allocator, rom);
     defer bus.deinit();
 
-    var cpu = CPU{ .bus = &bus };
+    var cpu = try CPU.init(std.testing.allocator, &bus);
     bus.cpu = &cpu;
     cpu.boot();
 

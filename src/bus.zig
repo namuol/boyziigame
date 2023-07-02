@@ -6,8 +6,8 @@ const CPU = @import("./cpu.zig").CPU;
 
 pub const Bus = struct {
     allocator: std.mem.Allocator,
-    rom: Rom,
     ram: []u8,
+    rom: *Rom = undefined,
     cpu: *CPU = undefined,
 
     // Temporary read-error sigil; we should probably look into how the bus
@@ -85,10 +85,24 @@ pub const Bus = struct {
         self.write(addr + 1, hi);
     }
 
-    pub fn init(allocator: std.mem.Allocator, rom: Rom) !Bus {
+    pub fn init(allocator: std.mem.Allocator, rom: *Rom) !Bus {
         var self = Bus{
             .allocator = allocator,
             .rom = rom,
+            .ram = try allocator.alloc(u8, 8 * 1024),
+        };
+
+        var i: usize = 0;
+        while (i < 8 * 1024) : (i += 1) {
+            self.ram[i] = 0x00;
+        }
+
+        return self;
+    }
+
+    pub fn init_(allocator: std.mem.Allocator) !Bus {
+        var self = Bus{
+            .allocator = allocator,
             .ram = try allocator.alloc(u8, 8 * 1024),
         };
 
