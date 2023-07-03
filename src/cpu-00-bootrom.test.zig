@@ -12,10 +12,11 @@ pub fn run() !void {
     var rom = try Rom.from_file("test-roms/01-special.gb", std.testing.allocator);
     defer rom.deinit();
 
-    var bus = try Bus.init(std.testing.allocator, rom);
+    var bus = try Bus.init(std.testing.allocator, &rom);
     defer bus.deinit();
 
-    var cpu = try CPU.init(std.testing.allocator, bus);
+    var cpu = try CPU.init(std.testing.allocator, &bus);
+    defer cpu.deinit();
     bus.cpu = &cpu;
 
     // Load BootromLog.txt from https://github.com/wheremyfoodat/Gameboy-logs

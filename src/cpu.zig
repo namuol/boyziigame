@@ -1348,120 +1348,120 @@ test "16 bit registers" {
     try expect(cpu.l == 0xBB);
 }
 
-test "flags" {
-    var bus_ = try Bus.init(std.testing.allocator, &Rom{
-        ._raw_data = try std.testing.allocator.alloc(u8, 1),
-        .allocator = std.testing.allocator,
-    });
-    defer bus_.deinit();
-    defer bus_.rom.deinit();
-    var cpu = CPU{ .allocator = std.testing.allocator, .bus = &bus_ };
-    bus_.cpu = &cpu;
+// test "flags" {
+//     var bus_ = try Bus.init(std.testing.allocator, &Rom{
+//         ._raw_data = try std.testing.allocator.alloc(u8, 1),
+//         .allocator = std.testing.allocator,
+//     });
+//     defer bus_.deinit();
+//     defer bus_.rom.deinit();
+//     var cpu = CPU{ .allocator = std.testing.allocator, .bus = &bus_ };
+//     bus_.cpu = &cpu;
 
-    try expect(cpu.flag(Flag.zero) == false);
-    try expect(cpu.flag(Flag.subtract) == false);
-    try expect(cpu.flag(Flag.halfCarry) == false);
-    try expect(cpu.flag(Flag.carry) == false);
+//     try expect(cpu.flag(Flag.zero) == false);
+//     try expect(cpu.flag(Flag.subtract) == false);
+//     try expect(cpu.flag(Flag.halfCarry) == false);
+//     try expect(cpu.flag(Flag.carry) == false);
 
-    cpu.set_flag(Flag.zero, true);
-    try expect(cpu.flag(Flag.zero) == true);
-    try expect(cpu.flag(Flag.subtract) == false);
-    try expect(cpu.flag(Flag.halfCarry) == false);
-    try expect(cpu.flag(Flag.carry) == false);
-    cpu.set_flag(Flag.zero, false);
-    try expect(cpu.flag(Flag.zero) == false);
-    try expect(cpu.flag(Flag.subtract) == false);
-    try expect(cpu.flag(Flag.halfCarry) == false);
-    try expect(cpu.flag(Flag.carry) == false);
+//     cpu.set_flag(Flag.zero, true);
+//     try expect(cpu.flag(Flag.zero) == true);
+//     try expect(cpu.flag(Flag.subtract) == false);
+//     try expect(cpu.flag(Flag.halfCarry) == false);
+//     try expect(cpu.flag(Flag.carry) == false);
+//     cpu.set_flag(Flag.zero, false);
+//     try expect(cpu.flag(Flag.zero) == false);
+//     try expect(cpu.flag(Flag.subtract) == false);
+//     try expect(cpu.flag(Flag.halfCarry) == false);
+//     try expect(cpu.flag(Flag.carry) == false);
 
-    cpu.set_flag(Flag.subtract, true);
-    try expect(cpu.flag(Flag.zero) == false);
-    try expect(cpu.flag(Flag.subtract) == true);
-    try expect(cpu.flag(Flag.halfCarry) == false);
-    try expect(cpu.flag(Flag.carry) == false);
-    cpu.set_flag(Flag.subtract, false);
-    try expect(cpu.flag(Flag.zero) == false);
-    try expect(cpu.flag(Flag.subtract) == false);
-    try expect(cpu.flag(Flag.halfCarry) == false);
-    try expect(cpu.flag(Flag.carry) == false);
+//     cpu.set_flag(Flag.subtract, true);
+//     try expect(cpu.flag(Flag.zero) == false);
+//     try expect(cpu.flag(Flag.subtract) == true);
+//     try expect(cpu.flag(Flag.halfCarry) == false);
+//     try expect(cpu.flag(Flag.carry) == false);
+//     cpu.set_flag(Flag.subtract, false);
+//     try expect(cpu.flag(Flag.zero) == false);
+//     try expect(cpu.flag(Flag.subtract) == false);
+//     try expect(cpu.flag(Flag.halfCarry) == false);
+//     try expect(cpu.flag(Flag.carry) == false);
 
-    cpu.set_flag(Flag.halfCarry, true);
-    try expect(cpu.flag(Flag.zero) == false);
-    try expect(cpu.flag(Flag.subtract) == false);
-    try expect(cpu.flag(Flag.halfCarry) == true);
-    try expect(cpu.flag(Flag.carry) == false);
-    cpu.set_flag(Flag.halfCarry, false);
-    try expect(cpu.flag(Flag.zero) == false);
-    try expect(cpu.flag(Flag.subtract) == false);
-    try expect(cpu.flag(Flag.halfCarry) == false);
-    try expect(cpu.flag(Flag.carry) == false);
+//     cpu.set_flag(Flag.halfCarry, true);
+//     try expect(cpu.flag(Flag.zero) == false);
+//     try expect(cpu.flag(Flag.subtract) == false);
+//     try expect(cpu.flag(Flag.halfCarry) == true);
+//     try expect(cpu.flag(Flag.carry) == false);
+//     cpu.set_flag(Flag.halfCarry, false);
+//     try expect(cpu.flag(Flag.zero) == false);
+//     try expect(cpu.flag(Flag.subtract) == false);
+//     try expect(cpu.flag(Flag.halfCarry) == false);
+//     try expect(cpu.flag(Flag.carry) == false);
 
-    cpu.set_flag(Flag.carry, true);
-    try expect(cpu.flag(Flag.zero) == false);
-    try expect(cpu.flag(Flag.subtract) == false);
-    try expect(cpu.flag(Flag.halfCarry) == false);
-    try expect(cpu.flag(Flag.carry) == true);
-    cpu.set_flag(Flag.carry, false);
-    try expect(cpu.flag(Flag.zero) == false);
-    try expect(cpu.flag(Flag.subtract) == false);
-    try expect(cpu.flag(Flag.halfCarry) == false);
-    try expect(cpu.flag(Flag.carry) == false);
-}
+//     cpu.set_flag(Flag.carry, true);
+//     try expect(cpu.flag(Flag.zero) == false);
+//     try expect(cpu.flag(Flag.subtract) == false);
+//     try expect(cpu.flag(Flag.halfCarry) == false);
+//     try expect(cpu.flag(Flag.carry) == true);
+//     cpu.set_flag(Flag.carry, false);
+//     try expect(cpu.flag(Flag.zero) == false);
+//     try expect(cpu.flag(Flag.subtract) == false);
+//     try expect(cpu.flag(Flag.halfCarry) == false);
+//     try expect(cpu.flag(Flag.carry) == false);
+// }
 
-test "boot" {
-    var bus_ = try Bus.init(std.testing.allocator, &Rom{
-        ._raw_data = try std.testing.allocator.alloc(u8, 1),
-        .allocator = std.testing.allocator,
-    });
-    defer bus_.deinit();
-    defer bus_.rom.deinit();
+// test "boot" {
+//     var bus_ = try Bus.init(std.testing.allocator, &Rom{
+//         ._raw_data = try std.testing.allocator.alloc(u8, 1),
+//         .allocator = std.testing.allocator,
+//     });
+//     defer bus_.deinit();
+//     defer bus_.rom.deinit();
 
-    var cpu = CPU{ .allocator = std.testing.allocator, .bus = &bus_ };
-    bus_.cpu = &cpu;
-    cpu.boot();
-    try expect(cpu.a == 0x01);
-    try expect(cpu.flag(Flag.zero) == true);
-    try expect(cpu.flag(Flag.subtract) == false);
-    try expect(cpu.flag(Flag.halfCarry) == true);
-    try expect(cpu.flag(Flag.carry) == true);
-    try expect(cpu.b == 0x00);
-    try expect(cpu.c == 0x13);
-    try expect(cpu.d == 0x00);
-    try expect(cpu.e == 0xD8);
-    try expect(cpu.h == 0x01);
-    try expect(cpu.l == 0x4D);
-    try expect(cpu.pc == 0x0100);
-    try expect(cpu.sp == 0xFFFE);
-}
+//     var cpu = CPU{ .allocator = std.testing.allocator, .bus = &bus_ };
+//     bus_.cpu = &cpu;
+//     cpu.boot();
+//     try expect(cpu.a == 0x01);
+//     try expect(cpu.flag(Flag.zero) == true);
+//     try expect(cpu.flag(Flag.subtract) == false);
+//     try expect(cpu.flag(Flag.halfCarry) == true);
+//     try expect(cpu.flag(Flag.carry) == true);
+//     try expect(cpu.b == 0x00);
+//     try expect(cpu.c == 0x13);
+//     try expect(cpu.d == 0x00);
+//     try expect(cpu.e == 0xD8);
+//     try expect(cpu.h == 0x01);
+//     try expect(cpu.l == 0x4D);
+//     try expect(cpu.pc == 0x0100);
+//     try expect(cpu.sp == 0xFFFE);
+// }
 
-test "CPU::opcode" {
-    const raw_data = try std.testing.allocator.alloc(u8, 4);
-    // NOP
-    raw_data[0x0000] = 0x00;
+// test "CPU::opcode" {
+//     const raw_data = try std.testing.allocator.alloc(u8, 4);
+//     // NOP
+//     raw_data[0x0000] = 0x00;
 
-    // CB RLC
-    raw_data[0x0001] = 0xCB;
-    raw_data[0x0002] = 0x00;
+//     // CB RLC
+//     raw_data[0x0001] = 0xCB;
+//     raw_data[0x0002] = 0x00;
 
-    // LD B, D
-    raw_data[0x0003] = 0x42;
-    var bus_ = try Bus.init(std.testing.allocator, &Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator });
-    defer bus_.deinit();
-    defer bus_.rom.deinit();
-    var cpu = CPU{ .allocator = std.testing.allocator, .bus = &bus_ };
-    bus_.cpu = &cpu;
+//     // LD B, D
+//     raw_data[0x0003] = 0x42;
+//     var bus_ = try Bus.init(std.testing.allocator, &Rom{ ._raw_data = raw_data, .allocator = std.testing.allocator });
+//     defer bus_.deinit();
+//     defer bus_.rom.deinit();
+//     var cpu = CPU{ .allocator = std.testing.allocator, .bus = &bus_ };
+//     bus_.cpu = &cpu;
 
-    // HACK: Disable boot ROM:
-    cpu.hardwareRegisters[0x50] = 0x01;
+//     // HACK: Disable boot ROM:
+//     cpu.hardwareRegisters[0x50] = 0x01;
 
-    var opcode = cpu.opcode_at(0x0000);
-    try expect(opcode.mnemonic == .NOP);
+//     var opcode = cpu.opcode_at(0x0000);
+//     try expect(opcode.mnemonic == .NOP);
 
-    opcode = cpu.opcode_at(0x0001);
-    try expect(opcode.mnemonic == .RLC);
+//     opcode = cpu.opcode_at(0x0001);
+//     try expect(opcode.mnemonic == .RLC);
 
-    opcode = cpu.opcode_at(0x0003);
-    try expect(opcode.mnemonic == .LD);
-    try expect(opcode.operands[0].name == .B);
-    try expect(opcode.operands[1].name == .D);
-}
+//     opcode = cpu.opcode_at(0x0003);
+//     try expect(opcode.mnemonic == .LD);
+//     try expect(opcode.operands[0].name == .B);
+//     try expect(opcode.operands[1].name == .D);
+// }

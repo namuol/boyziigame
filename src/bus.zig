@@ -7,6 +7,7 @@ const CPU = @import("./cpu.zig").CPU;
 pub const Bus = struct {
     allocator: std.mem.Allocator,
     ram: []u8,
+    vram: []u8,
     rom: *Rom = undefined,
     cpu: *CPU = undefined,
 
@@ -31,6 +32,8 @@ pub const Bus = struct {
             0x0100...0x3FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
             // From cartridge, switchable bank via mapper (if any)
             0x4000...0x7FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
+            // 8 KiB Video RAM (VRAM)
+            0x8000...0x9FFF => return self.vram[addr - 0x8000],
             // 4 KiB Work RAM (WRAM)
             0xC000...0xCFFF => return self.ram[addr - 0xC000],
             // 4 KiB Work RAM (WRAM) - In CGB mode, switchable bank 1~7
@@ -56,9 +59,7 @@ pub const Bus = struct {
             // 0x0000...0x3FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
             // // From cartridge, switchable bank via mapper (if any)
             // 0x4000...0x7FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
-            0x8000...0x9FFF => {
-                // TODO: Write to VRAM
-            },
+            0x8000...0x9FFF => self.vram[addr - 0x8000] = data,
             0xA000...0xBFFF => {
                 // TODO: Write to external RAM
             },
@@ -90,6 +91,8 @@ pub const Bus = struct {
             .allocator = allocator,
             .rom = rom,
             .ram = try allocator.alloc(u8, 8 * 1024),
+            // TODO: CGB needs to have two switchable banks of 8KiB
+            .vram = try allocator.alloc(u8, 8 * 1024),
         };
 
         var i: usize = 0;
@@ -116,5 +119,6 @@ pub const Bus = struct {
 
     pub fn deinit(self: *const Bus) void {
         self.allocator.free(self.ram);
+        self.allocator.free(self.vram);
     }
 };

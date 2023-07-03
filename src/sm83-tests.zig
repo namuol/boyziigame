@@ -102,10 +102,11 @@ test "disassemble" {
     var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
     defer rom.deinit();
 
-    var bus = try Bus.init(std.testing.allocator, rom);
+    var bus = try Bus.init(std.testing.allocator, &rom);
     defer bus.deinit();
 
     var cpu = try CPU.init(std.testing.allocator, &bus);
+    defer cpu.deinit();
     bus.cpu = &cpu;
     cpu.boot();
 
@@ -194,10 +195,11 @@ test "disassemble" {
 //     var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
 //     defer rom.deinit();
 
-//     var bus = try Bus.init(std.testing.allocator, rom);
+//     var bus = try Bus.init(std.testing.allocator, &rom);
 //     defer bus.deinit();
 
 //     var cpu = try CPU.init(std.testing.allocator, &bus);
+    defer cpu.deinit();
 //     bus.cpu = &cpu;
 //     cpu.boot();
 
@@ -1070,10 +1072,11 @@ test "real world ROM log match" {
     var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
     defer rom.deinit();
 
-    var bus = try Bus.init(std.testing.allocator, rom);
+    var bus = try Bus.init(std.testing.allocator, &rom);
     defer bus.deinit();
 
     var cpu = try CPU.init(std.testing.allocator, &bus);
+    defer cpu.deinit();
     bus.cpu = &cpu;
     cpu.boot();
 

@@ -35,13 +35,51 @@ const ray = @cImport({
 
 const Console = @import("./console.zig").Console;
 
+const DebugView = enum(u8) {
+    None,
+    TileData,
+};
+
+const COLORS = [4]ray.Color{
+    ray.Color{
+        .r = 0x00,
+        .g = 0x00,
+        .b = 0x00,
+        .a = 0x00,
+    },
+    ray.Color{
+        .r = 0xDD,
+        .g = 0xDD,
+        .b = 0xDD,
+        .a = 0xFF,
+    },
+    ray.Color{
+        .r = 0x99,
+        .g = 0x99,
+        .b = 0x99,
+        .a = 0xFF,
+    },
+    ray.Color{
+        .r = 0x33,
+        .g = 0x33,
+        .b = 0x33,
+        .a = 0xFF,
+    },
+};
+
+const DEBUG_VIEWS = [_]DebugView{
+    .TileData,
+    .None,
+};
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer std.debug.assert(gpa.deinit() == .ok);
 
-    var console = try Console.init("./pokemon_blue.gb", allocator);
+    var console = try Console.init("./cpu_instrs.gb", allocator);
     defer console.deinit();
+    console.cpu.hardwareRegisters[0x44] = 0x90;
 
     // Double width; main screen on left hand side, debugging info on right hand side:
     const scale = 4;
@@ -51,18 +89,33 @@ pub fn main() !void {
     ray.InitWindow(screen_width, screen_height, "BoyZ II Game");
     defer ray.CloseWindow(); // Close window and OpenGL context
 
-    const image = ray.Image{
+    ray.SetTargetFPS(60); // Set our game to run at 60 frames-per-second
+
+    const lcd_image = ray.Image{
         .data = &console.lcd.pixels[0],
         .width = 160,
         .height = 144,
         .format = ray.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
         .mipmaps = 1,
     };
+    const lcd_texture = ray.LoadTextureFromImage(lcd_image);
+    defer ray.UnloadTexture(lcd_texture);
+    ray.SetTextureFilter(lcd_texture, ray.TEXTURE_FILTER_POINT);
 
-    const texture = ray.LoadTextureFromImage(image);
-    defer ray.UnloadTexture(texture);
+    const tile_data_image_buf = try allocator.alloc(u32, 8 * 20 * 8 * 20);
+    var tile_data_image = ray.Image{
+        .data = &tile_data_image_buf[0],
+        .width = 8 * 20, // 20 tiles wide
+        .height = 8 * 20, // 20 tiles tall (only using first 4 columns in last row)
+        .format = ray.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
+        .mipmaps = 1,
+    };
+    defer allocator.free(tile_data_image_buf);
+    const tile_data_texture = ray.LoadTextureFromImage(tile_data_image);
+    defer ray.UnloadTexture(tile_data_texture);
+    ray.SetTextureFilter(tile_data_texture, ray.TEXTURE_FILTER_POINT);
 
-    ray.SetTargetFPS(60); // Set our game to run at 60 frames-per-second
+    var debug_view_index: u8 = 0;
 
     while (!ray.WindowShouldClose()) // Detect window close button or ESC key
     {
@@ -70,22 +123,70 @@ pub fn main() !void {
         //----------------------------------------------------------------------------------
         console.frame();
         std.debug.print("{}\n", .{console.cpu});
+        if (ray.IsKeyPressed(ray.KEY_TAB)) {
+            debug_view_index +%= 1;
+        }
         //----------------------------------------------------------------------------------
-
-        ray.UpdateTexture(texture, image.data);
 
         // Draw
         //----------------------------------------------------------------------------------
+        ray.UpdateTexture(lcd_texture, lcd_image.data);
+
         ray.BeginDrawing();
         defer ray.EndDrawing();
 
-        // Draw the texture full screen.
-        // For this, we use the screen dimensions, and use them as the destination rectangle for the texture.
-        ray.DrawTextureRec(texture, ray.Rectangle{ .x = 0.0, .y = 0.0, .width = @intToFloat(f32, texture.width * scale), .height = @intToFloat(f32, texture.height * scale) }, ray.Vector2{ .x = 0.0, .y = 0.0 }, ray.WHITE);
-
         ray.ClearBackground(ray.RAYWHITE);
 
-        ray.DrawText("BoyZ II Game", 690, 20, 20, ray.LIGHTGRAY);
+        // Draw the texture full screen.
+        // For this, we use the screen dimensions, and use them as the destination rectangle for the texture.
+        ray.DrawTextureEx(lcd_texture, ray.Vector2{ .x = 0.0, .y = 0.0 }, 0.0, @intToFloat(f32, scale), ray.WHITE);
+
+        switch (DEBUG_VIEWS[debug_view_index % DEBUG_VIEWS.len]) {
+            .TileData => {
+                var tile_num: usize = 0;
+                // FIXME: Hard-coding number of tiles in VRAM for now
+                while (tile_num < 384) : (tile_num += 1) {
+                    // Each tile occupies 16 bytes, where each line is represented by 2 bytes:
+                    //
+                    // ```
+                    // Byte 0-1  Topmost Line (Top 8 pixels)
+                    // Byte 2-3  Second Line
+                    // etc.
+                    // ```
+
+                    // For each line, the first byte specifies the least
+                    // significant bit of the color ID of each pixel, and the
+                    // second byte specifies the most significant bit. In both
+                    // bytes, bit 7 represents the leftmost pixel, and bit 0 the
+                    // rightmost.
+                    const lsb = console.bus.vram[tile_num * 16];
+                    const msb = console.bus.vram[tile_num * 16 + 1];
+                    var line: usize = 0;
+                    while (line < 8) : (line += 1) {
+                        const y = 8 * (tile_num / 20) + line;
+                        const x = 8 * (tile_num % 20);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 0), @intCast(c_int, y), COLORS[((msb << 1) & 2) | (lsb & (1 >> 0) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 1), @intCast(c_int, y), COLORS[((msb >> 0) & 2) | (lsb & (1 >> 1) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 2), @intCast(c_int, y), COLORS[((msb >> 1) & 2) | (lsb & (1 >> 2) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 3), @intCast(c_int, y), COLORS[((msb >> 2) & 2) | (lsb & (1 >> 3) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 4), @intCast(c_int, y), COLORS[((msb >> 3) & 2) | (lsb & (1 >> 4) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 5), @intCast(c_int, y), COLORS[((msb >> 4) & 2) | (lsb & (1 >> 5) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 6), @intCast(c_int, y), COLORS[((msb >> 5) & 2) | (lsb & (1 >> 6) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 7), @intCast(c_int, y), COLORS[((msb >> 6) & 2) | (lsb & (1 >> 7) & 1)]);
+                    }
+                }
+
+                ray.UpdateTexture(tile_data_texture, tile_data_image.data);
+                ray.DrawText("Tile Data", screen_width / 2 + 16, 16, 20, ray.BLACK);
+                const tile_data_texture_scale = (scale / 2);
+                const x = screen_width / 2 + (((screen_width / 2) - (8 * 20 * tile_data_texture_scale)) / 2);
+                const y = ((screen_height - (8 * 20 * tile_data_texture_scale)) / 2);
+                ray.DrawTextureEx(tile_data_texture, ray.Vector2{ .x = x, .y = y }, 0.0, @intToFloat(f32, tile_data_texture_scale), ray.WHITE);
+            },
+            else => {
+                ray.DrawText("BoyZ II Game", screen_width / 2 + 16, 16, 20, ray.LIGHTGRAY);
+            },
+        }
         //----------------------------------------------------------------------------------
     }
 }

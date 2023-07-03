@@ -26,4 +26,8 @@ pub const LCD = struct {
     pub fn deinit(self: *const LCD) void {
         self.allocator.free(self.pixels);
     }
+
+    pub fn cycle(_: *const LCD, _: u32) void {
+        // self.pixels[ticks % (WIDTH * HEIGHT)] = ticks | 0xFF_00_00_00;
+    }
 };
