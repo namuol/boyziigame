@@ -10,6 +10,7 @@ const std = @import("std");
 
 // No gods, no kings, only bus
 const Bus = @import("./bus.zig").Bus;
+const PPU = @import("./ppu.zig").PPU;
 
 const rom = @import("./rom.zig");
 const Rom = rom.Rom;
@@ -1320,10 +1321,11 @@ fn OperandValue(comptime T: type) type {
 
 const expect = std.testing.expect;
 test "16 bit registers" {
+    var ppu = try PPU.init(std.testing.allocator);
     var bus_ = try Bus.init(std.testing.allocator, &Rom{
         ._raw_data = try std.testing.allocator.alloc(u8, 1),
         .allocator = std.testing.allocator,
-    });
+    }, &ppu);
     defer bus_.deinit();
     defer bus_.rom.deinit();
 

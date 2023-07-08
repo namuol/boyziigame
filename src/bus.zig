@@ -3,12 +3,13 @@
 const std = @import("std");
 const Rom = @import("./rom.zig").Rom;
 const CPU = @import("./cpu.zig").CPU;
+const PPU = @import("./ppu.zig").PPU;
 
 pub const Bus = struct {
     allocator: std.mem.Allocator,
     ram: []u8,
-    vram: []u8,
     rom: *Rom = undefined,
+    ppu: *PPU = undefined,
     cpu: *CPU = undefined,
 
     // Temporary read-error sigil; we should probably look into how the bus
@@ -33,7 +34,7 @@ pub const Bus = struct {
             // From cartridge, switchable bank via mapper (if any)
             0x4000...0x7FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
             // 8 KiB Video RAM (VRAM)
-            0x8000...0x9FFF => return self.vram[addr - 0x8000],
+            0x8000...0x9FFF => return self.ppu.read(addr),
             // 4 KiB Work RAM (WRAM)
             0xC000...0xCFFF => return self.ram[addr - 0xC000],
             // 4 KiB Work RAM (WRAM) - In CGB mode, switchable bank 1~7
@@ -59,7 +60,7 @@ pub const Bus = struct {
             // 0x0000...0x3FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
             // // From cartridge, switchable bank via mapper (if any)
             // 0x4000...0x7FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
-            0x8000...0x9FFF => self.vram[addr - 0x8000] = data,
+            0x8000...0x9FFF => self.ppu.write(addr, data),
             0xA000...0xBFFF => {
                 // TODO: Write to external RAM
             },
@@ -74,7 +75,7 @@ pub const Bus = struct {
 
             // TODO: Follow the rest from the guide
             else => {
-                self.cpu.panic("Dunno how to write to ${x:0>4}\n", .{addr});
+                // self.cpu.panic("Dunno how to write to ${x:0>4}\n", .{addr});
             },
         }
     }
@@ -86,13 +87,12 @@ pub const Bus = struct {
         self.write(addr + 1, hi);
     }
 
-    pub fn init(allocator: std.mem.Allocator, rom: *Rom) !Bus {
+    pub fn init(allocator: std.mem.Allocator, rom: *Rom, ppu: *PPU) !Bus {
         var self = Bus{
             .allocator = allocator,
             .rom = rom,
+            .ppu = ppu,
             .ram = try allocator.alloc(u8, 8 * 1024),
-            // TODO: CGB needs to have two switchable banks of 8KiB
-            .vram = try allocator.alloc(u8, 8 * 1024),
         };
 
         var i: usize = 0;
@@ -119,6 +119,5 @@ pub const Bus = struct {
 
     pub fn deinit(self: *const Bus) void {
         self.allocator.free(self.ram);
-        self.allocator.free(self.vram);
     }
 };

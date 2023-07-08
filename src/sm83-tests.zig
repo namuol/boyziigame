@@ -6,6 +6,7 @@ const expect = std.testing.expect;
 // No gods, no kings, only bus
 const Bus = @import("./bus.zig").Bus;
 const Rom = @import("./rom.zig").Rom;
+const PPU = @import("./ppu.zig").PPU;
 const CPU = @import("./cpu.zig").CPU;
 
 test "basic cycle (LD)" {
@@ -102,7 +103,10 @@ test "disassemble" {
     var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
     defer rom.deinit();
 
-    var bus = try Bus.init(std.testing.allocator, &rom);
+    var ppu = try PPU.init(std.testing.allocator);
+    defer ppu.deinit();
+
+    var bus = try Bus.init(std.testing.allocator, &rom, &ppu);
     defer bus.deinit();
 
     var cpu = try CPU.init(std.testing.allocator, &bus);
@@ -199,7 +203,7 @@ test "disassemble" {
 //     defer bus.deinit();
 
 //     var cpu = try CPU.init(std.testing.allocator, &bus);
-    defer cpu.deinit();
+//     defer cpu.deinit();
 //     bus.cpu = &cpu;
 //     cpu.boot();
 
@@ -1072,7 +1076,10 @@ test "real world ROM log match" {
     var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
     defer rom.deinit();
 
-    var bus = try Bus.init(std.testing.allocator, &rom);
+    var ppu = try PPU.init(std.testing.allocator);
+    defer ppu.deinit();
+
+    var bus = try Bus.init(std.testing.allocator, &rom, &ppu);
     defer bus.deinit();
 
     var cpu = try CPU.init(std.testing.allocator, &bus);

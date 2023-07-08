@@ -42,10 +42,10 @@ const DebugView = enum(u8) {
 
 const COLORS = [4]ray.Color{
     ray.Color{
-        .r = 0x00,
+        .r = 0xFF,
         .g = 0x00,
-        .b = 0x00,
-        .a = 0x00,
+        .b = 0xFF,
+        .a = 0x11,
     },
     ray.Color{
         .r = 0xDD,
@@ -54,15 +54,15 @@ const COLORS = [4]ray.Color{
         .a = 0xFF,
     },
     ray.Color{
-        .r = 0x99,
-        .g = 0x99,
-        .b = 0x99,
+        .r = 0x00,
+        .g = 0x00,
+        .b = 0x00,
         .a = 0xFF,
     },
     ray.Color{
-        .r = 0x33,
-        .g = 0x33,
-        .b = 0x33,
+        .r = 0x00,
+        .g = 0x00,
+        .b = 0x00,
         .a = 0xFF,
     },
 };
@@ -105,8 +105,8 @@ pub fn main() !void {
     const tile_data_image_buf = try allocator.alloc(u32, 8 * 20 * 8 * 20);
     var tile_data_image = ray.Image{
         .data = &tile_data_image_buf[0],
-        .width = 8 * 20, // 20 tiles wide
-        .height = 8 * 20, // 20 tiles tall (only using first 4 columns in last row)
+        .width = 8 * 16, // 16 tiles wide
+        .height = 8 * 16, // 16 tiles tall
         .format = ray.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
         .mipmaps = 1,
     };
@@ -159,20 +159,20 @@ pub fn main() !void {
                     // second byte specifies the most significant bit. In both
                     // bytes, bit 7 represents the leftmost pixel, and bit 0 the
                     // rightmost.
-                    const lsb = console.bus.vram[tile_num * 16];
-                    const msb = console.bus.vram[tile_num * 16 + 1];
                     var line: usize = 0;
                     while (line < 8) : (line += 1) {
+                        const lsb = console.ppu.vram[tile_num * 16 + line * 2];
+                        const msb = console.ppu.vram[tile_num * 16 + line * 2 + 1];
                         const y = 8 * (tile_num / 20) + line;
                         const x = 8 * (tile_num % 20);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 0), @intCast(c_int, y), COLORS[((msb << 1) & 2) | (lsb & (1 >> 0) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 1), @intCast(c_int, y), COLORS[((msb >> 0) & 2) | (lsb & (1 >> 1) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 2), @intCast(c_int, y), COLORS[((msb >> 1) & 2) | (lsb & (1 >> 2) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 3), @intCast(c_int, y), COLORS[((msb >> 2) & 2) | (lsb & (1 >> 3) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 4), @intCast(c_int, y), COLORS[((msb >> 3) & 2) | (lsb & (1 >> 4) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 5), @intCast(c_int, y), COLORS[((msb >> 4) & 2) | (lsb & (1 >> 5) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 6), @intCast(c_int, y), COLORS[((msb >> 5) & 2) | (lsb & (1 >> 6) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 7), @intCast(c_int, y), COLORS[((msb >> 6) & 2) | (lsb & (1 >> 7) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 7), @intCast(c_int, y), COLORS[((msb << 1) & 2) | (lsb & (1 >> 0) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 6), @intCast(c_int, y), COLORS[((msb >> 0) & 2) | (lsb & (1 >> 1) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 5), @intCast(c_int, y), COLORS[((msb >> 1) & 2) | (lsb & (1 >> 2) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 4), @intCast(c_int, y), COLORS[((msb >> 2) & 2) | (lsb & (1 >> 3) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 3), @intCast(c_int, y), COLORS[((msb >> 3) & 2) | (lsb & (1 >> 4) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 2), @intCast(c_int, y), COLORS[((msb >> 4) & 2) | (lsb & (1 >> 5) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 1), @intCast(c_int, y), COLORS[((msb >> 5) & 2) | (lsb & (1 >> 6) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 0), @intCast(c_int, y), COLORS[((msb >> 6) & 2) | (lsb & (1 >> 7) & 1)]);
                     }
                 }
 

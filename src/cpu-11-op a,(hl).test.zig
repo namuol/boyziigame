@@ -6,13 +6,17 @@ const expect = std.testing.expect;
 // No gods, no kings, only bus
 const Bus = @import("./bus.zig").Bus;
 const Rom = @import("./rom.zig").Rom;
+const PPU = @import("./ppu.zig").PPU;
 const CPU = @import("./cpu.zig").CPU;
 
 pub fn run() !void {
     var rom = try Rom.from_file("test-roms/11-op a,(hl).gb", std.testing.allocator);
     defer rom.deinit();
 
-    var bus = try Bus.init(std.testing.allocator, &rom);
+    var ppu = try PPU.init(std.testing.allocator);
+    defer ppu.deinit();
+
+    var bus = try Bus.init(std.testing.allocator, &rom, &ppu);
     defer bus.deinit();
 
     var cpu = try CPU.init(std.testing.allocator, &bus);

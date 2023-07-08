@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const CPU = @import("./cpu.zig").CPU;
+const PPU = @import("./ppu.zig").PPU;
 const LCD = @import("./lcd.zig").LCD;
 const Bus = @import("./bus.zig").Bus;
 const Rom = @import("./rom.zig").Rom;
@@ -11,6 +12,7 @@ pub const Console = struct {
     rom: Rom,
     bus: Bus,
     cpu: CPU,
+    ppu: PPU,
     lcd: LCD,
 
     pub fn init(rom_file_path: []const u8, allocator: std.mem.Allocator) !*Console {
@@ -20,7 +22,8 @@ pub const Console = struct {
         self.allocator = allocator;
 
         self.rom = try Rom.from_file(rom_file_path, allocator);
-        self.bus = try Bus.init(allocator, &self.rom);
+        self.ppu = try PPU.init(allocator);
+        self.bus = try Bus.init(allocator, &self.rom, &self.ppu);
         self.cpu = try CPU.init(allocator, &self.bus);
         self.lcd = try LCD.init(allocator);
 
@@ -33,6 +36,7 @@ pub const Console = struct {
     pub fn deinit(self: *const Console) void {
         self.lcd.deinit();
         self.cpu.deinit();
+        self.ppu.deinit();
         self.bus.deinit();
         self.rom.deinit();
 
