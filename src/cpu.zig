@@ -34,9 +34,17 @@ const Interrupt = enum(u8) {
 
 const DMG_CPU_HZ: u32 = 4194304;
 
+const INT_FLAG_VBLANK: u8 = 0b1 << 0;
+const INT_FLAG_STAT: u8 = 0b1 << 1;
 const INT_FLAG_TIMER: u8 = 0b1 << 2;
+const INT_FLAG_SERIAL: u8 = 0b1 << 3;
+const INT_FLAG_JOYPAD: u8 = 0b1 << 4;
 
+const INT_VEC_VBLANK: u16 = 0x0040;
+const INT_VEC_STAT: u16 = 0x0048;
 const INT_VEC_TIMER: u16 = 0x0050;
+const INT_VEC_SERIAL: u16 = 0x0058;
+const INT_VEC_JOYPAD: u16 = 0x0060;
 
 pub const CPU = struct {
     bus: *Bus = undefined,
@@ -127,27 +135,38 @@ pub const CPU = struct {
     }
 
     pub fn read_hw_register(self: *const CPU, addr: u8) u8 {
-        // std.debug.print("\nread_hw_register(0x{x:0>2}) = 0x{x:0>2}\n", .{ addr, self.hardwareRegisters[addr] });
         return switch (addr) {
+            0x44 => self.bus.ppu.ly,
+            0x41 => {
+                // I'm making the LCD mode part of the PPU, and always reading
+                // it here to determine the appropriate mode flags.
+                //
+                // I'm doing the same to compare LCY with LY.
+                //
+                // It's unclear if this is actually how the hardware works, or
+                // if the LCD/PPU sets the values at the start of a cycle, or if
+                // the CPU just sets this flag every cycle or whatever, but this
+                // keeps things simple for now.
+                const stat = (self.hardwareRegisters[0x41] & 0b1111_1100) | self.bus.ppu.mode;
+                const ly = self.read_hw_register(0x44);
+                const lcy = self.read_hw_register(0x45);
+                if (lcy == ly) {
+                    return stat & 0b1111_1011;
+                }
+                return stat | 0b0000_0100;
+            },
             0x4D => 0xFF,
             else => self.hardwareRegisters[addr],
         };
     }
 
     pub fn write_hw_register(self: *CPU, addr: u8, data: u8) void {
-        // std.debug.print("\nwrite_hw_register(0x{x:0>2}, 0x{x:0>2})\n", .{ addr, data });
         switch (addr) {
+            // LY Coordinate is read-only on the bus
+            0x44 => {},
             // Writing any value to DIV register resets it to $00
             0x04 => {
                 self.hardwareRegisters[addr] = 0x00;
-            },
-            0xFF => {
-                // std.debug.print("rIE = ${X:0>2}\n", .{data});
-                self.hardwareRegisters[addr] = data;
-            },
-            0x0F => {
-                // std.debug.print("rIF = ${X:0>2}\n", .{data});
-                self.hardwareRegisters[addr] = data;
             },
             else => {
                 self.hardwareRegisters[addr] = data;
@@ -251,11 +270,41 @@ pub const CPU = struct {
         hardware_registers.simulate_dmg_boot(self.hardwareRegisters);
     }
 
+    fn statInterruptLine(self: *const CPU) bool {
+        const stat = self.read_hw_register(0x41);
+
+        // HBlank
+        if ((stat & (1 << 0) != 0) and (stat & (1 << 3) != 0)) {
+            return true;
+        }
+
+        // VBlank
+        if ((stat & (1 << 1) != 0) and (stat & (1 << 4) != 0)) {
+            return true;
+        }
+
+        // OAM
+        if ((stat & (1 << 2) != 0) and (stat & (1 << 5) != 0)) {
+            return true;
+        }
+
+        // LCY == LY
+        if ((stat & (1 << 3) != 0) and (stat & (1 << 6) != 0)) {
+            return true;
+        }
+
+        return false;
+    }
+
     pub fn cycle(self: *CPU) bool {
         var stepped: bool = false;
 
         // Only for debugging:
         self.debugLastPC = self.pc;
+
+        // Need to temporarily store previous STAT register value so we can
+        // detect a rising edge on the interrupt line.
+        const prev_stat_interrupt_line = self.statInterruptLine();
 
         // We are not (yet) implementing a "cycle accurate" emulator, so we
         // essentially just do all our execution at once, once our cycle counter
@@ -869,7 +918,6 @@ pub const CPU = struct {
 
             if ((self.ticks % timerCycleDivisor) == 0) {
                 self.hardwareRegisters[0x05] +%= 1;
-                // std.debug.print("FF05 = {X:0>2} cyclesLeft: {}\n", .{ self.hardwareRegisters[0x05], self.cyclesLeft });
                 // When the value overflows (exceeds $FF) it is reset to the
                 // value specified in TMA (FF06) and an interrupt is requested.
                 if (self.hardwareRegisters[0x05] == 0x00) {
@@ -879,17 +927,27 @@ pub const CPU = struct {
             }
         }
 
+        //
+        // STAT (LCD status)
+        //
+        if (!prev_stat_interrupt_line and self.statInterruptLine()) {
+            self.hardwareRegisters[0x0F] |= INT_FLAG_STAT;
+        }
+
+        //
+        // HANDLE INTERRUPTS
+        //
+
         // As soon as an interrupt is pending, we un-halt the CPU
         if (self.halted and ((self.hardwareRegisters[0x0F]) != 0x00)) {
-            // std.debug.print("unHALTed\n", .{});
             self.halted = false;
         }
 
-        var interruptHandled: bool = false;
-        if (!interruptHandled and self.maybe_interrupt(INT_FLAG_TIMER, INT_VEC_TIMER)) {
-            // std.debug.print("\nTimer interrupt!\n", .{});
-            interruptHandled = true;
-        }
+        const interruptHandled = self.maybe_interrupt(INT_FLAG_VBLANK, INT_VEC_VBLANK) or
+            self.maybe_interrupt(INT_FLAG_STAT, INT_VEC_STAT) or
+            self.maybe_interrupt(INT_FLAG_TIMER, INT_VEC_TIMER) or
+            self.maybe_interrupt(INT_FLAG_SERIAL, INT_VEC_SERIAL) or
+            self.maybe_interrupt(INT_FLAG_JOYPAD, INT_VEC_JOYPAD);
 
         //
         // DONE
@@ -904,7 +962,7 @@ pub const CPU = struct {
         while (!self.cycle()) {}
     }
 
-    pub fn maybe_interrupt(self: *CPU, interruptFlag: u8, interruptVector: u16) bool {
+    fn maybe_interrupt(self: *CPU, interruptFlag: u8, interruptVector: u16) bool {
         if (self.interruptMasterEnable and
             (self.hardwareRegisters[0xFF] & interruptFlag) != 0 and
             (self.hardwareRegisters[0x0F] & interruptFlag) != 0)
@@ -941,7 +999,6 @@ pub const CPU = struct {
                     .DE => self.de(),
                     .SP => self.sp,
                     .HL => blk: {
-                        // std.debug.print("\nHL = ${x:0>4}; (HL) = ${x:0>2};\n", .{ self.hl(), self.bus.read(self.hl()) });
                         // wtf is this, zig?
                         break :blk self.hl();
                     },

@@ -69,9 +69,20 @@ test "enqueue/dequeue" {
     }
 }
 
+const MODE_OAM_SCAN: u2 = 2;
+const MODE_DRAWING: u2 = 3;
+const MODE_HBLANK: u2 = 0;
+const MODE_VBLANK: u2 = 1;
+
 pub const PPU = struct {
     allocator: std.mem.Allocator,
     vram: []u8,
+
+    /// Vertical line currently being drawn (including hidden vblank lines)
+    ly: u8 = 0,
+    dot: u16 = 0,
+    mode: u2 = undefined,
+
     // Temporary 8-pixel buffer to hold pixel data fetched by the pixel fetcher
     // while it waits for the fifo to have space for the read data.
     pixel_fetch: [8]u2 = [_]u2{0} ** 8,
@@ -88,15 +99,32 @@ pub const PPU = struct {
         self.allocator.free(self.vram);
     }
 
-    pub fn cycle(_: *const PPU) void {
-        // self.pixels[ticks % (WIDTH * HEIGHT)] = ticks | 0xFF_00_00_00;
+    pub fn cycle(self: *PPU) void {
+        if (self.ly > 143) {
+            self.mode = MODE_VBLANK;
+        } else {
+            switch (self.dot) {
+                // OAM SEARCH
+                //
+                // Find all sprites that are visible on the current line and put
+                // them into an array of up to 10 sprites.
+                //
+                // 20 cycles
+                0...79 => self.mode = MODE_OAM_SCAN,
+                80...252 => self.mode = MODE_DRAWING,
+                253...457 => self.mode = MODE_HBLANK,
+                else => {},
+            }
+        }
 
-        // OAM SEARCH
-        //
-        // Find all sprites that are visible on the current line and put them
-        // into an array of up to 10 sprites.
-        //
-        // 20 cycles
+        self.dot += 1;
+        if (self.dot > 457) {
+            self.dot = 0;
+            self.ly += 1;
+            if (self.ly > 153) {
+                self.ly = 0;
+            }
+        }
     }
 
     pub fn read(self: *const PPU, addr: u16) u8 {

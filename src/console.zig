@@ -48,6 +48,7 @@ pub const Console = struct {
         var i: usize = 0;
         // HACK; roughly approximate frame
         while (i < cyclesPerFrame) : (i += 1) {
+            _ = self.ppu.cycle();
             _ = self.cpu.cycle();
             _ = self.lcd.cycle(self.cpu.ticks);
         }

@@ -81,7 +81,6 @@ pub fn main() !void {
 
     var console = try Console.init("./cpu_instrs.gb", allocator);
     defer console.deinit();
-    console.cpu.hardwareRegisters[0x44] = 0x90;
 
     // Double width; main screen on left hand side, debugging info on right hand side:
     const scale = 4;
@@ -151,7 +150,7 @@ pub fn main() !void {
             }
         }
 
-        std.debug.print("{}\n", .{console.cpu});
+        // std.debug.print("{}\n", .{console.cpu});
         if (ray.IsKeyPressed(ray.KEY_TAB)) {
             debug_view_index +%= 1;
         }
