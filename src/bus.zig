@@ -23,7 +23,7 @@ pub const Bus = struct {
             // is how we allow the CPU to control whether it's reading from the
             // boot rom or not from the first 256 bytes of address space:
             0x0000...0x00FF => if (self.cpu.boot_rom_enabled())
-                self.cpu.boot_rom_read(@intCast(u8, addr))
+                self.cpu.boot_rom_read(@truncate(u8, addr))
             else
                 self.rom.bus_read(addr),
             // From cartridge, usually a fixed bank
@@ -38,9 +38,12 @@ pub const Bus = struct {
             0xC000...0xCFFF => self.ram[addr - 0xC000],
             // 4 KiB Work RAM (WRAM) - In CGB mode, switchable bank 1~7
             0xD000...0xDFFF => self.ram[addr - 0xC000],
+            // Mirror of C000~DDFF (ECHO RAM)
+            0xE000...0xFDFF => self.ram[(addr - 0xC000) % (0xFDFF - 0xE000)],
+            // Object attribute memory (OAM)
+            0xFE00...0xFE9F => self.ppu.read(addr),
             // Hardware registers/HRAM
             0xFF00...0xFFFF => self.cpu.read_hw_register(@truncate(u8, addr & 0x00FF)),
-            // TODO: Follow the rest from the guide
             else => TEMP_READ_ERROR_SIGIL,
         };
     }
@@ -59,22 +62,20 @@ pub const Bus = struct {
             0x0000...0x3FFF => self.rom.bus_write(addr, data),
             // From cartridge, switchable bank via mapper (if any)
             0x4000...0x7FFF => self.rom.bus_write(addr, data),
-
             // VRAM
             0x8000...0x9FFF => self.ppu.write(addr, data),
-
             // From cartridge, switchable bank if any
             0xA000...0xBFFF => self.rom.bus_write(addr, data),
-
             // 4 KiB Work RAM (WRAM)
             0xC000...0xCFFF => self.ram[addr - 0xC000] = data,
             // 4 KiB Work RAM (WRAM) - In CGB mode, switchable bank 1~7
             0xD000...0xDFFF => self.ram[addr - 0xC000] = data,
-
+            // Mirror of C000~DDFF (ECHO RAM)
+            0xE000...0xFDFF => self.ram[(addr - 0xC000) % (0xFDFF - 0xE000)] = data,
+            // Object attribute memory (OAM)
+            0xFE00...0xFE9F => self.ppu.write(addr, data),
             // Hardware registers/HRAM
             0xFF00...0xFFFF => self.cpu.write_hw_register(@truncate(u8, addr & 0x00FF), data),
-
-            // TODO: Follow the rest from the guide
             else => {
                 // self.cpu.panic("Dunno how to write to ${x:0>4}\n", .{addr});
             },

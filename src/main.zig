@@ -55,15 +55,15 @@ const COLORS = [4]ray.Color{
         .a = 0xFF,
     },
     ray.Color{
-        .r = 0x00,
-        .g = 0x00,
-        .b = 0x00,
+        .r = 0x55,
+        .g = 0x55,
+        .b = 0x55,
         .a = 0xFF,
     },
     ray.Color{
-        .r = 0x00,
-        .g = 0x00,
-        .b = 0x00,
+        .r = 0x33,
+        .g = 0x33,
+        .b = 0x33,
         .a = 0xFF,
     },
 };
@@ -79,7 +79,7 @@ pub fn main() !void {
     const allocator = gpa.allocator();
     defer std.debug.assert(gpa.deinit() == .ok);
 
-    var console = try Console.init("./cpu_instrs.gb", allocator);
+    var console = try Console.init("./tetris.gb", allocator);
     defer console.deinit();
 
     // Double width; main screen on left hand side, debugging info on right hand side:
@@ -137,6 +137,9 @@ pub fn main() !void {
 
     var debug_view_index: u8 = 0;
 
+    // const fmt = "registers:\n{}\n\ndisassemble:\n{}\n";
+    // std.debug.print(fmt, .{ console.cpu.registers(), console.cpu.disassemble(5) });
+
     while (!ray.WindowShouldClose()) // Detect window close button or ESC key
     {
         // Update
@@ -150,7 +153,11 @@ pub fn main() !void {
             }
         }
 
-        // std.debug.print("{}\n", .{console.cpu});
+        // if (ray.IsKeyPressed(ray.KEY_PERIOD)) {
+        //     console.step();
+        //     std.debug.print(fmt, .{ console.cpu.registers(), console.cpu.disassemble(5) });
+        // }
+
         if (ray.IsKeyPressed(ray.KEY_TAB)) {
             debug_view_index +%= 1;
         }
@@ -193,14 +200,14 @@ pub fn main() !void {
                         const msb = console.ppu.vram[tile_num * 16 + line * 2 + 1];
                         const y = 8 * (tile_num / 20) + line;
                         const x = 8 * (tile_num % 20);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 7), @intCast(c_int, y), COLORS[((msb << 1) & 2) | (lsb & (1 >> 0) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 6), @intCast(c_int, y), COLORS[((msb >> 0) & 2) | (lsb & (1 >> 1) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 5), @intCast(c_int, y), COLORS[((msb >> 1) & 2) | (lsb & (1 >> 2) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 4), @intCast(c_int, y), COLORS[((msb >> 2) & 2) | (lsb & (1 >> 3) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 3), @intCast(c_int, y), COLORS[((msb >> 3) & 2) | (lsb & (1 >> 4) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 2), @intCast(c_int, y), COLORS[((msb >> 4) & 2) | (lsb & (1 >> 5) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 1), @intCast(c_int, y), COLORS[((msb >> 5) & 2) | (lsb & (1 >> 6) & 1)]);
-                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 0), @intCast(c_int, y), COLORS[((msb >> 6) & 2) | (lsb & (1 >> 7) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 7), @intCast(c_int, y), COLORS[((msb << 1) & 2) | ((lsb >> 0) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 6), @intCast(c_int, y), COLORS[((msb >> 0) & 2) | ((lsb >> 1) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 5), @intCast(c_int, y), COLORS[((msb >> 1) & 2) | ((lsb >> 2) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 4), @intCast(c_int, y), COLORS[((msb >> 2) & 2) | ((lsb >> 3) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 3), @intCast(c_int, y), COLORS[((msb >> 3) & 2) | ((lsb >> 4) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 2), @intCast(c_int, y), COLORS[((msb >> 4) & 2) | ((lsb >> 5) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 1), @intCast(c_int, y), COLORS[((msb >> 5) & 2) | ((lsb >> 6) & 1)]);
+                        ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 0), @intCast(c_int, y), COLORS[((msb >> 6) & 2) | ((lsb >> 7) & 1)]);
                     }
                 }
 
@@ -235,14 +242,14 @@ pub fn main() !void {
                         const msb = console.ppu.vram[tile_num * 16 + line * 2 + 1];
                         const y = 8 * ((tile_index - 0x9800) / 32) + line;
                         const x = 8 * ((tile_index - 0x9800) % 32);
-                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 7), @intCast(c_int, y), COLORS[((msb << 1) & 2) | (lsb & (1 >> 0) & 1)]);
-                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 6), @intCast(c_int, y), COLORS[((msb >> 0) & 2) | (lsb & (1 >> 1) & 1)]);
-                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 5), @intCast(c_int, y), COLORS[((msb >> 1) & 2) | (lsb & (1 >> 2) & 1)]);
-                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 4), @intCast(c_int, y), COLORS[((msb >> 2) & 2) | (lsb & (1 >> 3) & 1)]);
-                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 3), @intCast(c_int, y), COLORS[((msb >> 3) & 2) | (lsb & (1 >> 4) & 1)]);
-                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 2), @intCast(c_int, y), COLORS[((msb >> 4) & 2) | (lsb & (1 >> 5) & 1)]);
-                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 1), @intCast(c_int, y), COLORS[((msb >> 5) & 2) | (lsb & (1 >> 6) & 1)]);
-                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 0), @intCast(c_int, y), COLORS[((msb >> 6) & 2) | (lsb & (1 >> 7) & 1)]);
+                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 7), @intCast(c_int, y), COLORS[((msb << 1) & 2) | ((lsb >> 0) & 1)]);
+                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 6), @intCast(c_int, y), COLORS[((msb >> 0) & 2) | ((lsb >> 1) & 1)]);
+                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 5), @intCast(c_int, y), COLORS[((msb >> 1) & 2) | ((lsb >> 2) & 1)]);
+                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 4), @intCast(c_int, y), COLORS[((msb >> 2) & 2) | ((lsb >> 3) & 1)]);
+                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 3), @intCast(c_int, y), COLORS[((msb >> 3) & 2) | ((lsb >> 4) & 1)]);
+                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 2), @intCast(c_int, y), COLORS[((msb >> 4) & 2) | ((lsb >> 5) & 1)]);
+                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 1), @intCast(c_int, y), COLORS[((msb >> 5) & 2) | ((lsb >> 6) & 1)]);
+                        ray.ImageDrawPixel(&tile_map_image, @intCast(c_int, x + 0), @intCast(c_int, y), COLORS[((msb >> 6) & 2) | ((lsb >> 7) & 1)]);
                     }
                 }
 

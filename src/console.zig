@@ -29,6 +29,7 @@ pub const Console = struct {
 
         self.bus.cpu = &self.cpu;
         self.cpu.bus = &self.bus;
+        self.ppu.lcd = &self.lcd;
 
         return self;
     }
@@ -41,6 +42,15 @@ pub const Console = struct {
         self.rom.deinit();
 
         self.allocator.destroy(self);
+    }
+
+    pub fn step(self: *Console) void {
+        var stepped = false;
+        while (!stepped) {
+            _ = self.ppu.cycle();
+            stepped = self.cpu.cycle();
+            _ = self.lcd.cycle(self.cpu.ticks);
+        }
     }
 
     pub fn frame(self: *Console) void {

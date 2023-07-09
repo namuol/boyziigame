@@ -131,11 +131,14 @@ pub const CPU = struct {
     }
 
     pub fn boot_rom_read(self: *const CPU, addr: u8) u8 {
+        // std.debug.print("boot rom read ${X:0>4} = ${X:0>2}\n", .{ addr, self.bootROM[addr] });
         return self.bootROM[addr];
     }
 
     pub fn read_hw_register(self: *const CPU, addr: u8) u8 {
         return switch (addr) {
+            // LCD control
+            0x40 => self.bus.ppu.lcdc,
             0x44 => self.bus.ppu.ly,
             0x41 => {
                 // I'm making the LCD mode part of the PPU, and always reading
@@ -162,6 +165,10 @@ pub const CPU = struct {
 
     pub fn write_hw_register(self: *CPU, addr: u8, data: u8) void {
         switch (addr) {
+            // LCD control
+            0x40 => {
+                self.bus.ppu.lcdc = data;
+            },
             // LY Coordinate is read-only on the bus
             0x44 => {},
             // Writing any value to DIV register resets it to $00
@@ -1166,12 +1173,6 @@ pub const CPU = struct {
             },
             .HL => {
                 self.set_hl(data);
-                if (operand.decrement) {
-                    self.set_hl(self.hl() -% 1);
-                }
-                if (operand.increment) {
-                    self.set_hl(self.hl() +% 1);
-                }
             },
             .SP => {
                 self.sp = data;
