@@ -38,7 +38,7 @@ pub fn run() !void {
     //
     // > For the convenience of anyone who uses them, LY (MMIO register at
     // > 0xFF44) is stubbed to 0x90 permanently.
-    cpu.hardwareRegisters[0x44] = 0x90;
+    ppu.ly = 0x90;
 
     // Run until we reach the start of the program ROM (basically just run the
     // boot ROM):

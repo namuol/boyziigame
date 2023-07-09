@@ -38,7 +38,7 @@ pub fn run() !void {
     //
     // > For the convenience of anyone who uses them, LY (MMIO register at
     // > 0xFF44) is stubbed to 0x90 permanently.
-    cpu.hardwareRegisters[0x44] = 0x90;
+    ppu.ly = 0x90;
 
     var line_number: u64 = 1;
 
