@@ -18,32 +18,31 @@ pub const Bus = struct {
     pub fn read(self: *const Bus, addr: u16) u8 {
         // Follow the memory mapping guide here:
         // https://gbdev.io/pandocs/Memory_Map.html
-        switch (addr) {
+        return switch (addr) {
             // This should probably be controlled by the CPU, but for now this
             // is how we allow the CPU to control whether it's reading from the
             // boot rom or not from the first 256 bytes of address space:
-            0x0000...0x00FF => {
-                if (self.cpu.boot_rom_enabled()) {
-                    return self.cpu.boot_rom_read(@intCast(u8, addr));
-                } else {
-                    return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL;
-                }
-            },
+            0x0000...0x00FF => if (self.cpu.boot_rom_enabled())
+                self.cpu.boot_rom_read(@intCast(u8, addr))
+            else
+                self.rom.bus_read(addr),
             // From cartridge, usually a fixed bank
-            0x0100...0x3FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
+            0x0100...0x3FFF => self.rom.bus_read(addr),
             // From cartridge, switchable bank via mapper (if any)
-            0x4000...0x7FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
+            0x4000...0x7FFF => self.rom.bus_read(addr),
             // 8 KiB Video RAM (VRAM)
-            0x8000...0x9FFF => return self.ppu.read(addr),
+            0x8000...0x9FFF => self.ppu.read(addr),
+            // From cartridge, switchable bank if any
+            0xA000...0xBFFF => self.rom.bus_read(addr),
             // 4 KiB Work RAM (WRAM)
-            0xC000...0xCFFF => return self.ram[addr - 0xC000],
+            0xC000...0xCFFF => self.ram[addr - 0xC000],
             // 4 KiB Work RAM (WRAM) - In CGB mode, switchable bank 1~7
-            0xD000...0xDFFF => return self.ram[addr - 0xC000],
+            0xD000...0xDFFF => self.ram[addr - 0xC000],
             // Hardware registers/HRAM
-            0xFF00...0xFFFF => return self.cpu.read_hw_register(@truncate(u8, addr & 0x00FF)),
+            0xFF00...0xFFFF => self.cpu.read_hw_register(@truncate(u8, addr & 0x00FF)),
             // TODO: Follow the rest from the guide
-            else => return TEMP_READ_ERROR_SIGIL,
-        }
+            else => TEMP_READ_ERROR_SIGIL,
+        };
     }
 
     pub fn read_16(self: *const Bus, addr: u16) u16 {
@@ -57,13 +56,15 @@ pub const Bus = struct {
         // https://gbdev.io/pandocs/Memory_Map.html
         switch (addr) {
             // From cartridge, usually a fixed bank
-            // 0x0000...0x3FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
-            // // From cartridge, switchable bank via mapper (if any)
-            // 0x4000...0x7FFF => return self.rom.bus_read(addr) catch TEMP_READ_ERROR_SIGIL,
+            0x0000...0x3FFF => self.rom.bus_write(addr, data),
+            // From cartridge, switchable bank via mapper (if any)
+            0x4000...0x7FFF => self.rom.bus_write(addr, data),
+
+            // VRAM
             0x8000...0x9FFF => self.ppu.write(addr, data),
-            0xA000...0xBFFF => {
-                // TODO: Write to external RAM
-            },
+
+            // From cartridge, switchable bank if any
+            0xA000...0xBFFF => self.rom.bus_write(addr, data),
 
             // 4 KiB Work RAM (WRAM)
             0xC000...0xCFFF => self.ram[addr - 0xC000] = data,

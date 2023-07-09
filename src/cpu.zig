@@ -128,7 +128,10 @@ pub const CPU = struct {
 
     pub fn read_hw_register(self: *const CPU, addr: u8) u8 {
         // std.debug.print("\nread_hw_register(0x{x:0>2}) = 0x{x:0>2}\n", .{ addr, self.hardwareRegisters[addr] });
-        return self.hardwareRegisters[addr];
+        return switch (addr) {
+            0x4D => 0xFF,
+            else => self.hardwareRegisters[addr],
+        };
     }
 
     pub fn write_hw_register(self: *CPU, addr: u8, data: u8) void {

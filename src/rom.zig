@@ -27,6 +27,8 @@ fn checksum_rom(data: []const u8) u16 {
 }
 
 pub const Rom = struct {
+    allocator: std.mem.Allocator,
+
     _raw_data: []u8 = undefined,
 
     logo: [48]u8 = undefined,
@@ -44,7 +46,11 @@ pub const Rom = struct {
     header_checksum: u8 = undefined,
     global_checksum: u16 = undefined,
 
-    allocator: std.mem.Allocator,
+    _bus_read: *const fn (self: *const Rom, addr: u16) u8 = undefined,
+    _bus_write: *const fn (self: *Rom, addr: u16, data: u8) void = undefined,
+
+    bank_num: u16 = 1,
+    bank_num_mask: u16 = 1,
 
     const HEADER_START = 0x100;
     const HEADER_END = 0x150;
@@ -194,6 +200,17 @@ pub const Rom = struct {
             rom.sgb_flag = @intToEnum(SgbFlag, rom._raw_data[pos]);
             pos += 1;
             rom.cartridge_type = @intToEnum(CartridgeType, rom._raw_data[pos]);
+            switch (rom.cartridge_type) {
+                .ROM_ONLY => {
+                    rom._bus_read = Rom.bus_read_rom_only;
+                    rom._bus_write = Rom.bus_write_rom_only;
+                },
+                .MBC1 => {
+                    rom._bus_read = Rom.bus_read_mbc1;
+                    rom._bus_write = Rom.bus_write_mbc1;
+                },
+                else => std.debug.panic("Unsupported mapper type: {s}", .{@tagName(rom.cartridge_type)}),
+            }
             pos += 1;
             rom.rom_size = @intToEnum(RomSize, rom._raw_data[pos]);
             pos += 1;
@@ -209,6 +226,25 @@ pub const Rom = struct {
             pos += 1;
             rom.global_checksum = (@as(u16, rom._raw_data[pos]) << 8) | @as(u16, rom._raw_data[pos + 1]);
         }
+
+        // Mask used to keep bank number in range when setting the bank number
+        // register.
+        //
+        // The smallest bitmask possible to represent all valid bank numbers is
+        // used based on the size of the rom.
+        //
+        // For example:
+        //
+        // -  32K ROM;  2 banks; ....1 (0, 1)
+        // -  64K ROM;  4 banks; ...11 (0, 1, 2, 3)
+        // - 128K ROM;  8 banks; ..111 (0, 1, 2, 3, ..., 7)
+        // - 256K ROM; 16 banks; .1111 (0, 1, 2, 3, ..., 15)
+        // - ...etc
+        //
+        // We can calculate this bitmask by essentially shifting a bit to the
+        // N+1th position to get 0b100..N+1, so by subtracting 1 from this
+        // number we get 0b111..N, a mask with N 1s
+        rom.bank_num_mask = std.math.pow(u16, 2, @enumToInt(rom.rom_size) + 1) - 1;
 
         return rom;
     }
@@ -301,27 +337,54 @@ pub const Rom = struct {
     //
 
     /// A read from the bus at a given address.
-    ///
-    /// Can return an error if the read is out of range of the cartridge ROM, in
-    /// which case the caller (i.e. the Bus) should handle the read instead.
-    pub fn bus_read(self: *const Rom, addr: u16) !u8 {
-        // TODO: Handle mappers and such
-        //
-        // We might want to return something other than `!u8` (maybe a union of
-        // some kind) for scenarios where we want to allow the Rom to defer to
-        // the bus to handle things like I/O or other devices.
-        if (addr > self._raw_data.len) {
-            return ReadError.OutOfRange;
-        }
+    pub fn bus_read(self: *const Rom, addr: u16) u8 {
+        return self._bus_read(self, addr);
+    }
 
+    pub fn bus_write(self: *Rom, addr: u16, data: u8) void {
+        self._bus_write(self, addr, data);
+    }
+
+    fn bus_read_rom_only(self: *const Rom, addr: u16) u8 {
         return self._raw_data[addr];
     }
+
+    fn bus_write_rom_only(_: *Rom, _: u16, _: u8) void {}
+
+    fn bus_read_mbc1(self: *const Rom, addr: u16) u8 {
+        switch (addr) {
+            // ROM Bank X0 [read-only]
+            0x0000...0x3FFF => return self._raw_data[addr],
+            // ROM Bank 01-7F [read-only]
+            0x4000...0x7FFF => {
+                var final_addr: u20 = (addr & 0x3FFF) | (self.bank_num << 14);
+                return self._raw_data[final_addr];
+            },
+
+            // RAM Bank 00-03; no RAM for this cart type so always return $FF:
+            0xA000...0xBFFF => return 0xFF,
+
+            // Should we panic here?
+            else => return 0xFF,
+        }
+    }
+
+    fn bus_write_mbc1(self: *Rom, addr: u16, data: u8) void {
+        switch (addr) {
+            // ROM Bank number [write-only]
+            0x2000...0x3FFF => {
+                var bank_num = data & self.bank_num_mask;
+                if (bank_num == 0) {
+                    // If this register is set to $00, it behaves as if it is
+                    // set to $01.
+                    bank_num = 1;
+                }
+                self.bank_num = bank_num;
+                std.debug.print("Switched to bank number {}\n", .{self.bank_num});
+            },
+            else => {
+                // Ignored...
+            },
+        }
+    }
 };
-
-// test "read from file and load from buffer" {
-//     var rom = try Rom.from_file("pokemon_blue.gb", std.testing.allocator);
-//     defer rom.deinit();
-
-//     print("\n{any}\n", .{rom});
-//     print("\n\n{s}\n", .{rom.draw_logo()});
-// }

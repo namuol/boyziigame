@@ -142,7 +142,15 @@ pub fn main() !void {
     {
         // Update
         //----------------------------------------------------------------------------------
-        console.frame();
+        if (!ray.IsKeyDown(ray.KEY_SPACE)) {
+            console.frame();
+        } else {
+            var i: u8 = 0;
+            while (i < 128) : (i += 1) {
+                console.frame();
+            }
+        }
+
         std.debug.print("{}\n", .{console.cpu});
         if (ray.IsKeyPressed(ray.KEY_TAB)) {
             debug_view_index +%= 1;
