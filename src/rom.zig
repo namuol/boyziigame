@@ -346,6 +346,7 @@ pub const Rom = struct {
 
     pub fn deinit(self: *const Rom) void {
         self.allocator.free(self._raw_data);
+        self.allocator.free(self.ram);
     }
 
     //
