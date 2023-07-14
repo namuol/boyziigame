@@ -84,6 +84,7 @@ pub const CPU = struct {
     enableInterruptsAfterNextInstruction: bool = false,
     interruptMasterEnable: bool = false,
     halted: bool = false,
+    prev_ppu_mode: u2 = undefined,
 
     allocator: std.mem.Allocator,
 
@@ -139,7 +140,6 @@ pub const CPU = struct {
         return switch (addr) {
             // LCD control
             0x40 => self.bus.ppu.lcdc,
-            0x44 => self.bus.ppu.ly,
             0x41 => {
                 // I'm making the LCD mode part of the PPU, and always reading
                 // it here to determine the appropriate mode flags.
@@ -158,6 +158,15 @@ pub const CPU = struct {
                 }
                 return stat | 0b0000_0100;
             },
+            0x42 => self.bus.ppu.scy,
+            0x43 => self.bus.ppu.scx,
+            0x44 => self.bus.ppu.ly,
+            0x4A => self.bus.ppu.wy,
+            0x4B => self.bus.ppu.wx_plus_7,
+
+            // HACK: This hardware register is used by CGB to do stuff we don't
+            // support yet. We need to hard-code this to $FF for now. Not sure
+            // if this should be readable/writable at all.
             0x4D => 0xFF,
             else => self.hardwareRegisters[addr],
         };
@@ -165,6 +174,7 @@ pub const CPU = struct {
 
     pub fn write_hw_register(self: *CPU, addr: u8, data: u8) void {
         switch (addr) {
+            0x00 => {},
             // LCD control
             0x40 => {
                 self.bus.ppu.lcdc = data;
@@ -174,6 +184,11 @@ pub const CPU = struct {
             // Writing any value to DIV register resets it to $00
             0x04 => {
                 self.hardwareRegisters[addr] = 0x00;
+            },
+            0x0F => {
+                std.debug.print("$0F = ${X:0>2}\n", .{data});
+                std.debug.print("{}\n", .{self});
+                self.hardwareRegisters[addr] = data;
             },
             else => {
                 self.hardwareRegisters[addr] = data;
@@ -942,6 +957,14 @@ pub const CPU = struct {
         }
 
         //
+        // VBLANK
+        //
+        if (self.prev_ppu_mode != 1 and self.bus.ppu.mode == 1) {
+            self.hardwareRegisters[0x0F] |= INT_FLAG_VBLANK;
+        }
+        self.prev_ppu_mode = self.bus.ppu.mode;
+
+        //
         // HANDLE INTERRUPTS
         //
 
@@ -979,6 +1002,7 @@ pub const CPU = struct {
             self.hardwareRegisters[0x0F] &= ~interruptFlag;
             self.bus.write_16(self.sp, self.pc);
             self.pc = interruptVector;
+            // std.debug.print("INTERRUPT: {X:0>2} {X:0>4}\n", .{ interruptFlag, interruptVector });
             return true;
         }
 

@@ -137,26 +137,35 @@ pub fn main() !void {
 
     var debug_view_index: u8 = 0;
 
+    var stepping = false;
+    // while (console.cpu.pc != 0x02be) {
+    //     console.step();
+    // }
+    console.cpu.hardwareRegisters[0x00] = 0xCF;
     // const fmt = "registers:\n{}\n\ndisassemble:\n{}\n";
     // std.debug.print(fmt, .{ console.cpu.registers(), console.cpu.disassemble(5) });
-
     while (!ray.WindowShouldClose()) // Detect window close button or ESC key
     {
         // Update
         //----------------------------------------------------------------------------------
         if (!ray.IsKeyDown(ray.KEY_SPACE)) {
-            console.frame();
+            if (!stepping) {
+                console.frame();
+                // std.debug.print("frame!\n", .{});
+            }
         } else {
+            stepping = false;
             var i: u8 = 0;
-            while (i < 128) : (i += 1) {
+            while (i < 64) : (i += 1) {
                 console.frame();
             }
         }
 
-        // if (ray.IsKeyPressed(ray.KEY_PERIOD)) {
-        //     console.step();
-        //     std.debug.print(fmt, .{ console.cpu.registers(), console.cpu.disassemble(5) });
-        // }
+        if (ray.IsKeyPressed(ray.KEY_PERIOD)) {
+            stepping = true;
+            console.step();
+            std.debug.print("registers:\n{}\n\ndisassemble:\n{}\n$FF85 = ${X:0>2}", .{ console.cpu.registers(), console.cpu.disassemble(5), console.bus.read(0xFF85) });
+        }
 
         if (ray.IsKeyPressed(ray.KEY_TAB)) {
             debug_view_index +%= 1;

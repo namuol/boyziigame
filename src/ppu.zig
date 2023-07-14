@@ -100,6 +100,11 @@ pub const PPU = struct {
     // LCD control register
     lcdc: u8 = 0,
 
+    scy: u8 = 0,
+    scx: u8 = 0,
+    wy: u8 = 0,
+    wx_plus_7: u8 = 0,
+
     // Temporary 8-pixel buffer to hold pixel data fetched by the pixel fetcher
     // while it waits for the fifo to have space for the read data.
     pixel_fetch: [2]u2 = [_]u2{0} ** 2,
@@ -150,6 +155,7 @@ pub const PPU = struct {
             if (self.ly > 153) {
                 self.ly = 0;
             }
+            // std.debug.print("LY = {}\n", .{self.ly});
         }
     }
 
