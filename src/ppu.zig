@@ -92,6 +92,9 @@ pub const PPU = struct {
     vram: []u8,
     oam: []u8,
 
+    dma_register: u8 = 0,
+    dma_cycles_left: u16 = 640,
+
     /// Vertical line currently being drawn (including hidden vblank lines)
     ly: u8 = 0,
     dot: u16 = 0,
@@ -176,7 +179,7 @@ pub const PPU = struct {
         }
     }
 
-    pub fn write(self: *const PPU, addr: u16, data: u8) void {
+    pub fn write(self: *PPU, addr: u16, data: u8) void {
         switch (addr) {
             0x8000...0x9FFF => {
                 // Ignore writes when drawing to LCD:
@@ -188,6 +191,12 @@ pub const PPU = struct {
             0xFE00...0xFE9F => {
                 // TODO: What do we do here during MODE_OAM_SCAN?
                 self.oam[addr - 0xFE00] = data;
+            },
+            0xFF46 => {
+                // DMA transfer
+                std.debug.print("DMA transfer! {X:0>2}\n", .{data});
+                self.dma_register = data;
+                self.dma_cycles_left = 640;
             },
             else => @panic("PPU write to unexpected address range"),
         }

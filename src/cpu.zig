@@ -185,11 +185,6 @@ pub const CPU = struct {
             0x04 => {
                 self.hardwareRegisters[addr] = 0x00;
             },
-            0x0F => {
-                std.debug.print("$0F = ${X:0>2}\n", .{data});
-                std.debug.print("{}\n", .{self});
-                self.hardwareRegisters[addr] = data;
-            },
             else => {
                 self.hardwareRegisters[addr] = data;
             },
@@ -1002,7 +997,7 @@ pub const CPU = struct {
             self.hardwareRegisters[0x0F] &= ~interruptFlag;
             self.bus.write_16(self.sp, self.pc);
             self.pc = interruptVector;
-            // std.debug.print("INTERRUPT: {X:0>2} {X:0>4}\n", .{ interruptFlag, interruptVector });
+            std.debug.print("INTERRUPT: {X:0>2} {X:0>4}\n", .{ interruptFlag, interruptVector });
             return true;
         }
 
@@ -1225,6 +1220,10 @@ pub const CPU = struct {
         return Registers{ .cpu = self };
     }
 
+    // pub fn backtrace(self: *const CPU) Backtrace {
+    //     return Backtrace{ .cpu = self };
+    // }
+
     pub fn format(self: *const CPU, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         // A: 00 F: 00 B: 00 C: 00 D: 00 E: 00 H: 00 L: 00 SP: 0000 PC: 00:0000 (31 FE FF AF)
         const fmt = "A: {X:0>2} F: {X:0>2} B: {X:0>2} C: {X:0>2} D: {X:0>2} E: {X:0>2} H: {X:0>2} L: {X:0>2} SP: {X:0>4} PC: 00:{X:0>4} ({X:0>2} {X:0>2} {X:0>2} {X:0>2})";
@@ -1281,6 +1280,7 @@ const Disassembly = struct {
     cpu: *const CPU,
     count: u16,
     pub fn format(self: *const Disassembly, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        self.cpu.bus.rom.__HACK__PRINTING_DEBUG_INFO = true;
         var addr = self.cpu.pc;
         var i: u16 = 0;
         while (i < self.count) : (i += 1) {
@@ -1345,8 +1345,17 @@ const Disassembly = struct {
 
             try writer.print("\n", .{});
         }
+        self.cpu.bus.rom.__HACK__PRINTING_DEBUG_INFO = false;
     }
 };
+
+// const Backtrace = struct {
+//     cpu: *const CPU,
+//     pub fn format(self: *const Backtrace, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+
+//         writer.print("\n", .{});
+//     }
+// };
 
 fn OperandValue(comptime T: type) type {
     return struct {

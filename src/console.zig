@@ -7,6 +7,15 @@ const Bus = @import("./bus.zig").Bus;
 const Rom = @import("./rom.zig").Rom;
 
 pub const Console = struct {
+    const BreakpointTag = enum {
+        addr,
+        none,
+    };
+    const Breakpoint = union(BreakpointTag) {
+        addr: u16,
+        none: bool,
+    };
+
     allocator: std.mem.Allocator,
 
     rom: Rom,
@@ -14,6 +23,7 @@ pub const Console = struct {
     cpu: CPU,
     ppu: PPU,
     lcd: LCD,
+    breakpoint: Breakpoint = Breakpoint{ .none = true },
 
     pub fn init(rom_file_path: []const u8, allocator: std.mem.Allocator) !*Console {
         var self = try allocator.create(Console);
@@ -44,23 +54,51 @@ pub const Console = struct {
         self.allocator.destroy(self);
     }
 
-    pub fn step(self: *Console) void {
+    pub fn setBreakpoint(self: *Console, addr: u16) void {
+        self.breakpoint = Breakpoint{ .addr = addr };
+    }
+
+    pub fn step(self: *Console) bool {
         var stepped = false;
         while (!stepped) {
             _ = self.ppu.cycle();
             stepped = self.cpu.cycle();
             _ = self.lcd.cycle(self.cpu.ticks);
         }
+
+        return self.shouldBreak();
     }
 
-    pub fn frame(self: *Console) void {
+    pub fn frame(self: *Console) bool {
         const cyclesPerFrame = self.cpu.cycleRate / 60;
+
+        var broke = false;
         var i: usize = 0;
         // HACK; roughly approximate frame
         while (i < cyclesPerFrame) : (i += 1) {
             _ = self.ppu.cycle();
-            _ = self.cpu.cycle();
+            const stepped = self.cpu.cycle();
             _ = self.lcd.cycle(self.cpu.ticks);
+
+            if (stepped and self.shouldBreak()) {
+                broke = true;
+                break;
+            }
+        }
+
+        return broke;
+    }
+
+    pub fn shouldBreak(self: *const Console) bool {
+        switch (self.breakpoint) {
+            .addr => |addr| {
+                const result = addr == self.cpu.pc;
+                if (result) {
+                    std.debug.print("shouldBreak!\n", .{});
+                }
+                return result;
+            },
+            .none => return false,
         }
     }
 };

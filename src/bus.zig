@@ -74,8 +74,10 @@ pub const Bus = struct {
             0xE000...0xFDFF => self.ram[(addr - 0xC000) % (0xFDFF - 0xE000)] = data,
             // Object attribute memory (OAM)
             0xFE00...0xFE9F => self.ppu.write(addr, data),
+            // DMA hardware register
+            0xFF46 => self.ppu.write(addr, data),
             // Hardware registers/HRAM
-            0xFF00...0xFFFF => self.cpu.write_hw_register(@truncate(u8, addr & 0x00FF), data),
+            0xFF00...0xFF45, 0xFF47...0xFFFF => self.cpu.write_hw_register(@truncate(u8, addr & 0x00FF), data),
             else => {
                 // self.cpu.panic("Dunno how to write to ${x:0>4}\n", .{addr});
             },

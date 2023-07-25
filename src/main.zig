@@ -73,14 +73,15 @@ const DEBUG_VIEWS = [_]DebugView{
     .TileData,
     .None,
 };
-
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer std.debug.assert(gpa.deinit() == .ok);
 
-    var console = try Console.init("./tetris.gb", allocator);
+    var console = try Console.init("./MARIOLAND2.gb", allocator);
     defer console.deinit();
+
+    std.debug.print("Cart info:\n{}", .{console.rom});
 
     // Double width; main screen on left hand side, debugging info on right hand side:
     const scale = 4;
@@ -138,38 +139,45 @@ pub fn main() !void {
     var debug_view_index: u8 = 0;
 
     var stepping = false;
-    // while (console.cpu.pc != 0x02be) {
-    //     console.step();
-    // }
     console.cpu.hardwareRegisters[0x00] = 0xCF;
-    // const fmt = "registers:\n{}\n\ndisassemble:\n{}\n";
-    // std.debug.print(fmt, .{ console.cpu.registers(), console.cpu.disassemble(5) });
+    // console.setBreakpoint(0x4000);
     while (!ray.WindowShouldClose()) // Detect window close button or ESC key
     {
         // Update
         //----------------------------------------------------------------------------------
-        if (!ray.IsKeyDown(ray.KEY_SPACE)) {
-            if (!stepping) {
-                console.frame();
-                // std.debug.print("frame!\n", .{});
-            }
-        } else {
-            stepping = false;
-            var i: u8 = 0;
-            while (i < 64) : (i += 1) {
-                console.frame();
-            }
+        var print_debug = false;
+        if (ray.IsKeyPressed(ray.KEY_TAB)) {
+            debug_view_index +%= 1;
         }
 
         if (ray.IsKeyPressed(ray.KEY_PERIOD)) {
             stepping = true;
-            console.step();
-            std.debug.print("registers:\n{}\n\ndisassemble:\n{}\n$FF85 = ${X:0>2}", .{ console.cpu.registers(), console.cpu.disassemble(5), console.bus.read(0xFF85) });
+            print_debug = true;
+            _ = console.step();
         }
 
-        if (ray.IsKeyPressed(ray.KEY_TAB)) {
-            debug_view_index +%= 1;
+        if (ray.IsKeyPressed(ray.KEY_ENTER)) {
+            stepping = false;
         }
+
+        if (!stepping) {
+            var i: u8 = 0;
+            var frames: u8 = if (ray.IsKeyDown(ray.KEY_SPACE)) 64 else 1;
+            std.debug.print("rendering {} frame(s)\n", .{frames});
+            while (i < frames) : (i += 1) {
+                if (console.frame()) {
+                    std.debug.print("broke!\n", .{});
+                    print_debug = true;
+                    stepping = true;
+                    break;
+                }
+            }
+        }
+
+        if (print_debug) {
+            std.debug.print("registers:\n{}\n\ndisassemble:\n{}\n", .{ console.cpu.registers(), console.cpu.disassemble(5) });
+        }
+
         //----------------------------------------------------------------------------------
 
         // Draw
