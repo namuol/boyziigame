@@ -140,7 +140,7 @@ pub fn main() !void {
 
     var stepping = false;
     console.cpu.hardwareRegisters[0x00] = 0xCF;
-    console.setWatchpoint(0x8170);
+    console.setWatchpoint(0x9843);
     while (!ray.WindowShouldClose()) // Detect window close button or ESC key
     {
         // Update
@@ -237,9 +237,13 @@ pub fn main() !void {
             },
             .TileMaps => {
                 var tile_index: usize = 0x9800;
+                const using_alt_tile_addressing_mode = (console.bus.read(0xFF40) & 0b0001_0000) == 0;
                 // FIXME: Hard-coding number of tiles in VRAM for now
                 while (tile_index < 0x9FFF) : (tile_index += 1) {
                     var tile_num: u16 = console.ppu.vram[tile_index - 0x8000];
+                    if (using_alt_tile_addressing_mode and tile_num < 128) {
+                        tile_num += 256;
+                    }
                     // Each tile occupies 16 bytes, where each line is represented by 2 bytes:
                     //
                     // ```

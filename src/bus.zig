@@ -60,6 +60,7 @@ pub const Bus = struct {
     pub fn write(self: *Bus, addr: u16, data: u8) void {
         if (self.watch == addr) {
             self.watch_hit = true;
+            std.debug.print("Watchpoint: [${X:0>4}] = ${X:0>2}\n", .{ addr, data });
         }
 
         // Follow the memory mapping guide here:
