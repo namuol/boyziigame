@@ -12,6 +12,9 @@ pub const Bus = struct {
     ppu: *PPU = undefined,
     cpu: *CPU = undefined,
 
+    watch: u16 = 0x0000,
+    watch_hit: bool = false,
+
     // Temporary read-error sigil; we should probably look into how the bus
     // behaves when attempting to read from addresses that are out of range.
     const TEMP_READ_ERROR_SIGIL: u8 = 0x42;
@@ -55,6 +58,10 @@ pub const Bus = struct {
     }
 
     pub fn write(self: *Bus, addr: u16, data: u8) void {
+        if (self.watch == addr) {
+            self.watch_hit = true;
+        }
+
         // Follow the memory mapping guide here:
         // https://gbdev.io/pandocs/Memory_Map.html
         switch (addr) {

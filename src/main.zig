@@ -107,11 +107,11 @@ pub fn main() !void {
     //
     // Tile Data texture
     //
-    const tile_data_image_buf = try allocator.alloc(u32, 8 * 16 * 8 * 16);
+    const tile_data_image_buf = try allocator.alloc(u32, 8 * 16 * 8 * 24);
     var tile_data_image = ray.Image{
         .data = &tile_data_image_buf[0],
         .width = 8 * 16, // 16 tiles wide
-        .height = 8 * 16, // 16 tiles tall
+        .height = 8 * 24, // 24 tiles tall
         .format = ray.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
         .mipmaps = 1,
     };
@@ -140,7 +140,7 @@ pub fn main() !void {
 
     var stepping = false;
     console.cpu.hardwareRegisters[0x00] = 0xCF;
-    // console.setBreakpoint(0x4000);
+    console.setWatchpoint(0x8170);
     while (!ray.WindowShouldClose()) // Detect window close button or ESC key
     {
         // Update
@@ -215,8 +215,8 @@ pub fn main() !void {
                     while (line < 8) : (line += 1) {
                         const lsb = console.ppu.vram[tile_num * 16 + line * 2];
                         const msb = console.ppu.vram[tile_num * 16 + line * 2 + 1];
-                        const y = 8 * (tile_num / 20) + line;
-                        const x = 8 * (tile_num % 20);
+                        const y = 8 * (tile_num / 16) + line;
+                        const x = 8 * (tile_num % 16);
                         ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 7), @intCast(c_int, y), COLORS[((msb << 1) & 2) | ((lsb >> 0) & 1)]);
                         ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 6), @intCast(c_int, y), COLORS[((msb >> 0) & 2) | ((lsb >> 1) & 1)]);
                         ray.ImageDrawPixel(&tile_data_image, @intCast(c_int, x + 5), @intCast(c_int, y), COLORS[((msb >> 1) & 2) | ((lsb >> 2) & 1)]);
@@ -231,8 +231,8 @@ pub fn main() !void {
                 ray.UpdateTexture(tile_data_texture, tile_data_image.data);
                 ray.DrawText("Tile Data", screen_width / 2 + 16, 16, 20, ray.BLACK);
                 const tile_data_texture_scale = (scale / 2);
-                const x = screen_width / 2 + (((screen_width / 2) - (8 * 20 * tile_data_texture_scale)) / 2);
-                const y = ((screen_height - (8 * 20 * tile_data_texture_scale)) / 2);
+                const x = screen_width / 2 + (((screen_width / 2) - (8 * 16 * tile_data_texture_scale)) / 2);
+                const y = ((screen_height - (8 * 24 * tile_data_texture_scale)) / 2);
                 ray.DrawTextureEx(tile_data_texture, ray.Vector2{ .x = x, .y = y }, 0.0, @intToFloat(f32, tile_data_texture_scale), ray.WHITE);
             },
             .TileMaps => {

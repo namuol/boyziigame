@@ -9,10 +9,12 @@ const Rom = @import("./rom.zig").Rom;
 pub const Console = struct {
     const BreakpointTag = enum {
         addr,
+        write,
         none,
     };
     const Breakpoint = union(BreakpointTag) {
         addr: u16,
+        write: u16,
         none: bool,
     };
 
@@ -58,6 +60,11 @@ pub const Console = struct {
         self.breakpoint = Breakpoint{ .addr = addr };
     }
 
+    pub fn setWatchpoint(self: *Console, addr: u16) void {
+        self.breakpoint = Breakpoint{ .write = addr };
+        self.bus.watch = addr;
+    }
+
     pub fn step(self: *Console) bool {
         var stepped = false;
         while (!stepped) {
@@ -89,7 +96,7 @@ pub const Console = struct {
         return broke;
     }
 
-    pub fn shouldBreak(self: *const Console) bool {
+    pub fn shouldBreak(self: *Console) bool {
         switch (self.breakpoint) {
             .addr => |addr| {
                 const result = addr == self.cpu.pc;
@@ -97,6 +104,13 @@ pub const Console = struct {
                     std.debug.print("shouldBreak!\n", .{});
                 }
                 return result;
+            },
+            .write => {
+                if (self.bus.watch_hit) {
+                    self.bus.watch_hit = false;
+                    return true;
+                }
+                return false;
             },
             .none => return false,
         }
