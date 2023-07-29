@@ -78,7 +78,15 @@ pub fn main() !void {
     const allocator = gpa.allocator();
     defer std.debug.assert(gpa.deinit() == .ok);
 
-    var console = try Console.init("./MARIOLAND2.gb", allocator);
+    const args = try std.process.argsAlloc(allocator);
+    defer std.process.argsFree(allocator, args);
+
+    var console: *Console = undefined;
+    if (args.len > 1) {
+        console = try Console.init(args[1], allocator);
+    } else {
+        console = try Console.init("./tetris.gb", allocator);
+    }
     defer console.deinit();
 
     std.debug.print("Cart info:\n{}", .{console.rom});
@@ -140,7 +148,8 @@ pub fn main() !void {
 
     var stepping = false;
     console.cpu.hardwareRegisters[0x00] = 0xCF;
-    console.setWatchpoint(0x9843);
+    console.setBreakpoint(0xFFA0);
+    // console.setWatchpoint(0xFF46);
     while (!ray.WindowShouldClose()) // Detect window close button or ESC key
     {
         // Update
@@ -162,7 +171,7 @@ pub fn main() !void {
 
         if (!stepping) {
             var i: u8 = 0;
-            var frames: u8 = if (ray.IsKeyDown(ray.KEY_SPACE)) 64 else 1;
+            var frames: u8 = if (ray.IsKeyDown(ray.KEY_SPACE)) 24 else 1;
             std.debug.print("rendering {} frame(s)\n", .{frames});
             while (i < frames) : (i += 1) {
                 if (console.frame()) {
@@ -175,7 +184,7 @@ pub fn main() !void {
         }
 
         if (print_debug) {
-            std.debug.print("registers:\n{}\n\ndisassemble:\n{}\n", .{ console.cpu.registers(), console.cpu.disassemble(5) });
+            std.debug.print("registers:\n{}\n\ndisassemble:\n{}\n\nbacktrace:\n{}\n", .{ console.cpu.registers(), console.cpu.disassemble(5), console.cpu.backtrace() });
         }
 
         //----------------------------------------------------------------------------------

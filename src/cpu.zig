@@ -103,11 +103,14 @@ pub const CPU = struct {
     cycleRate: u32 = DMG_CPU_HZ,
     debugLastPC: u16 = 0x0000,
 
+    callsites: std.ArrayList(Callsite),
+
     pub fn init(allocator: std.mem.Allocator, bus: *Bus) !CPU {
         var ref = CPU{
             .bus = bus,
             .allocator = allocator,
             .hardwareRegisters = try allocator.alloc(u8, 256),
+            .callsites = std.ArrayList(Callsite).init(allocator),
         };
         var i: usize = 0;
         while (i < 256) : (i += 1) {
@@ -118,6 +121,7 @@ pub const CPU = struct {
 
     pub fn deinit(self: *const CPU) void {
         self.allocator.free(self.hardwareRegisters);
+        self.callsites.deinit();
     }
 
     pub fn panic(self: *const CPU, comptime format_: []const u8, args: anytype) noreturn {
@@ -328,6 +332,7 @@ pub const CPU = struct {
         // has reached 0.
         if (!self.halted and self.cyclesLeft == 0) {
             stepped = true;
+            const previous_pc = self.pc;
 
             const opcode = self.opcode_at(self.pc);
             if (opcode.prefixed) {
@@ -417,7 +422,6 @@ pub const CPU = struct {
                             self.panic("Condition .{s} not implemented for CALL", .{opcode.operands[0].name.string()});
                         },
                     };
-
                     const next_instruction_addr = self.pc +% opcode.bytes -% 1;
                     const addr = self.read_operand_u16(&opcode.operands[opcode.operands.len - 1]);
 
@@ -426,6 +430,7 @@ pub const CPU = struct {
                         // std.debug.print("next_instruction_addr = ${x:0>4}\n", .{next_instruction_addr});
                         self.sp -%= 2;
                         self.bus.write_16(self.sp, next_instruction_addr);
+                        self.callsites.append(Callsite{ .addr = previous_pc }) catch @panic("alloc fail");
                         // Jump to the address specified by the call
                         self.pc = addr;
                     } else {
@@ -451,6 +456,7 @@ pub const CPU = struct {
                         const addr = self.bus.read_16(self.sp);
                         self.sp +%= 2;
                         self.pc = addr;
+                        _ = self.callsites.pop();
                         if (opcode.mnemonic == .RETI) {
                             self.interruptMasterEnable = true;
                         }
@@ -459,6 +465,7 @@ pub const CPU = struct {
                     }
                 },
                 .RST => {
+                    self.callsites.append(Callsite{ .addr = previous_pc }) catch @panic("alloc fail");
                     // Push present address onto stack.
                     self.sp -%= 2;
                     self.bus.write_16(self.sp, self.pc);
@@ -996,8 +1003,9 @@ pub const CPU = struct {
             self.sp -%= 2;
             self.hardwareRegisters[0x0F] &= ~interruptFlag;
             self.bus.write_16(self.sp, self.pc);
+            self.callsites.append(Callsite{ .addr = self.pc }) catch @panic("alloc fail");
             self.pc = interruptVector;
-            std.debug.print("INTERRUPT: {X:0>2} {X:0>4}\n", .{ interruptFlag, interruptVector });
+            // std.debug.print("INTERRUPT: {X:0>2} {X:0>4}\n", .{ interruptFlag, interruptVector });
             return true;
         }
 
@@ -1220,9 +1228,9 @@ pub const CPU = struct {
         return Registers{ .cpu = self };
     }
 
-    // pub fn backtrace(self: *const CPU) Backtrace {
-    //     return Backtrace{ .cpu = self };
-    // }
+    pub fn backtrace(self: *const CPU) Backtrace {
+        return Backtrace{ .cpu = self };
+    }
 
     pub fn format(self: *const CPU, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         // A: 00 F: 00 B: 00 C: 00 D: 00 E: 00 H: 00 L: 00 SP: 0000 PC: 00:0000 (31 FE FF AF)
@@ -1245,6 +1253,28 @@ pub const CPU = struct {
             self.bus.read(self.pc +% 2),
             self.bus.read(self.pc +% 3),
         });
+    }
+};
+
+const Callsite = struct {
+    bank: u8 = 0, // Need to get this from the rom's mapper, presumably
+    addr: u16,
+    pub fn format(self: *const Callsite, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        return writer.print("${x:0>2}:${x:0>4}", .{ self.bank, self.addr });
+    }
+};
+
+const Backtrace = struct {
+    cpu: *const CPU,
+    pub fn format(self: *const Backtrace, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        try writer.print("  1. {}\n", .{Callsite{ .bank = 0, .addr = self.cpu.pc }});
+        const len: usize = self.cpu.callsites.items.len;
+        var i: usize = 1;
+        while (i <= len) : (i += 1) {
+            const callsite = self.cpu.callsites.items[len - i];
+            try writer.print("{d: >3}. {}\n", .{ i + 1, callsite });
+        }
+        try writer.print("\n", .{});
     }
 };
 
@@ -1348,14 +1378,6 @@ const Disassembly = struct {
         self.cpu.bus.rom.__HACK__PRINTING_DEBUG_INFO = false;
     }
 };
-
-// const Backtrace = struct {
-//     cpu: *const CPU,
-//     pub fn format(self: *const Backtrace, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
-
-//         writer.print("\n", .{});
-//     }
-// };
 
 fn OperandValue(comptime T: type) type {
     return struct {

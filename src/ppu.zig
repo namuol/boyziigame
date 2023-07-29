@@ -1,5 +1,6 @@
 const std = @import("std");
 const LCD = @import("./lcd.zig").LCD;
+const Bus = @import("./bus.zig").Bus;
 
 pub const PixelFIFO = struct {
     // Each pixel in the FIFO has four properties:
@@ -88,11 +89,12 @@ pub const PPU = struct {
     allocator: std.mem.Allocator,
 
     lcd: *LCD = undefined,
+    bus: *Bus = undefined,
 
     vram: []u8,
     oam: []u8,
 
-    dma_register: u8 = 0,
+    dma_source_address: u16 = 0,
     dma_cycles_left: u16 = 640,
 
     /// Vertical line currently being drawn (including hidden vblank lines)
@@ -130,6 +132,17 @@ pub const PPU = struct {
     }
 
     pub fn cycle(self: *PPU) void {
+        if (self.dma_cycles_left > 0) {
+            if ((self.dma_cycles_left % 4) == 0) {
+                // Each CPU cycle (every 4th "tick") we write the next byte
+                // during DMA:
+                const offset: u16 = 160 - (self.dma_cycles_left / 4);
+                self.bus.write(0xFE00 + offset, self.bus.read(self.dma_source_address + offset));
+            }
+
+            self.dma_cycles_left -= 1;
+        }
+
         if (self.ly > 143) {
             self.mode = MODE_VBLANK;
         } else {
@@ -194,9 +207,9 @@ pub const PPU = struct {
             },
             0xFF46 => {
                 // DMA transfer
-                std.debug.print("DMA transfer! {X:0>2}\n", .{data});
-                self.dma_register = data;
-                self.dma_cycles_left = 640;
+                // std.debug.print("DMA transfer! {X:0>2}\n", .{data});
+                self.dma_source_address = @intCast(u16, data) * 100;
+                self.dma_cycles_left = 160 * 4;
             },
             else => @panic("PPU write to unexpected address range"),
         }

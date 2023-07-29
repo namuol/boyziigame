@@ -42,6 +42,7 @@ pub const Console = struct {
         self.bus.cpu = &self.cpu;
         self.cpu.bus = &self.bus;
         self.ppu.lcd = &self.lcd;
+        self.ppu.bus = &self.bus;
 
         return self;
     }
