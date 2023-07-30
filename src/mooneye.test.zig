@@ -75,3 +75,21 @@ test "test-roms/mooneye-test-suite/emulator-only/mbc1/ram_256kb.gb" {
 test "test-roms/mooneye-test-suite/emulator-only/mbc1/ram_64kb.gb" {
     try run_mooneye_test("test-roms/mooneye-test-suite/emulator-only/mbc1/ram_64kb.gb");
 }
+
+// MBC1 Bits (flags & such?)
+
+test "test-roms/mooneye-test-suite/emulator-only/mbc1/bits_bank1.gb" {
+    try run_mooneye_test("test-roms/mooneye-test-suite/emulator-only/mbc1/bits_bank1.gb");
+}
+
+test "test-roms/mooneye-test-suite/emulator-only/mbc1/bits_bank2.gb" {
+    try run_mooneye_test("test-roms/mooneye-test-suite/emulator-only/mbc1/bits_bank2.gb");
+}
+
+test "test-roms/mooneye-test-suite/emulator-only/mbc1/bits_mode.gb" {
+    try run_mooneye_test("test-roms/mooneye-test-suite/emulator-only/mbc1/bits_mode.gb");
+}
+
+test "test-roms/mooneye-test-suite/emulator-only/mbc1/bits_ramg.gb" {
+    try run_mooneye_test("test-roms/mooneye-test-suite/emulator-only/mbc1/bits_ramg.gb");
+}

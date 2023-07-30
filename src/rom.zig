@@ -457,7 +457,7 @@ pub const Rom = struct {
         switch (addr) {
             // RAM Enable [write-only]
             0x0000...0x1FFF => {
-                self.ram_enabled = (data & 0x0A) == 0x0A;
+                self.ram_enabled = (data & 0x0F) == 0x0A;
             },
 
             // ROM Bank Number [write-only]
