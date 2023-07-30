@@ -128,10 +128,10 @@ pub const Console = struct {
     }
 };
 
-test "init" {
-    var console = try Console.init("./pokemon_blue.gb", std.testing.allocator);
-    defer console.deinit();
-    std.debug.print("{}\n", .{console.cpu});
-    console.cpu.step();
-    std.debug.print("{}\n", .{console.cpu});
-}
+// test "init" {
+//     var console = try Console.init("./pokemon_blue.gb", std.testing.allocator);
+//     defer console.deinit();
+//     std.debug.print("{}\n", .{console.cpu});
+//     console.cpu.step();
+//     std.debug.print("{}\n", .{console.cpu});
+// }

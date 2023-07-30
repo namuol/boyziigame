@@ -50,12 +50,11 @@ pub const Rom = struct {
     _bus_read: *const fn (self: *const Rom, addr: u16) u8 = undefined,
     _bus_write: *const fn (self: *Rom, addr: u16, data: u8) void = undefined,
 
-    bank_num_mask: u16 = 1,
-    bank_num: u16 = 1,
-    bank_num_hi: u2 = 0,
+    bank_num_mask: u7 = 1,
+    bank1: u5 = 1,
+    bank2: u2 = 0,
     banking_mode: u1 = 0,
     ram_enabled: bool = false,
-    ram_bank_num: u2 = 0,
 
     __HACK__PRINTING_DEBUG_INFO: bool = false,
 
@@ -267,7 +266,7 @@ pub const Rom = struct {
         // We can calculate this bitmask by essentially shifting a bit to the
         // N+1th position to get 0b100..N+1, so by subtracting 1 from this
         // number we get 0b111..N, a mask with N 1s
-        rom.bank_num_mask = std.math.pow(u16, 2, @enumToInt(rom.rom_size) + 1) - 1;
+        rom.bank_num_mask = @truncate(u7, std.math.pow(u16, 2, @enumToInt(rom.rom_size) + 1) - 1);
 
         return rom;
     }
@@ -379,18 +378,19 @@ pub const Rom = struct {
         switch (addr) {
             // ROM Bank X0 [read-only]
             0x0000...0x3FFF => {
-                var final_addr: u20 = @intCast(u20, addr);
+                var final_addr: u21 = @intCast(u21, addr);
                 if (self.banking_mode == 1) {
-                    final_addr |= (@intCast(u20, self.ram_bank_num) << 19);
+                    final_addr |= (@intCast(u21, self.bank2) << 19);
                 }
-                return self._raw_data[final_addr];
+                return self._raw_data[final_addr % self._raw_data.len];
             },
             // ROM Bank 01-7F [read-only]
             0x4000...0x7FFF => {
-                var final_addr: u20 = (addr & 0x3FFF) | (@intCast(u20, (self.bank_num & self.bank_num_mask)) << 14);
-                const result = self._raw_data[final_addr];
+                var final_bank_num: u7 = ((@intCast(u7, self.bank2) << 5) | (@intCast(u7, self.bank1))) & self.bank_num_mask;
+                var final_addr: u21 = (addr & 0x3FFF) | (@intCast(u21, (final_bank_num)) << 14);
+                const result = self._raw_data[final_addr % self._raw_data.len];
                 // if (!self.__HACK__PRINTING_DEBUG_INFO) {
-                //     std.debug.print("bus_read_mbc1(0x{X:0>4}) (bank ${X:0>2}) // ROM[0x{X:0>5}] = ${X:0>2}\n", .{ addr, self.bank_num, final_addr, result });
+                //     std.debug.print("bus_read_mbc1(0x{X:0>4}) (bank1 ${X:0>2}, bank2 ${X}, final_bank_num ${X:0>2}) // ROM[0x{X:0>5}] = ${X:0>2}\n", .{ addr, self.bank1, self.bank2, final_bank_num, final_addr, result });
                 // }
                 return result;
             },
@@ -422,15 +422,31 @@ pub const Rom = struct {
         switch (addr) {
             // ROM Bank number [write-only]
             0x2000...0x3FFF => {
-                var bank_num = data & 0b0001_1111;
-                if (bank_num == 0) {
+                var bank1 = @truncate(u5, data);
+                if (bank1 == 0) {
                     // If this register is set to $00, it behaves as if it is
                     // set to $01.
-                    bank_num = 1;
+                    bank1 = 1;
                 }
-                self.bank_num = bank_num;
-                // std.debug.print("rom.bank_num = ${X:0>2} (set via ${X:0>4}=${X:0>2})\n", .{ bank_num, addr, data });
+                self.bank1 = bank1;
+                // std.debug.print("rom.bank1 = ${X:0>2} (set via ${X:0>4}=${X:0>2})\n", .{ bank1, addr, data });
             },
+
+            // RAM Bank Number/Upper Bits of ROM Bank Number [write-only]
+            0x4000...0x5FFF => {
+                self.bank2 = @truncate(u2, data);
+                // std.debug.print("bank2 = {X:0>2}\n", .{self.bank2});
+            },
+
+            // Banking Mode Select [write-only]
+            0x6000...0x7FFF => {
+                if (data & 0b1 == 0b1) {
+                    self.banking_mode = 1;
+                } else {
+                    self.banking_mode = 0;
+                }
+            },
+
             else => {
                 // Ignored...
             },
@@ -448,26 +464,17 @@ pub const Rom = struct {
             // 0x2000...0x3FFF - handled in else block
 
             // RAM Bank Number [write-only]
-            0x4000...0x5FFF => {
-                self.ram_bank_num = @truncate(u2, data);
-                // std.debug.print("ram_bank_num = {X:0>2}", .{self.ram_bank_num});
-            },
+            // 0x4000...0x5FFF - handled in else block
 
             // Banking Mode Select [write-only]
-            0x6000...0x7FFF => {
-                if (data == 0) {
-                    self.banking_mode = 0;
-                } else {
-                    self.banking_mode = 1;
-                }
-            },
+            // 0x6000...0x7FFF - handled in else block
 
             // RAM Bank 00-03
             0xA000...0xBFFF => {
                 if (!self.ram_enabled) return;
 
                 const final_addr = self.ram_addr(addr);
-                self.ram[final_addr] = data;
+                self.ram[final_addr % self.ram.len] = data;
                 // std.debug.print("write {X:0>4} ({X:0>4}) = {X:0>2}\n", .{ addr, final_addr, data });
             },
 
@@ -478,7 +485,7 @@ pub const Rom = struct {
     fn ram_addr(self: *const Rom, addr: u16) u14 {
         var final_addr: u14 = @truncate(u14, addr & 0b00_1111_1111_1111);
         if (self.banking_mode == 1) {
-            final_addr |= (@intCast(u14, self.ram_bank_num) << 13);
+            final_addr |= (@intCast(u14, self.bank2) << 13);
         }
 
         return final_addr;
