@@ -410,7 +410,7 @@ pub const Rom = struct {
                 if (!self.ram_enabled) return 0xFF;
 
                 const final_addr = self.ram_addr(addr);
-                const result = self.ram[final_addr];
+                const result = self.ram[final_addr % self.ram.len];
                 // std.debug.print("bus_read_mbc1_ram(0x{X:0>4}) // RAM[0x{X:0>5}] = ${X:0>2}\n", .{ addr, final_addr, result });
                 return result;
             },
@@ -482,10 +482,10 @@ pub const Rom = struct {
         }
     }
 
-    fn ram_addr(self: *const Rom, addr: u16) u14 {
-        var final_addr: u14 = @truncate(u14, addr & 0b00_1111_1111_1111);
+    fn ram_addr(self: *const Rom, addr: u16) u15 {
+        var final_addr: u15 = @truncate(u15, addr & 0b000_1111_1111_1111);
         if (self.banking_mode == 1) {
-            final_addr |= (@intCast(u14, self.bank2) << 13);
+            final_addr |= (@intCast(u15, self.bank2) << 13);
         }
 
         return final_addr;

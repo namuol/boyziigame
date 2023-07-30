@@ -40,7 +40,7 @@ fn run_mooneye_test(rom_file_path: []const u8) !void {
     }
 }
 
-// MBC1 tests:
+// MBC1 ROM-only
 
 test "test-roms/mooneye-test-suite/emulator-only/mbc1/rom_16Mb.gb" {
     try run_mooneye_test("test-roms/mooneye-test-suite/emulator-only/mbc1/rom_16Mb.gb");
@@ -64,4 +64,14 @@ test "test-roms/mooneye-test-suite/emulator-only/mbc1/rom_512kb.gb" {
 
 test "test-roms/mooneye-test-suite/emulator-only/mbc1/rom_8Mb.gb" {
     try run_mooneye_test("test-roms/mooneye-test-suite/emulator-only/mbc1/rom_8Mb.gb");
+}
+
+// MBC1 RAM
+
+test "test-roms/mooneye-test-suite/emulator-only/mbc1/ram_256kb.gb" {
+    try run_mooneye_test("test-roms/mooneye-test-suite/emulator-only/mbc1/ram_256kb.gb");
+}
+
+test "test-roms/mooneye-test-suite/emulator-only/mbc1/ram_64kb.gb" {
+    try run_mooneye_test("test-roms/mooneye-test-suite/emulator-only/mbc1/ram_64kb.gb");
 }
