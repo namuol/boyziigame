@@ -67,11 +67,16 @@ pub const Console = struct {
     }
 
     pub fn step(self: *Console) bool {
+        var loops: u64 = 0;
         var stepped = false;
         while (!stepped) {
             _ = self.ppu.cycle();
             stepped = self.cpu.cycle();
             _ = self.lcd.cycle(self.cpu.ticks);
+            if (loops > 1000) {
+                self.cpu.panic("Excess loops in console.step!", .{});
+            }
+            loops += 1;
         }
 
         return self.shouldBreak();
@@ -80,6 +85,7 @@ pub const Console = struct {
     pub fn frame(self: *Console) bool {
         const cyclesPerFrame = self.cpu.cycleRate / 60;
 
+        var loops: u64 = 0;
         var broke = false;
         var i: usize = 0;
         // HACK; roughly approximate frame
@@ -92,6 +98,10 @@ pub const Console = struct {
                 broke = true;
                 break;
             }
+            if (loops > 100_000_000) {
+                self.cpu.panic("Excess loops in console.frame!", .{});
+            }
+            loops += 1;
         }
 
         return broke;

@@ -32,7 +32,7 @@ const Interrupt = enum(u8) {
     timer = 0b0000_0100,
 };
 
-const DMG_CPU_HZ: u32 = 4194304;
+const DMG_CPU_HZ: u32 = 4_194_304;
 
 const INT_FLAG_VBLANK: u8 = 0b1 << 0;
 const INT_FLAG_STAT: u8 = 0b1 << 1;
@@ -456,7 +456,9 @@ pub const CPU = struct {
                         const addr = self.bus.read_16(self.sp);
                         self.sp +%= 2;
                         self.pc = addr;
-                        _ = self.callsites.pop();
+                        if (self.callsites.items.len > 0) {
+                            _ = self.callsites.pop();
+                        }
                         if (opcode.mnemonic == .RETI) {
                             self.interruptMasterEnable = true;
                         }
@@ -991,7 +993,13 @@ pub const CPU = struct {
     }
 
     pub fn step(self: *CPU) void {
-        while (!self.cycle()) {}
+        var loops: u64 = 0;
+        while (!self.cycle()) {
+            if (loops > 1000) {
+                self.cpu.panic("Excess loops in cpu.step!", .{});
+            }
+            loops += 1;
+        }
     }
 
     fn maybe_interrupt(self: *CPU, interruptFlag: u8, interruptVector: u16) bool {

@@ -148,8 +148,8 @@ pub fn main() !void {
 
     var stepping = false;
     console.cpu.hardwareRegisters[0x00] = 0xCF;
-    console.setBreakpoint(0xFFA0);
-    // console.setWatchpoint(0xFF46);
+    // console.setBreakpoint(0xc04A);
+    // console.setWatchpoint(0x9800);
     while (!ray.WindowShouldClose()) // Detect window close button or ESC key
     {
         // Update
@@ -184,7 +184,7 @@ pub fn main() !void {
         }
 
         if (print_debug) {
-            std.debug.print("registers:\n{}\n\ndisassemble:\n{}\n\nbacktrace:\n{}\n", .{ console.cpu.registers(), console.cpu.disassemble(5), console.cpu.backtrace() });
+            std.debug.print("registers:\n{}\n\ndisassemble:\n{}\n\nbacktrace:\n{}\nbank_num: {}\nbanking_mode: {}\nbank_num_mask: {}\n", .{ console.cpu.registers(), console.cpu.disassemble(5), console.cpu.backtrace(), console.rom.bank_num, console.rom.banking_mode, console.rom.bank_num_mask });
         }
 
         //----------------------------------------------------------------------------------

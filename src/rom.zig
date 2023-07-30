@@ -387,7 +387,7 @@ pub const Rom = struct {
             },
             // ROM Bank 01-7F [read-only]
             0x4000...0x7FFF => {
-                var final_addr: u20 = (addr & 0x3FFF) | (@intCast(u20, self.bank_num) << 14);
+                var final_addr: u20 = (addr & 0x3FFF) | (@intCast(u20, (self.bank_num & self.bank_num_mask)) << 14);
                 const result = self._raw_data[final_addr];
                 // if (!self.__HACK__PRINTING_DEBUG_INFO) {
                 //     std.debug.print("bus_read_mbc1(0x{X:0>4}) (bank ${X:0>2}) // ROM[0x{X:0>5}] = ${X:0>2}\n", .{ addr, self.bank_num, final_addr, result });
@@ -407,6 +407,8 @@ pub const Rom = struct {
         switch (addr) {
             // RAM Bank 00–03
             0xA000...0xBFFF => {
+                if (!self.ram_enabled) return 0xFF;
+
                 const final_addr = self.ram_addr(addr);
                 const result = self.ram[final_addr];
                 // std.debug.print("bus_read_mbc1_ram(0x{X:0>4}) // RAM[0x{X:0>5}] = ${X:0>2}\n", .{ addr, final_addr, result });
@@ -420,7 +422,7 @@ pub const Rom = struct {
         switch (addr) {
             // ROM Bank number [write-only]
             0x2000...0x3FFF => {
-                var bank_num = data & self.bank_num_mask;
+                var bank_num = data & 0b0001_1111;
                 if (bank_num == 0) {
                     // If this register is set to $00, it behaves as if it is
                     // set to $01.
@@ -462,6 +464,8 @@ pub const Rom = struct {
 
             // RAM Bank 00-03
             0xA000...0xBFFF => {
+                if (!self.ram_enabled) return;
+
                 const final_addr = self.ram_addr(addr);
                 self.ram[final_addr] = data;
                 // std.debug.print("write {X:0>4} ({X:0>4}) = {X:0>2}\n", .{ addr, final_addr, data });
