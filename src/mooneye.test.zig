@@ -155,12 +155,12 @@ test "test-roms/mooneye-test-suite/acceptance/if_ie_registers.gb" {
 // test "test-roms/mooneye-test-suite/acceptance/ei_sequence.gb" {
 //     try run_mooneye_test("test-roms/mooneye-test-suite/acceptance/ei_sequence.gb");
 // }
-// test "test-roms/mooneye-test-suite/acceptance/ei_timing.gb" {
-//     try run_mooneye_test("test-roms/mooneye-test-suite/acceptance/ei_timing.gb");
-// }
-// test "test-roms/mooneye-test-suite/acceptance/halt_ime0_ei.gb" {
-//     try run_mooneye_test("test-roms/mooneye-test-suite/acceptance/halt_ime0_ei.gb");
-// }
+test "test-roms/mooneye-test-suite/acceptance/ei_timing.gb" {
+    try run_mooneye_test("test-roms/mooneye-test-suite/acceptance/ei_timing.gb");
+}
+test "test-roms/mooneye-test-suite/acceptance/halt_ime0_ei.gb" {
+    try run_mooneye_test("test-roms/mooneye-test-suite/acceptance/halt_ime0_ei.gb");
+}
 
 // Other timing related stuff:
 
