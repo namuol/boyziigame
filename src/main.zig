@@ -147,8 +147,10 @@ pub fn main() !void {
     var debug_view_index: u8 = 0;
 
     var stepping = false;
-    console.cpu.hardwareRegisters[0x00] = 0xCF;
-    console.setBreakpoint(0x016e);
+    // Skip bootloader
+    console.cpu.boot();
+    // console.cpu.hardwareRegisters[0x00] = 0xCF;
+    console.setBreakpoint(0x0058);
     // console.setWatchpoint(0x9800);
     while (!ray.WindowShouldClose()) // Detect window close button or ESC key
     {
@@ -184,7 +186,7 @@ pub fn main() !void {
         }
 
         if (print_debug) {
-            std.debug.print("registers:\n{}\n\ndisassemble:\n{}\n\nbacktrace:\n{}\nbank1: {}\nbank2: {}\nbanking_mode: {}\nbank_num_mask: {}\n", .{ console.cpu.registers(), console.cpu.disassemble(5), console.cpu.backtrace(), console.rom.bank1, console.rom.bank2, console.rom.banking_mode, console.rom.bank_num_mask });
+            std.debug.print("registers:\n{}\n\ndisassemble:\n{}\n\nbacktrace:\n{}rIF ($FF0F): ${X:0>2}\nbank1: {}\nbank2: {}\nbanking_mode: {}\nbank_num_mask: {}\n", .{ console.cpu.registers(), console.cpu.disassemble(5), console.cpu.backtrace(), console.cpu.hardwareRegisters[0x0F], console.rom.bank1, console.rom.bank2, console.rom.banking_mode, console.rom.bank_num_mask });
         }
 
         //----------------------------------------------------------------------------------

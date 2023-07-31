@@ -142,6 +142,8 @@ pub const CPU = struct {
 
     pub fn read_hw_register(self: *const CPU, addr: u8) u8 {
         return switch (addr) {
+            // Interrupt Flag; upper 3 bits should always be 1s:
+            0x0F => 0b1110_0000 | self.hardwareRegisters[addr],
             // LCD control
             0x40 => self.bus.ppu.lcdc,
             0x41 => {
@@ -905,13 +907,11 @@ pub const CPU = struct {
 
             if (self.disableInterruptsAfterNextInstruction and opcode.mnemonic != .DI) {
                 // std.debug.print("Interrupts disabled!\n", .{});
-                self.hardwareRegisters[0xFF] = 0x0F & 0b0000;
                 self.interruptMasterEnable = false;
                 self.disableInterruptsAfterNextInstruction = false;
             }
             if (self.enableInterruptsAfterNextInstruction and opcode.mnemonic != .EI) {
                 // std.debug.print("Interrupts enabled!\n", .{});
-                self.hardwareRegisters[0xFF] = 0x0F & 0b1111;
                 self.interruptMasterEnable = true;
                 self.enableInterruptsAfterNextInstruction = false;
             }

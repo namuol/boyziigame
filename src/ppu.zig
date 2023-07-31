@@ -93,9 +93,9 @@ pub const PPU = struct {
 
     vram: []u8,
     oam: []u8,
-
+    dma_source_address_reg: u8 = 0,
     dma_source_address: u16 = 0,
-    dma_cycles_left: u16 = 640,
+    dma_cycles_left: u16 = 0,
 
     /// Vertical line currently being drawn (including hidden vblank lines)
     ly: u8 = 0,
@@ -133,14 +133,18 @@ pub const PPU = struct {
 
     pub fn cycle(self: *PPU) void {
         if (self.dma_cycles_left > 0) {
-            if ((self.dma_cycles_left % 4) == 0) {
+            if ((self.dma_cycles_left % 4) == 0 and (self.dma_cycles_left <= 160 * 4)) {
                 // Each CPU cycle (every 4th "tick") we write the next byte
                 // during DMA:
                 const offset: u16 = 160 - (self.dma_cycles_left / 4);
-                self.bus.write(0xFE00 + offset, self.bus.read(self.dma_source_address + offset));
+                // self.bus.write(0xFE00 + offset, self.bus.read(self.dma_source_address + offset));
+                self.oam[offset] = self.bus.read(self.dma_source_address + offset);
             }
 
             self.dma_cycles_left -= 1;
+            // if (self.dma_cycles_left == 0) {
+            //     std.debug.print("DMA done!\n", .{});
+            // }
         }
 
         if (self.ly > 143) {
@@ -185,8 +189,15 @@ pub const PPU = struct {
                 return self.vram[addr - 0x8000];
             },
             0xFE00...0xFE9F => {
+                if (self.dma_cycles_left > 0 and self.dma_cycles_left <= (160 * 4)) {
+                    // std.debug.print("self.dma_cycles_left: {}\n", .{self.dma_cycles_left});
+                    return 0xFF;
+                }
                 // TODO: What do we do here during MODE_OAM_SCAN?
                 return self.oam[addr - 0xFE00];
+            },
+            0xFF46 => {
+                return self.dma_source_address_reg;
             },
             else => @panic("PPU read from unexpected address range"),
         }
@@ -202,14 +213,21 @@ pub const PPU = struct {
                 self.vram[addr - 0x8000] = data;
             },
             0xFE00...0xFE9F => {
+                if (self.dma_cycles_left > 0 and self.dma_cycles_left <= (160 * 4)) {
+                    return;
+                }
+                // if (self.dma_cycles_left > 0) {
+                //     return;
+                // }
                 // TODO: What do we do here during MODE_OAM_SCAN?
                 self.oam[addr - 0xFE00] = data;
             },
             0xFF46 => {
                 // DMA transfer
-                // std.debug.print("DMA transfer! {X:0>2}\n", .{data});
-                self.dma_source_address = @intCast(u16, data) * 100;
-                self.dma_cycles_left = 160 * 4;
+                self.dma_source_address_reg = data;
+                self.dma_source_address = @intCast(u16, data) * 0x100;
+                self.dma_cycles_left = (160 + 4) * 4;
+                // std.debug.print("DMA transfer! ${X:0>4} (= ${X:0>2})\n", .{ self.dma_source_address, self.bus.read(self.dma_source_address) });
             },
             else => @panic("PPU write to unexpected address range"),
         }

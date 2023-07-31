@@ -45,8 +45,10 @@ pub const Bus = struct {
             0xE000...0xFDFF => self.ram[(addr - 0xC000) % (0xFDFF - 0xE000)],
             // Object attribute memory (OAM)
             0xFE00...0xFE9F => self.ppu.read(addr),
+            // DMA hardware register
+            0xFF46 => self.ppu.read(addr),
             // Hardware registers/HRAM
-            0xFF00...0xFFFF => self.cpu.read_hw_register(@truncate(u8, addr & 0x00FF)),
+            0xFF00...0xFF45, 0xFF47...0xFFFF => self.cpu.read_hw_register(@truncate(u8, addr & 0x00FF)),
             else => TEMP_READ_ERROR_SIGIL,
         };
     }
@@ -60,7 +62,7 @@ pub const Bus = struct {
     pub fn write(self: *Bus, addr: u16, data: u8) void {
         if (self.watch == addr) {
             self.watch_hit = true;
-            std.debug.print("Watchpoint: [${X:0>4}] = ${X:0>2}\n", .{ addr, data });
+            // std.debug.print("Watchpoint: [${X:0>4}] = ${X:0>2}\n", .{ addr, data });
         }
 
         // Follow the memory mapping guide here:
@@ -96,7 +98,7 @@ pub const Bus = struct {
         const lo: u8 = @truncate(u8, data);
         const hi: u8 = @truncate(u8, (data >> 8));
         self.write(addr, lo);
-        self.write(addr + 1, hi);
+        self.write(addr +% 1, hi);
     }
 
     pub fn init(allocator: std.mem.Allocator, rom: *Rom, ppu: *PPU) !Bus {

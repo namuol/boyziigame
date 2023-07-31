@@ -108,6 +108,10 @@ pub const Console = struct {
     }
 
     pub fn shouldBreak(self: *Console) bool {
+        if (self.bus.read(self.cpu.pc) == 0x40) {
+            return true;
+        }
+
         switch (self.breakpoint) {
             .addr => |addr| {
                 const result = addr == self.cpu.pc;
