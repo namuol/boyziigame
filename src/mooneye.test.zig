@@ -201,9 +201,9 @@ test "test-roms/mooneye-test-suite/acceptance/halt_ime0_ei.gb" {
 // test "test-roms/mooneye-test-suite/acceptance/jp_timing.gb" {
 //     try run_mooneye_test("test-roms/mooneye-test-suite/acceptance/jp_timing.gb");
 // }
-// test "test-roms/mooneye-test-suite/acceptance/ld_hl_sp_e_timing.gb" {
-//     try run_mooneye_test("test-roms/mooneye-test-suite/acceptance/ld_hl_sp_e_timing.gb");
-// }
+test "test-roms/mooneye-test-suite/acceptance/ld_hl_sp_e_timing.gb" {
+    try run_mooneye_test("test-roms/mooneye-test-suite/acceptance/ld_hl_sp_e_timing.gb");
+}
 
 // test "test-roms/mooneye-test-suite/acceptance/pop_timing.gb" {
 //     try run_mooneye_test("test-roms/mooneye-test-suite/acceptance/pop_timing.gb");
@@ -217,9 +217,9 @@ test "test-roms/mooneye-test-suite/acceptance/halt_ime0_ei.gb" {
 // test "test-roms/mooneye-test-suite/acceptance/ret_timing.gb" {
 //     try run_mooneye_test("test-roms/mooneye-test-suite/acceptance/ret_timing.gb");
 // }
-// test "test-roms/mooneye-test-suite/acceptance/reti_intr_timing.gb" {
-//     try run_mooneye_test("test-roms/mooneye-test-suite/acceptance/reti_intr_timing.gb");
-// }
+test "test-roms/mooneye-test-suite/acceptance/reti_intr_timing.gb" {
+    try run_mooneye_test("test-roms/mooneye-test-suite/acceptance/reti_intr_timing.gb");
+}
 // test "test-roms/mooneye-test-suite/acceptance/reti_timing.gb" {
 //     try run_mooneye_test("test-roms/mooneye-test-suite/acceptance/reti_timing.gb");
 // }
